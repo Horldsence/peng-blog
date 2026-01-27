@@ -1,0 +1,15 @@
+/target
+
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+# Linux
+~$
+
+# docs
+/docs
+
+# IDEs
+.idea
+.vscode

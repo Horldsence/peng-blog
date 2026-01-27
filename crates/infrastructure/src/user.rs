@@ -1,0 +1,169 @@
+use async_trait::async_trait;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
+use blog_service::repository::UserRepository;
+use domain::{Error, Result, User};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
+use std::sync::Arc;
+use uuid::Uuid;
+
+pub struct UserRepositoryImpl {
+    db: Arc<DatabaseConnection>,
+}
+
+impl Clone for UserRepositoryImpl {
+    fn clone(&self) -> Self {
+        Self {
+            db: Arc::clone(&self.db),
+        }
+    }
+}
+
+impl UserRepositoryImpl {
+    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+        Self { db }
+    }
+
+    fn hash_password(&self, password: &str) -> Result<String> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        argon2
+            .hash_password(password.as_bytes(), &salt)
+            .map(|hash| hash.to_string())
+            .map_err(|e| Error::Internal(format!("Failed to hash password: {}", e)))
+    }
+
+    fn verify_password(&self, password: &str, hash: &str) -> Result<bool> {
+        let parsed_hash = PasswordHash::new(hash)
+            .map_err(|e| Error::Internal(format!("Invalid password hash: {}", e)))?;
+        let argon2 = Argon2::default();
+        argon2
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .map_err(|_| Error::Internal("Password verification failed".to_string()))?;
+        Ok(true)
+    }
+}
+
+fn parse_datetime(dt_str: &str) -> Result<chrono::DateTime<chrono::Utc>> {
+    chrono::DateTime::parse_from_rfc3339(dt_str)
+        .map(|dt| dt.with_timezone(&chrono::Utc))
+        .map_err(|e| Error::Internal(format!("Invalid datetime: {}", e)))
+}
+
+fn model_to_user(model: crate::entity::user::Model) -> Result<User> {
+    let id = uuid::Uuid::parse_str(&model.id)
+        .map_err(|e| Error::Internal(format!("Invalid user id: {}", e)))?;
+
+    let created_at = parse_datetime(&model.created_at)?;
+
+    Ok(User {
+        id,
+        username: model.username,
+        password_hash: model.password_hash,
+        permissions: model.permissions as u64,
+        created_at,
+    })
+}
+
+#[async_trait]
+impl UserRepository for UserRepositoryImpl {
+    async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User> {
+        let password_hash = self.hash_password(&password)?;
+        let user_id = Uuid::new_v4();
+        let user = User::new(user_id, username.clone(), password_hash, permissions);
+
+        crate::entity::user::ActiveModel {
+            id: Set(user.id.to_string()),
+            username: Set(user.username.clone()),
+            password_hash: Set(user.password_hash.clone()),
+            permissions: Set(user.permissions as i64),
+            created_at: Set(user.created_at.to_rfc3339()),
+        }
+        .insert(self.db.as_ref())
+        .await
+        .map_err(|e| Error::Internal(format!("Failed to create user: {}", e)))?;
+
+        Ok(user)
+    }
+
+    async fn find_by_username(&self, username: &str) -> Result<Option<User>> {
+        let model = crate::entity::user::Entity::find()
+            .filter(crate::entity::user::Column::Username.eq(username))
+            .one(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?;
+
+        match model {
+            Some(model) => Ok(Some(model_to_user(model)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>> {
+        let model = crate::entity::user::Entity::find()
+            .filter(crate::entity::user::Column::Id.eq(id.to_string()))
+            .one(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?;
+
+        match model {
+            Some(model) => Ok(Some(model_to_user(model)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn verify_credentials(&self, username: &str, password: &str) -> Result<Option<User>> {
+        let user = self.find_by_username(username).await?;
+
+        match user {
+            Some(user) => {
+                let valid = self.verify_password(password, &user.password_hash)?;
+                if valid {
+                    Ok(Some(user))
+                } else {
+                    Ok(None)
+                }
+            }
+            None => Ok(None),
+        }
+    }
+
+    async fn update_permissions(&self, user_id: Uuid, permissions: u64) -> Result<User> {
+        let model = crate::entity::user::Entity::find_by_id(user_id.to_string())
+            .one(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?
+            .ok_or_else(|| Error::NotFound(format!("User with id {} not found", user_id)))?;
+
+        let active_model = crate::entity::user::ActiveModel {
+            id: Set(model.id),
+            username: Set(model.username),
+            password_hash: Set(model.password_hash),
+            permissions: Set(permissions as i64),
+            created_at: Set(model.created_at),
+        };
+
+        let updated_model = active_model
+            .update(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to update user: {}", e)))?;
+
+        model_to_user(updated_model)
+    }
+
+    async fn list_users(&self, limit: u64) -> Result<Vec<User>> {
+        let models = crate::entity::user::Entity::find()
+            .order_by_asc(crate::entity::user::Column::CreatedAt)
+            .limit(limit)
+            .all(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to list users: {}", e)))?;
+
+        models
+            .into_iter()
+            .map(|model| model_to_user(model))
+            .collect()
+    }
+}
