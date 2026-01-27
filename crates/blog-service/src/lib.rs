@@ -11,13 +11,10 @@
 //! - No I/O operations (testable in isolation)
 //!
 //! ## Architecture
-//! ```
-//! Core (business logic)
-//!   ↓ depends on
-//! Domain (types)
-//!   ↓ implemented by
-//! Infrastructure (data access)
-//! ```
+//!
+//! The architecture follows a layered approach:
+//! - Core (business logic) depends on Domain (types)
+//! - Domain (types) is implemented by Infrastructure (data access)
 
 pub mod post;
 pub mod user;

@@ -206,7 +206,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_post_validates_empty_title() {
-        let mut mock_repo = MockPostRepo::new();
+        let mock_repo = MockPostRepo::new();
         let service = PostService::new(Arc::new(mock_repo));
 
         let user_id = Uuid::new_v4();
@@ -224,7 +224,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_post_validates_title_too_long() {
-        let mut mock_repo = MockPostRepo::new();
+        let mock_repo = MockPostRepo::new();
         let service = PostService::new(Arc::new(mock_repo));
 
         let user_id = Uuid::new_v4();
@@ -243,10 +243,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_post_validates_long_content() {
-        let mut mock_repo = MockPostRepo::new();
+        let mock_repo = MockPostRepo::new();
         let service = PostService::new(Arc::new(mock_repo));
 
-        let long_content = "a".repeat(10001);
+        let _long_content = "a".repeat(10001);
         let user_id = Uuid::new_v4();
 
         let result = service
@@ -262,7 +262,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_requires_permission() {
-        let mut mock_repo = MockPostRepo::new();
+        let mock_repo = MockPostRepo::new();
         let service = PostService::new(Arc::new(mock_repo));
 
         let post_id = Uuid::new_v4();
@@ -282,7 +282,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_post_requires_permission() {
-        let mut mock_repo = MockPostRepo::new();
+        let mock_repo = MockPostRepo::new();
         let service = PostService::new(Arc::new(mock_repo));
 
         let post_id = Uuid::new_v4();

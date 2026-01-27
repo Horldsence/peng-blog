@@ -247,7 +247,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_empty_username() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         let result = service.register("".to_string(), "password123".to_string()).await;
@@ -261,7 +261,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_short_username() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         let result = service.register("ab".to_string(), "password123".to_string()).await;
@@ -275,7 +275,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_long_username() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         let long_username = "a".repeat(31);
@@ -292,7 +292,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_short_password() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         let result = service.register("username".to_string(), "short".to_string()).await;
@@ -306,7 +306,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_password_requirements() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         // Password without number
@@ -334,7 +334,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_permissions_requires_admin() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         let user_id = Uuid::new_v4();
@@ -355,9 +355,21 @@ mod tests {
     #[tokio::test]
     async fn test_cannot_remove_own_admin() {
         let mut mock_repo = MockUserRepo::new();
+        let user_id = Uuid::new_v4();
+        
+        mock_repo
+            .expect_find_by_id()
+            .times(2)
+            .with(mockall::predicate::eq(user_id))
+            .returning(move |_| Ok(Some(User::new(
+                user_id,
+                "testuser".to_string(),
+                "password".to_string(),
+                ADMIN_PERMISSIONS,
+            ))));
+        
         let service = UserService::new(Arc::new(mock_repo));
 
-        let user_id = Uuid::new_v4();
         let no_admin = DEFAULT_USER_PERMISSIONS;
 
         let result = service
@@ -373,7 +385,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_requires_admin() {
-        let mut mock_repo = MockUserRepo::new();
+        let mock_repo = MockUserRepo::new();
         let service = UserService::new(Arc::new(mock_repo));
 
         let no_permissions = 0;
