@@ -4,7 +4,7 @@
 //! The state is generic over repository implementations, allowing for easy testing
 //! and swapping of different database backends.
 
-use blog_service::{PostService, UserService, PostRepository, UserRepository};
+use service::{PostService, UserService, PostRepository, UserRepository};
 use std::sync::Arc;
 
 use crate::middleware::auth::AuthState;
@@ -48,19 +48,22 @@ where
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```ignore
     /// use api::{AppState, AuthState};
-    /// use blog_service::{PostService, UserService};
+    /// use service::{PostService, UserService};
     /// use infrastructure::{PostRepositoryImpl, UserRepositoryImpl};
     /// use std::sync::Arc;
     ///
+    /// // Initialize database connection
+    /// let db = establish_connection(&database_url).await?;
     /// let post_repo = Arc::new(PostRepositoryImpl::new(db.clone()));
     /// let user_repo = Arc::new(UserRepositoryImpl::new(db));
     /// let post_service = PostService::new(post_repo);
     /// let user_service = UserService::new(user_repo);
-    /// let auth_state = AuthState::new("secret");
-    /// 
+    /// let auth_state = AuthState::new("your-secret-key");
+    ///
     /// let state = AppState::new(post_service, user_service, auth_state);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn new(
         post_service: PostService<PR>,

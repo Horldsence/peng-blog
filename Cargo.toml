@@ -5,7 +5,7 @@ members = [
     "crates/api",
     "crates/infrastructure",
     "crates/domain",
-    "crates/blog-service",
+    "crates/service",
 ]
 
 [workspace.package]

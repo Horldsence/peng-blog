@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 domain = { path = "../domain" }
-blog-service = { path = "../blog-service" }
+service = { path = "../service" }
 uuid = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }

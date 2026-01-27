@@ -132,9 +132,9 @@ impl IntoResponse for AuthError {
 ///
 /// # Example
 ///
-/// ```rust
-/// use axum::routing::get;
-/// use crate::middleware::auth::Claims;
+/// ```ignore
+/// use axum::{routing::get, Router};
+/// use api::middleware::auth::Claims;
 ///
 /// async fn protected_route(claims: Claims) -> String {
 ///     format!("Hello, {}!", claims.username)

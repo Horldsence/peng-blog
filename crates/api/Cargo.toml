@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 domain = { path = "../domain" }
-blog-service = { path = "../blog-service" }
+service = { path = "../service" }
 infrastructure = { path = "../infrastructure" }
 axum = { workspace = true }
 tower = { workspace = true }

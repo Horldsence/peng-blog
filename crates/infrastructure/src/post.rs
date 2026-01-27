@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use domain::{Error, Post, Result};
-use blog_service::repository::PostRepository;
+use service::repository::PostRepository;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
     QueryFilter, QueryOrder, QuerySelect, Set,

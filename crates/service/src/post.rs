@@ -8,6 +8,13 @@ use domain::{Error, Post, Result, POST_DELETE, POST_PUBLISH, POST_UPDATE};
 use uuid::Uuid;
 use std::sync::Arc;
 
+// ============================================================================
+// Constants
+// ============================================================================
+
+/// Default limit for listing posts
+const DEFAULT_LIST_LIMIT: u64 = 20;
+
 /// Service for post business logic
 ///
 /// This service encapsulates all business rules for post operations.
@@ -140,7 +147,7 @@ impl<R: PostRepository> PostService<R> {
 
     /// List published posts
     pub async fn list_published(&self, limit: Option<u64>) -> Result<Vec<Post>> {
-        self.repo.list_published_posts(limit.unwrap_or(20)).await
+        self.repo.list_published_posts(limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
     }
 
     /// Get posts by user
@@ -149,7 +156,7 @@ impl<R: PostRepository> PostService<R> {
         user_id: Uuid,
         limit: Option<u64>,
     ) -> Result<Vec<Post>> {
-        self.repo.get_posts_by_user(user_id, limit.unwrap_or(20)).await
+        self.repo.get_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
     }
 }
 

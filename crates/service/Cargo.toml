@@ -1,5 +1,5 @@
 [package]
-name = "blog-service"
+name = "service"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

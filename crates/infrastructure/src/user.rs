@@ -3,7 +3,7 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use blog_service::repository::UserRepository;
+use service::repository::UserRepository;
 use domain::{Error, Result, User};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
 use std::sync::Arc;

@@ -1,5 +1,5 @@
 use api::{routes, AuthState};
-use blog_service::{PostService, UserService};
+use service::{PostService, UserService};
 use infrastructure::{establish_connection, PostRepositoryImpl, UserRepositoryImpl};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;

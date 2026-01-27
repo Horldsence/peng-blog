@@ -8,6 +8,16 @@ use domain::{Error, Result, User, DEFAULT_USER_PERMISSIONS, USER_MANAGE};
 use uuid::Uuid;
 use std::sync::Arc;
 
+// ============================================================================
+// Constants
+// ============================================================================
+
+/// Default limit for listing users
+const DEFAULT_LIST_LIMIT: u64 = 50;
+
+/// Limit used when checking for admin count
+const ADMIN_COUNT_CHECK_LIMIT: u64 = 1000;
+
 /// Service for user business logic
 ///
 /// This service encapsulates all business rules for user operations.
@@ -113,7 +123,7 @@ impl<R: UserRepository> UserService<R> {
         if target_user.has_permission(USER_MANAGE) && (new_permissions & USER_MANAGE) == 0 {
             let admin_count = self
                 .repo
-                .list_users(1000)
+                .list_users(ADMIN_COUNT_CHECK_LIMIT)
                 .await?
                 .into_iter()
                 .filter(|u| u.has_permission(USER_MANAGE))
@@ -146,25 +156,23 @@ impl<R: UserRepository> UserService<R> {
             ));
         }
 
-        self.repo.list_users(limit.unwrap_or(50)).await
+        self.repo.list_users(limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
     }
 
     /// Check if user exists by username
     pub async fn exists(&self, username: &str) -> bool {
-        self.repo
-            .find_by_username(username)
-            .await
-            .map(|opt| opt.is_some())
-            .unwrap_or(false)
+        match self.repo.find_by_username(username).await {
+            Ok(user_opt) => user_opt.is_some(),
+            Err(_) => false,
+        }
     }
 
     /// Check if user exists by ID
     pub async fn exists_by_id(&self, id: Uuid) -> bool {
-        self.repo
-            .find_by_id(id)
-            .await
-            .map(|opt| opt.is_some())
-            .unwrap_or(false)
+        match self.repo.find_by_id(id).await {
+            Ok(user_opt) => user_opt.is_some(),
+            Err(_) => false,
+        }
     }
 }
 

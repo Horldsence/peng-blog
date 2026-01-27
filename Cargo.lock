@@ -100,12 +100,12 @@ dependencies = [
  "async-trait",
  "axum 0.8.8",
  "axum-extra",
- "blog-service",
  "domain",
  "infrastructure",
  "jsonwebtoken",
  "serde",
  "serde_json",
+ "service",
  "thiserror",
  "tower",
  "tower-http",
@@ -119,10 +119,10 @@ version = "0.1.0"
 dependencies = [
  "api",
  "axum 0.8.8",
- "blog-service",
  "domain",
  "dotenvy",
  "infrastructure",
+ "service",
  "tokio",
  "tower",
  "tower-http",
@@ -402,18 +402,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
  "generic-array",
-]
-
-[[package]]
-name = "blog-service"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "domain",
- "mockall",
- "thiserror",
- "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -1332,7 +1320,6 @@ version = "0.1.0"
 dependencies = [
  "argon2",
  "async-trait",
- "blog-service",
  "chrono",
  "domain",
  "rand",
@@ -1340,6 +1327,7 @@ dependencies = [
  "sea-orm",
  "sea-orm-migration",
  "serde",
+ "service",
  "uuid",
 ]
 
@@ -2367,6 +2355,18 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "service"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "domain",
+ "mockall",
+ "thiserror",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]

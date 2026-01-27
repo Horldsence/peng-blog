@@ -16,5 +16,5 @@ pub use post::routes;
 pub use error::ApiResult;
 
 // Re-export repository traits for generic type parameters
-pub use blog_service::{PostRepository, UserRepository};
+pub use service::{PostRepository, UserRepository};
 pub use middleware::auth::{AuthState, Claims};
