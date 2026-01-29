@@ -73,11 +73,6 @@ where
     pub fn builder() -> AppStateBuilder<PR, UR, SR, FR, CR, STR> {
         AppStateBuilder::default()
     }
-
-    /// Get a reference to the authentication state
-    pub fn auth_state(&self) -> &AuthState {
-        &self.auth_state
-    }
 }
 
 /// Builder for creating AppState instances
@@ -173,49 +168,41 @@ where
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
 {
-    /// Set the post service
     pub fn post_service(mut self, service: PostService<PR>) -> Self {
         self.post_service = Some(service);
         self
     }
 
-    /// Set the user service
     pub fn user_service(mut self, service: UserService<UR>) -> Self {
         self.user_service = Some(service);
         self
     }
 
-    /// Set the session service
     pub fn session_service(mut self, service: SessionService<SR>) -> Self {
         self.session_service = Some(service);
         self
     }
 
-    /// Set the file service
     pub fn file_service(mut self, service: FileService<FR>) -> Self {
         self.file_service = Some(service);
         self
     }
 
-    /// Set the comment service
     pub fn comment_service(mut self, service: CommentService<CR, UR>) -> Self {
         self.comment_service = Some(service);
         self
     }
 
-    /// Set the stats service
     pub fn stats_service(mut self, service: StatsService<STR>) -> Self {
         self.stats_service = Some(service);
         self
     }
 
-    /// Set the auth state
     pub fn auth_state(mut self, state: AuthState) -> Self {
         self.auth_state = Some(state);
         self
     }
 
-    /// Set the upload directory
     pub fn upload_dir(mut self, dir: String) -> Self {
         self.upload_dir = Some(dir);
         self
