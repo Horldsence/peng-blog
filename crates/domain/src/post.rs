@@ -11,6 +11,7 @@ pub struct Post {
     pub content: String,
     pub published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
+    pub views: u64,
 }
 
 impl Post {
@@ -23,6 +24,7 @@ impl Post {
             content,
             published_at: None,
             created_at: Utc::now(),
+            views: 0,
         }
     }
 
@@ -44,6 +46,11 @@ impl Post {
     /// Check if the post is owned by a specific user
     pub fn is_owned_by(&self, user_id: Uuid) -> bool {
         self.user_id == user_id
+    }
+
+    /// Increment the view count
+    pub fn increment_view(&mut self) {
+        self.views += 1;
     }
 }
 

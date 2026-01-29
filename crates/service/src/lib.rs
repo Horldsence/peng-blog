@@ -19,9 +19,17 @@
 pub mod post;
 pub mod user;
 pub mod repository;
+pub mod session;
+pub mod file;
+pub mod comment;
+pub mod stats;
 
-pub use repository::{PostRepository, UserRepository};
+pub use repository::{PostRepository, UserRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository};
 pub use post::PostService;
 pub use user::UserService;
+pub use session::SessionService;
+pub use file::FileService;
+pub use comment::CommentService;
+pub use stats::StatsService;
 
 pub use domain::{Error, Result};

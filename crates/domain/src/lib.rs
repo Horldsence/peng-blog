@@ -9,11 +9,19 @@
 pub mod post;
 pub mod user;
 pub mod error;
+pub mod session;
+pub mod file;
+pub mod comment;
+pub mod stats;
 
 // Re-export commonly used types for convenience
 pub use error::{Error, Result};
 pub use post::{Post, CreatePost, UpdatePost};
 pub use user::{User, UserInfo, RegisterRequest, LoginRequest, LoginResponse};
+pub use session::{Session, CreateSession};
+pub use file::{File, UploadFile, FileResponse};
+pub use comment::{Comment, CreateComment, CreateCommentGitHub, CommentResponse, GitHubUser, GitHubAuthRequest};
+pub use stats::{VisitStats, PostStats, DailyStats, StatsResponse, RecordViewRequest};
 
 // ============================================================================
 // Permission Constants (Bit Flags)
@@ -43,3 +51,63 @@ pub const DEFAULT_USER_PERMISSIONS: u64 = POST_CREATE | POST_UPDATE | POST_PUBLI
 
 /// Admin permissions - all permissions combined
 pub const ADMIN_PERMISSIONS: u64 = POST_CREATE | POST_UPDATE | POST_DELETE | POST_PUBLISH | USER_MANAGE;
+
+// ============================================================================
+// Permission Checking Helpers
+// ============================================================================
+
+/// Check if user can perform action on resource owned by another user
+///
+/// This is the core permission check helper that eliminates repeated
+/// "owner or admin" logic throughout the codebase.
+///
+/// # Arguments
+/// * `resource_owner_id` - The ID of the user who owns the resource
+/// * `requester_id` - The ID of the user making the request
+/// * `requester_permissions` - The permissions bit flags of the requester
+/// * `admin_permission` - The admin permission required to bypass ownership check
+///
+/// # Returns
+/// * `Ok(())` if the requester is the owner OR has admin permission
+/// * `Err(Error::Validation)` if neither condition is met
+pub fn check_ownership_or_admin(
+    resource_owner_id: uuid::Uuid,
+    requester_id: uuid::Uuid,
+    requester_permissions: u64,
+    admin_permission: u64,
+) -> Result<()> {
+    if resource_owner_id == requester_id {
+        return Ok(());
+    }
+    
+    if (requester_permissions & admin_permission) != 0 {
+        return Ok(());
+    }
+    
+    Err(Error::Validation(
+        "Permission denied: you must be the resource owner or have admin privileges".to_string(),
+    ))
+}
+
+/// Check if user has a specific permission
+///
+/// # Arguments
+/// * `user_permissions` - The user's permission bit flags
+/// * `required_permission` - The required permission bit flag
+///
+/// # Returns
+/// * `Ok(())` if the user has the required permission
+/// * `Err(Error::Validation)` if the user lacks the permission
+pub fn check_permission(user_permissions: u64, required_permission: u64) -> Result<()> {
+    if (user_permissions & required_permission) != 0 {
+        Ok(())
+    } else {
+        Err(Error::Validation(
+            format!(
+                "Permission denied: requires permission flag {:#x}",
+                required_permission
+            )
+            .to_string(),
+        ))
+    }
+}

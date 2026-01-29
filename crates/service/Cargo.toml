@@ -10,6 +10,10 @@ domain = { path = "../domain" }
 uuid = { workspace = true }
 async-trait = { workspace = true }
 thiserror = { workspace = true }
+reqwest = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true, features = ["fs"] }
+urlencoding = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

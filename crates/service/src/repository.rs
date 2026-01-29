@@ -71,3 +71,110 @@ pub trait UserRepository: Send + Sync {
     /// List all users (admin only)
     async fn list_users(&self, limit: u64) -> Result<Vec<User>>;
 }
+
+// ============================================================================
+// Session Repository Trait
+// ============================================================================
+
+/// Repository interface for Session operations
+///
+/// This trait defines the contract for session data access.
+/// Sessions are used for cookie-based authentication.
+#[async_trait]
+pub trait SessionRepository: Send + Sync {
+    /// Create a new session
+    async fn create_session(&self, user_id: Uuid, remember_me: bool) -> Result<domain::Session>;
+
+    /// Get a session by token
+    async fn get_session(&self, token: &str) -> Result<Option<domain::Session>>;
+
+    /// Delete a session by token
+    async fn delete_session(&self, token: &str) -> Result<()>;
+
+    /// Delete all sessions for a user
+    async fn delete_user_sessions(&self, user_id: Uuid) -> Result<()>;
+
+    /// Clean up expired sessions
+    async fn cleanup_expired_sessions(&self) -> Result<u64>;
+}
+
+// ============================================================================
+// File Repository Trait
+// ============================================================================
+
+/// Repository interface for File operations
+///
+/// This trait defines the contract for file data access.
+/// Files are user uploads stored in the system.
+#[async_trait]
+pub trait FileRepository: Send + Sync {
+    /// Create a new file record
+    async fn create_file(&self, file: domain::File) -> Result<domain::File>;
+
+    /// Get a file by ID
+    async fn get_file(&self, id: Uuid) -> Result<Option<domain::File>>;
+
+    /// List files by user ID
+    async fn list_files_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<domain::File>>;
+
+    /// Delete a file by ID
+    async fn delete_file(&self, id: Uuid, user_id: Uuid) -> Result<()>;
+}
+
+// ============================================================================
+// Comment Repository Trait
+// ============================================================================
+
+/// Repository interface for Comment operations
+///
+/// This trait defines the contract for comment data access.
+/// Comments support both registered users and GitHub users.
+#[async_trait]
+pub trait CommentRepository: Send + Sync {
+    /// Create a new comment
+    async fn create_comment(&self, comment: domain::Comment) -> Result<domain::Comment>;
+
+    /// Get a comment by ID
+    async fn get_comment(&self, id: Uuid) -> Result<Option<domain::Comment>>;
+
+    /// List comments for a post
+    async fn list_post_comments(&self, post_id: Uuid, limit: u64) -> Result<Vec<domain::Comment>>;
+
+    /// Update a comment
+    async fn update_comment(&self, comment: domain::Comment) -> Result<domain::Comment>;
+
+    /// Delete a comment by ID
+    async fn delete_comment(&self, id: Uuid, user_id: Option<Uuid>, is_github_user: bool) -> Result<()>;
+
+    /// Get comment count for a post
+    async fn get_post_comment_count(&self, post_id: Uuid) -> Result<u64>;
+}
+
+// ============================================================================
+// Stats Repository Trait
+// ============================================================================
+
+/// Repository interface for Statistics operations
+///
+/// This trait defines the contract for statistics data access.
+/// Includes global visitor stats and per-post view stats.
+#[async_trait]
+pub trait StatsRepository: Send + Sync {
+    /// Get global visitor statistics
+    async fn get_visit_stats(&self) -> Result<domain::VisitStats>;
+
+    /// Increment visitor count
+    async fn increment_visit(&self, is_today: bool) -> Result<()>;
+
+    /// Reset today's visit count (called at midnight)
+    async fn reset_today_visits(&self) -> Result<()>;
+
+    /// Get or create post statistics
+    async fn get_or_create_post_stats(&self, post_id: Uuid) -> Result<domain::PostStats>;
+
+    /// Increment post view count
+    async fn increment_post_view(&self, post_id: Uuid) -> Result<()>;
+
+    /// Get total statistics (admin only)
+    async fn get_total_stats(&self) -> Result<domain::stats::StatsResponse>;
+}

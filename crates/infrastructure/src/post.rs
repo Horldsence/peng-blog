@@ -34,6 +34,7 @@ fn post_to_entity(post: &Post) -> crate::entity::post::Model {
         content: post.content.clone(),
         published_at: post.published_at.map(|d| d.to_rfc3339()),
         created_at: post.created_at.to_rfc3339(),
+        views: 0,
     }
 }
 
@@ -45,6 +46,7 @@ fn entity_to_active_model(entity: crate::entity::post::Model) -> crate::entity::
         content: Set(entity.content),
         published_at: Set(entity.published_at),
         created_at: Set(entity.created_at),
+        views: Set(entity.views),
     }
 }
 
@@ -79,6 +81,7 @@ fn model_to_post(model: crate::entity::post::Model) -> Result<Post> {
         content: model.content,
         published_at,
         created_at,
+        views: model.views as u64,
     })
 }
 

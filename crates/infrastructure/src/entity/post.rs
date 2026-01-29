@@ -29,6 +29,9 @@ pub struct Model {
     
     /// ISO 8601 datetime string when post was created
     pub created_at: String,
+    
+    /// Number of times this post has been viewed
+    pub views: i64,
 }
 
 /// Relations for Post entity
@@ -40,6 +43,7 @@ impl ActiveModelBehavior for ActiveModel {
     fn new() -> Self {
         Self {
             created_at: Set(chrono::Utc::now().to_rfc3339()),
+            views: Set(0),
             ..ActiveModelTrait::default()
         }
     }

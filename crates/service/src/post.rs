@@ -50,21 +50,11 @@ impl<R: PostRepository> PostService<R> {
         updater_id: Uuid,
         updater_permissions: u64,
     ) -> Result<Post> {
-        // Check update permission
-        if (updater_permissions & POST_UPDATE) == 0 {
-            return Err(Error::Validation(
-                "Insufficient permissions to update post".to_string(),
-            ));
-        }
+        domain::check_permission(updater_permissions, POST_UPDATE)?;
 
         let mut post = self.repo.get_post(id).await?;
 
-        // Check ownership or admin permission
-        if post.user_id != updater_id && (updater_permissions & POST_DELETE) == 0 {
-            return Err(Error::Validation(
-                "Cannot update posts owned by others".to_string(),
-            ));
-        }
+        domain::check_ownership_or_admin(post.user_id, updater_id, updater_permissions, POST_DELETE)?;
 
         // Update fields if provided
         if let Some(title) = title {
@@ -82,21 +72,11 @@ impl<R: PostRepository> PostService<R> {
 
     /// Publish a post with permission and ownership checks
     pub async fn publish(&self, id: Uuid, user_id: Uuid, permissions: u64) -> Result<Post> {
-        // Check publish permission
-        if (permissions & POST_PUBLISH) == 0 {
-            return Err(Error::Validation(
-                "Insufficient permissions to publish post".to_string(),
-            ));
-        }
+        domain::check_permission(permissions, POST_PUBLISH)?;
 
         let mut post = self.repo.get_post(id).await?;
 
-        // Check ownership or admin permission
-        if post.user_id != user_id && (permissions & POST_DELETE) == 0 {
-            return Err(Error::Validation(
-                "Cannot publish posts owned by others".to_string(),
-            ));
-        }
+        domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
 
         post.publish();
         self.repo.update_post(post).await
@@ -104,21 +84,11 @@ impl<R: PostRepository> PostService<R> {
 
     /// Unpublish a post with permission and ownership checks
     pub async fn unpublish(&self, id: Uuid, user_id: Uuid, permissions: u64) -> Result<Post> {
-        // Check publish permission
-        if (permissions & POST_PUBLISH) == 0 {
-            return Err(Error::Validation(
-                "Insufficient permissions to unpublish post".to_string(),
-            ));
-        }
+        domain::check_permission(permissions, POST_PUBLISH)?;
 
         let mut post = self.repo.get_post(id).await?;
 
-        // Check ownership or admin permission
-        if post.user_id != user_id && (permissions & POST_DELETE) == 0 {
-            return Err(Error::Validation(
-                "Cannot unpublish posts owned by others".to_string(),
-            ));
-        }
+        domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
 
         post.unpublish();
         self.repo.update_post(post).await
@@ -126,21 +96,11 @@ impl<R: PostRepository> PostService<R> {
 
     /// Delete a post with permission and ownership checks
     pub async fn delete(&self, id: Uuid, user_id: Uuid, permissions: u64) -> Result<()> {
-        // Check delete permission
-        if (permissions & POST_DELETE) == 0 {
-            return Err(Error::Validation(
-                "Insufficient permissions to delete post".to_string(),
-            ));
-        }
+        domain::check_permission(permissions, POST_DELETE)?;
 
         let post = self.repo.get_post(id).await?;
 
-        // Check ownership or admin permission
-        if post.user_id != user_id && (permissions & POST_DELETE) == 0 {
-            return Err(Error::Validation(
-                "Cannot delete posts owned by others".to_string(),
-            ));
-        }
+        domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
 
         self.repo.delete_post(id).await
     }
@@ -282,7 +242,7 @@ mod tests {
 
         assert!(result.is_err());
         match result {
-            Err(Error::Validation(msg)) => assert!(msg.contains("Insufficient permissions")),
+            Err(Error::Validation(msg)) => assert!(msg.contains("Permission denied")),
             _ => panic!("Expected permission error"),
         }
     }
@@ -300,7 +260,7 @@ mod tests {
 
         assert!(result.is_err());
         match result {
-            Err(Error::Validation(msg)) => assert!(msg.contains("Insufficient permissions")),
+            Err(Error::Validation(msg)) => assert!(msg.contains("Permission denied")),
             _ => panic!("Expected permission error"),
         }
     }

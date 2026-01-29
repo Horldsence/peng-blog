@@ -35,7 +35,7 @@ serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 
 # UUID
-uuid = { version = "1.10", features = ["v4", "serde"] }
+uuid = { version = "1.10", features = ["v4", "v5", "serde"] }
 
 # Error handling
 anyhow = "1.0"
@@ -46,6 +46,12 @@ async-trait = "0.1"
 
 # HTTP client (for frontend)
 reqwest = { version = "0.12", features = ["json"] }
+
+# URL encoding
+urlencoding = "2.1"
+
+# Async utilities
+tokio-util = { version = "0.7", features = ["io"] }
 
 # Logging
 tracing = "0.1"
@@ -60,6 +66,41 @@ argon2 = { version = "0.5", features = ["std", "getrandom"] }
 # Authentication
 jsonwebtoken = "9.0"
 
+# ============================================================================
+# Test Dependencies
+# ============================================================================
+
+[workspace.dev-dependencies]
+# Async testing utilities
+tokio-test = "0.4"
+
+# Mocking framework
+mockall = "0.13"
+
+# Test assertions
+pretty_assertions = "1.4"
+
+# HTTP testing
+axum-test = "17.0"
+
+# Property-based testing
+proptest = "1.5"
+
+# Benchmarking
+criterion = "0.5"
+
+# Code coverage (used via CLI)
+cargo-tarpaulin = "0.31"
+
+# Test utilities
+tempfile = "3.14"
+rand = "0.8"
+rand_core = { version = "0.6", features = ["getrandom"] }
+
+# ============================================================================
+# Build Profiles
+# ============================================================================
+
 [profile.release]
 opt-level = 3
 lto = true
@@ -68,3 +109,31 @@ strip = true
 
 [profile.dev]
 opt-level = 0
+
+[profile.test]
+opt-level = 0
+debug = true
+
+[profile.bench]
+inherits = "release"
+debug = true
+
+# ============================================================================
+# Test Configuration
+# ============================================================================
+
+# Default test configuration
+[workspace.metadata.test]
+# Test timeout in seconds (disabled by default)
+timeout = 0
+
+# Number of threads to use for tests
+threads = 0
+
+# ============================================================================
+# Benchmarking Configuration
+# ============================================================================
+
+[workspace.metadata.bench]
+# Benchmark harness
+harness = false

@@ -45,11 +45,11 @@ impl<R: UserRepository> UserService<R> {
             return Err(Error::Validation("Username already exists".to_string()));
         }
 
-        // Check if this is the first user (make them admin)
+        // Check if this is first user (make them admin)
         let existing_users = self.repo.list_users(1).await?;
         let is_first_user = existing_users.is_empty();
         let permissions = if is_first_user {
-            USER_MANAGE // Full admin permissions
+            domain::ADMIN_PERMISSIONS // Full admin permissions
         } else {
             DEFAULT_USER_PERMISSIONS
         };
@@ -111,13 +111,12 @@ impl<R: UserRepository> UserService<R> {
             .ok_or_else(|| Error::NotFound("Target user not found".to_string()))?;
 
         // Prevent users from removing their own admin privileges
-        if requester_id == target_user_id {
-            if (new_permissions & USER_MANAGE) == 0 {
+        if requester_id == target_user_id
+            && (new_permissions & USER_MANAGE) == 0 {
                 return Err(Error::Validation(
                     "Cannot remove your own admin privileges".to_string(),
                 ));
             }
-        }
 
         // Prevent removing permissions from the last admin
         if target_user.has_permission(USER_MANAGE) && (new_permissions & USER_MANAGE) == 0 {

@@ -85,6 +85,7 @@ impl UserRepository for UserRepositoryImpl {
         .await
         .map_err(|e| Error::Internal(format!("Failed to create user: {}", e)))?;
 
+        // The user object already has all the data we need, return it directly
         Ok(user)
     }
 
@@ -163,7 +164,7 @@ impl UserRepository for UserRepositoryImpl {
 
         models
             .into_iter()
-            .map(|model| model_to_user(model))
+            .map(model_to_user)
             .collect()
     }
 }

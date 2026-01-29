@@ -19,6 +19,10 @@ pub enum ApiError {
     #[error("Validation error: {0}")]
     Validation(String),
 
+    /// Not found errors
+    #[error("Not found: {0}")]
+    NotFound(String),
+
     /// Authentication/authorization errors
     #[error("Unauthorized: {0}")]
     Unauthorized(String),
@@ -36,6 +40,11 @@ impl ApiError {
     /// Create a validation error
     pub fn validation(msg: impl Into<String>) -> Self {
         Self::Validation(msg.into())
+    }
+
+    /// Create a not found error
+    pub fn not_found(msg: impl Into<String>) -> Self {
+        Self::NotFound(msg.into())
     }
 
     /// Create an unauthorized error
@@ -69,6 +78,9 @@ impl IntoResponse for ApiError {
             }
             ApiError::Validation(msg) => {
                 (StatusCode::BAD_REQUEST, "validation", msg)
+            }
+            ApiError::NotFound(msg) => {
+                (StatusCode::NOT_FOUND, "not_found", msg)
             }
             ApiError::Unauthorized(msg) => {
                 (StatusCode::UNAUTHORIZED, "unauthorized", msg)
