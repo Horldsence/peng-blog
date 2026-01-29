@@ -1,0 +1,135 @@
+/* App 组件样式 */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* 页面容器 */
+.login-page,
+.register-page {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-page,
+.about-page {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2rem;
+}
+
+/* 登录页面样式 */
+.login-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 1rem;
+}
+
+.login-page .login-form {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* 注册页面样式 */
+.register-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.register-page > div {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.register-page h2 {
+  margin-bottom: 1rem;
+  color: #1e293b;
+}
+
+.register-page p {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.register-page a {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+/* 管理页面样式 */
+.admin-page {
+  padding: 2rem 1rem;
+}
+
+.admin-page > div {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.admin-page h2 {
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.admin-page p {
+  color: #64748b;
+}
+
+/* 关于页面样式 */
+.about-page {
+  padding: 2rem 1rem;
+}
+
+.about-page > div {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 800px;
+}
+
+.about-page h2 {
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.about-page p {
+  color: #64748b;
+  line-height: 1.8;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .login-page .login-form,
+  .register-page > div,
+  .admin-page > div,
+  .about-page > div {
+    padding: 1.5rem;
+  }
+  
+  .login-page,
+  .register-page {
+    min-height: calc(100vh - 100px);
+  }
+}
