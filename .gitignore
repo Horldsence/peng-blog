@@ -1,5 +1,22 @@
 /target
 
+# Environment
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Uploads
+/uploads
+
+# Test directory
+/test
+
 # macOS
 .DS_Store
 # Windows
