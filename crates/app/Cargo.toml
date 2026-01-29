@@ -5,9 +5,9 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 
-[[bin]]
-name = "peng-blog"
-path = "src/main.rs"
+[lib]
+name = "app"
+path = "src/lib.rs"
 
 [dependencies]
 api = { path = "../api" }

@@ -72,21 +72,27 @@ impl UserRepository for UserRepositoryImpl {
     async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User> {
         let password_hash = self.hash_password(&password)?;
         let user_id = Uuid::new_v4();
-        let user = User::new(user_id, username.clone(), password_hash, permissions);
-
+        let created_at = chrono::Utc::now();
+        
         crate::entity::user::ActiveModel {
-            id: Set(user.id.to_string()),
-            username: Set(user.username.clone()),
-            password_hash: Set(user.password_hash.clone()),
-            permissions: Set(user.permissions as i64),
-            created_at: Set(user.created_at.to_rfc3339()),
+            id: Set(user_id.to_string()),
+            username: Set(username.clone()),
+            password_hash: Set(password_hash.clone()),
+            permissions: Set(permissions as i64),
+            created_at: Set(created_at.to_rfc3339()),
         }
         .insert(self.db.as_ref())
         .await
         .map_err(|e| Error::Internal(format!("Failed to create user: {}", e)))?;
 
-        // The user object already has all the data we need, return it directly
-        Ok(user)
+        // Return User object directly since we have all the data
+        Ok(User {
+            id: user_id,
+            username,
+            password_hash,
+            permissions,
+            created_at,
+        })
     }
 
     async fn find_by_username(&self, username: &str) -> Result<Option<User>> {
@@ -166,5 +172,48 @@ impl UserRepository for UserRepositoryImpl {
             .into_iter()
             .map(model_to_user)
             .collect()
+    }
+
+    async fn update_password(&self, user_id: Uuid, new_password: String) -> Result<()> {
+        // Check if user exists
+        let model = crate::entity::user::Entity::find_by_id(user_id.to_string())
+            .one(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?
+            .ok_or_else(|| Error::NotFound(format!("User with id {} not found", user_id)))?;
+
+        // Hash new password
+        let password_hash = self.hash_password(&new_password)?;
+
+        // Update password
+        crate::entity::user::ActiveModel {
+            id: Set(model.id),
+            username: Set(model.username),
+            password_hash: Set(password_hash),
+            permissions: Set(model.permissions),
+            created_at: Set(model.created_at),
+        }
+        .update(self.db.as_ref())
+        .await
+        .map_err(|e| Error::Internal(format!("Failed to update password: {}", e)))?;
+
+        Ok(())
+    }
+
+    async fn delete_user(&self, user_id: Uuid) -> Result<()> {
+        // Check if user exists
+        crate::entity::user::Entity::find_by_id(user_id.to_string())
+            .one(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?
+            .ok_or_else(|| Error::NotFound(format!("User with id {} not found", user_id)))?;
+
+        // Delete user (cascade will delete related records)
+        crate::entity::user::Entity::delete_by_id(user_id.to_string())
+            .exec(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to delete user: {}", e)))?;
+
+        Ok(())
     }
 }

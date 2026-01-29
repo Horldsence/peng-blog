@@ -391,6 +391,14 @@ mod tests {
         async fn list_users(&self, _limit: u64) -> Result<Vec<User>> {
             Ok(Vec::new())
         }
+
+        async fn update_password(&self, _user_id: uuid::Uuid, _new_password: String) -> Result<()> {
+            Ok(())
+        }
+
+        async fn delete_user(&self, _user_id: uuid::Uuid) -> Result<()> {
+            Ok(())
+        }
     }
 
     #[tokio::test]

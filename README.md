@@ -161,6 +161,63 @@ cargo fmt
 cargo clippy
 ```
 
+### CLI 工具
+
+peng-blog 提供了强大的 CLI 工具用于用户和数据库管理：
+
+#### 用户管理
+
+```bash
+# 查看所有用户
+cargo run --package cli -- user list
+
+# 查看用户详情
+cargo run --package cli -- user show <user_id>
+
+# 创建新用户（交互式）
+cargo run --package cli -- user create
+
+# 创建管理员用户
+cargo run --package cli -- user create --username admin --password "admin123" --admin
+
+# 删除用户
+cargo run --package cli -- user delete <user_id>
+
+# 重置用户密码（交互式）
+cargo run --package cli -- user reset-password <user_id>
+
+# 提升用户为管理员
+cargo run --package cli -- user promote <user_id>
+
+# 降级管理员为普通用户
+cargo run --package cli -- user demote <user_id>
+```
+
+#### 数据库管理
+
+```bash
+# 运行数据库迁移
+cargo run --package cli -- db migrate
+
+# 重置数据库（警告：会删除所有数据）
+cargo run --package cli -- db reset
+
+# 查看数据库状态
+cargo run --package cli -- db status
+```
+
+#### 非交互模式
+
+CLI 工具支持非交互模式，适合脚本使用：
+
+```bash
+# 创建用户（非交互）
+cargo run --package cli -- user create --username testuser --password "test123" --non-interactive
+
+# 重置密码（非交互）
+cargo run --package cli -- user reset-password <user_id> --password "newpass123" --non-interactive
+```
+
 ## 📚 API 文档
 
 ### 认证相关

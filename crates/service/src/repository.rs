@@ -55,7 +55,7 @@ pub trait PostRepository: Send + Sync {
 
 /// Repository interface for User operations
 ///
-/// This trait defines the contract for user data access.
+/// This trait defines contract for user data access.
 /// Implementations can use any database (SQLite, PostgreSQL, etc.)
 #[async_trait]
 pub trait UserRepository: Send + Sync {
@@ -73,6 +73,12 @@ pub trait UserRepository: Send + Sync {
 
     /// Update user permissions
     async fn update_permissions(&self, user_id: Uuid, permissions: u64) -> Result<User>;
+
+    /// Update user password
+    async fn update_password(&self, user_id: Uuid, new_password: String) -> Result<()>;
+
+    /// Delete a user by ID
+    async fn delete_user(&self, user_id: Uuid) -> Result<()>;
 
     /// List all users (admin only)
     async fn list_users(&self, limit: u64) -> Result<Vec<User>>;

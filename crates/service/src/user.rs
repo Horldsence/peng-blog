@@ -248,7 +248,9 @@ mod tests {
             async fn find_by_id(&self, id: Uuid) -> Result<Option<User>>;
             async fn verify_credentials(&self, username: &str, password: &str) -> Result<Option<User>>;
             async fn update_permissions(&self, user_id: Uuid, permissions: u64) -> Result<User>;
+            async fn update_password(&self, user_id: Uuid, new_password: String) -> Result<()>;
             async fn list_users(&self, limit: u64) -> Result<Vec<User>>;
+            async fn delete_user(&self, user_id: Uuid) -> Result<()>;
         }
     }
 

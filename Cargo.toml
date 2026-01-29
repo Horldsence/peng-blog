@@ -6,6 +6,7 @@ members = [
     "crates/infrastructure",
     "crates/domain",
     "crates/service",
+    "crates/cli",
 ]
 
 [workspace.package]
@@ -61,7 +62,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0.15"
 
 # Password hashing
-argon2 = { version = "0.5", features = ["std", "getrandom"] }
+argon2 = { version = "0.5", features = ["std"] }
 
 # Authentication
 jsonwebtoken = "9.0"
