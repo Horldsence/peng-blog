@@ -39,8 +39,14 @@ pub trait PostRepository: Send + Sync {
     /// Delete a post by ID
     async fn delete_post(&self, id: Uuid) -> Result<()>;
 
-    /// Get posts by user ID
+    /// Get posts by user ID (including unpublished)
     async fn get_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+
+    /// List published posts by a specific user
+    async fn list_published_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+
+    /// List all posts (including unpublished) - admin only
+    async fn list_all_posts(&self, limit: u64) -> Result<Vec<Post>>;
 }
 
 // ============================================================================

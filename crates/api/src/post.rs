@@ -9,7 +9,7 @@ use domain::post::{CreatePost, UpdatePost};
 
 use crate::error::ApiResult;
 use crate::middleware::auth::Claims;
-use domain::POST_CREATE;
+use domain::{POST_CREATE, USER_MANAGE};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -25,6 +25,7 @@ pub struct ListQuery {
 fn default_limit() -> u64 {
     20
 }
+
 
 // ============================================================================
 // Routes
@@ -53,6 +54,7 @@ where
 
 async fn list_posts<PR, UR, SR, FR, CR, STR>(
     State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    user: Option<Claims>,
     Query(params): Query<ListQuery>,
 ) -> ApiResult<impl IntoResponse>
 where
@@ -64,19 +66,64 @@ where
     STR: StatsRepository + Send + Sync + 'static + Clone,
 {
     let posts = if let Some(user_id_str) = params.user_id {
-        let user_id = Uuid::parse_str(&user_id_str)
+        let target_user_id = Uuid::parse_str(&user_id_str)
             .map_err(|e| crate::error::ApiError::Validation(format!("Invalid user ID: {}", e)))?;
-        state
-            .post_service
-            .list_by_user(user_id, Some(params.limit))
-            .await
-            .map_err(crate::error::ApiError::Domain)?
+        
+        // Check if current user is the owner or admin
+        if let Some(current_user) = user {
+            let current_user_id = uuid::Uuid::parse_str(&current_user.sub)
+                .map_err(|e| crate::error::ApiError::Internal(format!("Invalid user ID: {}", e)))?;
+            
+            // Owner or admin can see all posts (including unpublished)
+            if current_user_id == target_user_id 
+                || (current_user.permissions & USER_MANAGE) != 0 {
+                state
+                    .post_service
+                    .list_by_user(target_user_id, Some(params.limit))
+                    .await
+                    .map_err(crate::error::ApiError::Domain)?
+            } else {
+                // Non-owner, non-admin can only see published posts
+                state
+                    .post_service
+                    .list_published_by_user(target_user_id, Some(params.limit))
+                    .await
+                    .map_err(crate::error::ApiError::Domain)?
+            }
+        } else {
+            // No user logged in - only show published posts
+            state
+                .post_service
+                .list_published_by_user(target_user_id, Some(params.limit))
+                .await
+                .map_err(crate::error::ApiError::Domain)?
+        }
     } else {
-        state
-            .post_service
-            .list_published(Some(params.limit))
-            .await
-            .map_err(crate::error::ApiError::Domain)?
+        // No user_id specified - only show published posts (unless admin)
+        if let Some(current_user) = user {
+            if (current_user.permissions & domain::USER_MANAGE) != 0 {
+                // Admin can see all posts
+                state
+                    .post_service
+                    .list_all(Some(params.limit))
+                    .await
+                    .map_err(crate::error::ApiError::Domain)?
+            } else {
+                // Non-admin can only see published posts
+                state
+                    .post_service
+                    .list_published(Some(params.limit))
+                    .await
+                    .map_err(crate::error::ApiError::Domain)?
+            }
+        } else {
+            // No user logged in - only show published posts
+            state
+                .post_service
+                .list_published(Some(params.limit))
+                .await
+                .map_err(crate::error::ApiError::Domain)?
+        }
     };
     Ok((StatusCode::OK, Json(posts)))
 }
@@ -108,6 +155,7 @@ where
 
 async fn get_post<PR, UR, SR, FR, CR, STR>(
     State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    user: Option<Claims>,
     Path(id): Path<Uuid>,
 ) -> ApiResult<impl IntoResponse>
 where
@@ -123,7 +171,31 @@ where
         .get(id)
         .await
         .map_err(crate::error::ApiError::Domain)?;
-    Ok((StatusCode::OK, Json(post)))
+
+    // Check if post is published
+    if post.is_published() {
+        Ok((StatusCode::OK, Json(post)))
+    } else {
+        // Post is unpublished - check access permissions
+        match user {
+            Some(current_user) => {
+                let current_user_id = uuid::Uuid::parse_str(&current_user.sub)
+                    .map_err(|e| crate::error::ApiError::Internal(format!("Invalid user ID: {}", e)))?;
+                
+                // Allow if user is the owner or has admin privileges
+                if current_user_id == post.user_id 
+                    || (current_user.permissions & USER_MANAGE) != 0 {
+                    Ok((StatusCode::OK, Json(post)))
+                } else {
+                    Err(crate::error::ApiError::NotFound("Post not found".to_string()))
+                }
+            }
+            None => {
+                // No user logged in - cannot access unpublished posts
+                Err(crate::error::ApiError::NotFound("Post not found".to_string()))
+            }
+        }
+    }
 }
 
 async fn update_post<PR, UR, SR, FR, CR, STR>(

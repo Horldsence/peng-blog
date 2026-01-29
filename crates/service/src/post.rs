@@ -118,6 +118,20 @@ impl<R: PostRepository> PostService<R> {
     ) -> Result<Vec<Post>> {
         self.repo.get_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
     }
+
+    /// List all posts (including unpublished) - admin only
+    pub async fn list_all(&self, limit: Option<u64>) -> Result<Vec<Post>> {
+        self.repo.list_all_posts(limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+    }
+
+    /// List published posts by a specific user
+    pub async fn list_published_by_user(
+        &self,
+        user_id: Uuid,
+        limit: Option<u64>,
+    ) -> Result<Vec<Post>> {
+        self.repo.list_published_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+    }
 }
 
 // ============================================================================
@@ -168,6 +182,8 @@ mod tests {
             async fn list_published_posts(&self, limit: u64) -> Result<Vec<Post>>;
             async fn delete_post(&self, id: Uuid) -> Result<()>;
             async fn get_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+            async fn list_published_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+            async fn list_all_posts(&self, limit: u64) -> Result<Vec<Post>>;
         }
     }
 

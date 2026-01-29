@@ -188,6 +188,22 @@ where
     }
 }
 
+// Implement OptionalFromRequestParts to allow Option<Claims> as an extractor
+// This enables routes that work with or without authentication
+impl<S> axum::extract::OptionalFromRequestParts<S> for Claims
+where
+    S: Send + Sync,
+{
+    type Rejection = AuthError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        Ok(<Self as FromRequestParts<S>>::from_request_parts(parts, state).await.ok())
+    }
+}
+
 /// Check if user has the required permission
 ///
 /// Returns Ok(()) if the user has the permission, otherwise returns an error

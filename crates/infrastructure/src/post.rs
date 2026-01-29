@@ -169,4 +169,44 @@ impl PostRepository for PostRepositoryImpl {
             .map(model_to_post)
             .collect()
     }
+
+    async fn list_published_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>> {
+        let models = crate::entity::post::Entity::find()
+            .filter(crate::entity::post::Column::UserId.eq(user_id.to_string()))
+            .filter(crate::entity::post::Column::PublishedAt.is_not_null())
+            .order_by_desc(crate::entity::post::Column::PublishedAt)
+            .limit(limit)
+            .all(self.db.as_ref())
+            .await
+            .map_err(|e| {
+                Error::Internal(format!(
+                    "Failed to list published posts by user: {}",
+                    e
+                ))
+            })?;
+
+        models
+            .into_iter()
+            .map(model_to_post)
+            .collect()
+    }
+
+    async fn list_all_posts(&self, limit: u64) -> Result<Vec<Post>> {
+        let models = crate::entity::post::Entity::find()
+            .order_by_desc(crate::entity::post::Column::CreatedAt)
+            .limit(limit)
+            .all(self.db.as_ref())
+            .await
+            .map_err(|e| {
+                Error::Internal(format!(
+                    "Failed to list all posts: {}",
+                    e
+                ))
+            })?;
+
+        models
+            .into_iter()
+            .map(model_to_post)
+            .collect()
+    }
 }
