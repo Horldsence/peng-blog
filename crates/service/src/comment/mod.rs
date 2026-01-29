@@ -211,19 +211,7 @@ impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
             .await?
             .ok_or_else(|| Error::NotFound("Comment not found".to_string()))?;
 
-        // Verify ownership
-        if is_github_user {
-            if !comment.is_from_github() {
-                return Err(Error::Validation("Not a GitHub user comment".to_string()));
-            }
-        } else if let Some(uid) = user_id {
-            if !comment.is_owned_by(uid) {
-                return Err(Error::Validation("You can only edit your own comments".to_string()));
-            }
-        } else {
-            return Err(Error::Validation("Invalid user".to_string()));
-        }
-
+        self.verify_ownership(&comment, user_id, is_github_user)?;
         comment.update_content(content);
         let updated = self.comment_repo.update_comment(comment).await?;
         self.build_response(&updated).await
@@ -253,19 +241,7 @@ impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
             .await?
             .ok_or_else(|| Error::NotFound("Comment not found".to_string()))?;
 
-        // Verify ownership
-        if is_github_user {
-            if !comment.is_from_github() {
-                return Err(Error::Validation("Not a GitHub user comment".to_string()));
-            }
-        } else if let Some(uid) = user_id {
-            if !comment.is_owned_by(uid) {
-                return Err(Error::Validation("You can only delete your own comments".to_string()));
-            }
-        } else {
-            return Err(Error::Validation("Invalid user".to_string()));
-        }
-
+        self.verify_ownership(&comment, user_id, is_github_user)?;
         self.comment_repo
             .delete_comment(id, user_id, is_github_user)
             .await
@@ -290,6 +266,29 @@ impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
         }
 
         Ok(response)
+    }
+
+    /// Verify ownership of a comment
+    ///
+    /// Checks that the provided user credentials match the comment owner.
+    fn verify_ownership(
+        &self,
+        comment: &Comment,
+        user_id: Option<uuid::Uuid>,
+        is_github_user: bool,
+    ) -> Result<()> {
+        if is_github_user {
+            if !comment.is_from_github() {
+                return Err(Error::Validation("Not a GitHub user comment".to_string()));
+            }
+        } else if let Some(uid) = user_id {
+            if !comment.is_owned_by(uid) {
+                return Err(Error::Validation("You don't own this comment".to_string()));
+            }
+        } else {
+            return Err(Error::Validation("Invalid user".to_string()));
+        }
+        Ok(())
     }
 }
 

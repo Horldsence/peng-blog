@@ -183,12 +183,7 @@ async fn handle_db_command(command: DbCommands, database_url: &str) -> anyhow::R
         }
         DbCommands::Reset { force } => {
             if !force {
-                let confirm = Confirm::new()
-                    .with_prompt("Are you sure you want to reset database? This will delete ALL data.")
-                    .default(false)
-                    .interact()?;
-                
-                if !confirm {
+                if !confirm_action("Are you sure you want to reset database? This will delete ALL data.", false)? {
                     println!("{}", style("Operation cancelled").yellow());
                     return Ok(());
                 }
@@ -226,6 +221,29 @@ async fn handle_db_command(command: DbCommands, database_url: &str) -> anyhow::R
     }
 }
 
+/// Helper: Parse user ID from string
+fn parse_user_id(id: &str) -> anyhow::Result<uuid::Uuid> {
+    Uuid::parse_str(id).map_err(|e| anyhow::anyhow!("Invalid user ID: {}", e))
+}
+
+/// Helper: Find user by ID with proper error handling
+async fn find_user(user_repo: &Arc<UserRepositoryImpl>, id: &str) -> anyhow::Result<domain::User> {
+    let user_id = parse_user_id(id)?;
+    user_repo
+        .find_by_id(user_id)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("User not found"))
+}
+
+/// Helper: Prompt user for confirmation (returns true if confirmed, false if cancelled)
+fn confirm_action(prompt: &str, default: bool) -> anyhow::Result<bool> {
+    Confirm::new()
+        .with_prompt(prompt)
+        .default(default)
+        .interact()
+        .map_err(|e| anyhow::anyhow!("Confirmation failed: {}", e))
+}
+
 async fn list_users(user_repo: &Arc<UserRepositoryImpl>) -> anyhow::Result<()> {
     println!("\n{}", style("Users").bold().cyan());
     println!("{}", "─".repeat(80));
@@ -258,13 +276,7 @@ async fn list_users(user_repo: &Arc<UserRepositoryImpl>) -> anyhow::Result<()> {
 }
 
 async fn show_user(user_repo: &Arc<UserRepositoryImpl>, id: &str) -> anyhow::Result<()> {
-    let user_id = Uuid::parse_str(id)
-        .map_err(|e| anyhow::anyhow!("Invalid user ID: {}", e))?;
-
-    let user = user_repo
-        .find_by_id(user_id)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+    let user = find_user(user_repo, id).await?;
     
     println!("\n{}", style("User Details").bold().cyan());
     println!("{}", "─".repeat(40));
@@ -280,6 +292,7 @@ async fn show_user(user_repo: &Arc<UserRepositoryImpl>, id: &str) -> anyhow::Res
 
     Ok(())
 }
+
 
 async fn create_user(
     user_repo: &Arc<UserRepositoryImpl>,
@@ -333,21 +346,14 @@ async fn delete_user(
     id: &str,
     force: bool,
 ) -> anyhow::Result<()> {
-    let user_id = Uuid::parse_str(id)
-        .map_err(|e| anyhow::anyhow!("Invalid user ID: {}", e))?;
-
+    let user_id = parse_user_id(id)?;
     let user = user_repo
         .find_by_id(user_id)
         .await?
         .ok_or_else(|| anyhow::anyhow!("User not found"))?;
     
     if !force {
-        let confirm = Confirm::new()
-            .with_prompt(&format!("Are you sure you want to delete user '{}'?", user.username))
-            .default(false)
-            .interact()?;
-        
-        if !confirm {
+        if !confirm_action(&format!("Are you sure you want to delete user '{}'?", user.username), false)? {
             println!("{}", style("Operation cancelled").yellow());
             return Ok(());
         }
@@ -366,13 +372,7 @@ async fn reset_password(
     password: Option<String>,
     non_interactive: bool,
 ) -> anyhow::Result<()> {
-    let user_id = Uuid::parse_str(id)
-        .map_err(|e| anyhow::anyhow!("Invalid user ID: {}", e))?;
-
-    let user = user_repo
-        .find_by_id(user_id)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+    let user = find_user(user_repo, id).await?;
     println!("\nResetting password for user: {}", style(&user.username).bold());
 
     let password = match password {
@@ -386,11 +386,10 @@ async fn reset_password(
             .interact()?,
     };
 
-    // Update password using repository method
-    user_repo.update_password(user_id, password).await?;
+    user_repo.update_password(user.id, password).await?;
 
     println!("\n{}", style("✓ Password reset successfully").green());
-    println!("User ID: {}", user_id);
+    println!("User ID: {}", user.id);
 
     Ok(())
 }
@@ -400,13 +399,7 @@ async fn promote_user(
     id: &str,
     force: bool,
 ) -> anyhow::Result<()> {
-    let user_id = Uuid::parse_str(id)
-        .map_err(|e| anyhow::anyhow!("Invalid user ID: {}", e))?;
-
-    let user = user_repo
-        .find_by_id(user_id)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+    let user = find_user(user_repo, id).await?;
     
     if user.permissions == ADMIN_PERMISSIONS {
         println!("{}", style("User is already an admin").yellow());
@@ -414,19 +407,13 @@ async fn promote_user(
     }
 
     if !force {
-        let confirm = Confirm::new()
-            .with_prompt(&format!("Are you sure you want to promote '{}' to admin?", user.username))
-            .default(true)
-            .interact()?;
-        
-        if !confirm {
+        if !confirm_action(&format!("Are you sure you want to promote '{}' to admin?", user.username), true)? {
             println!("{}", style("Operation cancelled").yellow());
             return Ok(());
         }
     }
 
-
-    user_repo.update_permissions(user_id, ADMIN_PERMISSIONS).await?;
+    user_repo.update_permissions(user.id, ADMIN_PERMISSIONS).await?;
 
     println!("\n{}", style("✓ User promoted to admin").green());
 
@@ -438,13 +425,7 @@ async fn demote_user(
     id: &str,
     force: bool,
 ) -> anyhow::Result<()> {
-    let user_id = Uuid::parse_str(id)
-        .map_err(|e| anyhow::anyhow!("Invalid user ID: {}", e))?;
-
-    let user = user_repo
-        .find_by_id(user_id)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+    let user = find_user(user_repo, id).await?;
     
     if user.permissions != ADMIN_PERMISSIONS {
         println!("{}", style("User is not an admin").yellow());
@@ -452,19 +433,13 @@ async fn demote_user(
     }
 
     if !force {
-        let confirm = Confirm::new()
-            .with_prompt(&format!("Are you sure you want to demote '{}' from admin?", user.username))
-            .default(false)
-            .interact()?;
-        
-        if !confirm {
+        if !confirm_action(&format!("Are you sure you want to demote '{}' from admin?", user.username), false)? {
             println!("{}", style("Operation cancelled").yellow());
             return Ok(());
         }
     }
 
-
-    user_repo.update_permissions(user_id, DEFAULT_USER_PERMISSIONS).await?;
+    user_repo.update_permissions(user.id, DEFAULT_USER_PERMISSIONS).await?;
 
     println!("\n{}", style("✓ User demoted from admin").green());
 
@@ -472,13 +447,19 @@ async fn demote_user(
 }
 
 fn format_permissions(permissions: u64) -> String {
-    let mut flags = vec![];
+    const PERMISSION_NAMES: [(u64, &str); 5] = [
+        (1 << 0, "POST_CREATE"),
+        (1 << 1, "POST_UPDATE"),
+        (1 << 2, "POST_DELETE"),
+        (1 << 3, "POST_PUBLISH"),
+        (1 << 4, "USER_MANAGE"),
+    ];
     
-    if permissions & (1 << 0) != 0 { flags.push("POST_CREATE"); }
-    if permissions & (1 << 1) != 0 { flags.push("POST_UPDATE"); }
-    if permissions & (1 << 2) != 0 { flags.push("POST_DELETE"); }
-    if permissions & (1 << 3) != 0 { flags.push("POST_PUBLISH"); }
-    if permissions & (1 << 4) != 0 { flags.push("USER_MANAGE"); }
+    let flags: Vec<&str> = PERMISSION_NAMES
+        .iter()
+        .filter(|(mask, _)| permissions & mask != 0)
+        .map(|(_, name)| *name)
+        .collect();
     
     if flags.is_empty() {
         "NONE".to_string()

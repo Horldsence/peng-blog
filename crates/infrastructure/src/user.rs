@@ -175,17 +175,16 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn update_password(&self, user_id: Uuid, new_password: String) -> Result<()> {
-        // Check if user exists
+        // Load user and check existence in one query
         let model = crate::entity::user::Entity::find_by_id(user_id.to_string())
             .one(self.db.as_ref())
             .await
             .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?
             .ok_or_else(|| Error::NotFound(format!("User with id {} not found", user_id)))?;
 
-        // Hash new password
+        // Hash new password and update
         let password_hash = self.hash_password(&new_password)?;
-
-        // Update password
+        
         crate::entity::user::ActiveModel {
             id: Set(model.id),
             username: Set(model.username),
@@ -201,18 +200,15 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn delete_user(&self, user_id: Uuid) -> Result<()> {
-        // Check if user exists
-        crate::entity::user::Entity::find_by_id(user_id.to_string())
-            .one(self.db.as_ref())
-            .await
-            .map_err(|e| Error::Internal(format!("Failed to find user: {}", e)))?
-            .ok_or_else(|| Error::NotFound(format!("User with id {} not found", user_id)))?;
-
-        // Delete user (cascade will delete related records)
-        crate::entity::user::Entity::delete_by_id(user_id.to_string())
+        // Delete user and check if it existed (cascade will delete related records)
+        let result = crate::entity::user::Entity::delete_by_id(user_id.to_string())
             .exec(self.db.as_ref())
             .await
             .map_err(|e| Error::Internal(format!("Failed to delete user: {}", e)))?;
+
+        if result.rows_affected == 0 {
+            return Err(Error::NotFound(format!("User with id {} not found", user_id)));
+        }
 
         Ok(())
     }

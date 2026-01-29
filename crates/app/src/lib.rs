@@ -64,11 +64,12 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     tokio::fs::create_dir_all(&upload_dir).await?;
 
     // Create all repositories
-    let post_repo = Arc::new(PostRepositoryImpl::new(Arc::clone(&db)));
-    let user_repo = Arc::new(UserRepositoryImpl::new(Arc::clone(&db)));
-    let session_repo = Arc::new(SessionRepositoryImpl::new(Arc::clone(&db)));
-    let file_repo = Arc::new(FileRepositoryImpl::new(Arc::clone(&db)));
-    let comment_repo = Arc::new(CommentRepositoryImpl::new(Arc::clone(&db)));
+    let db_clone = Arc::clone(&db);
+    let post_repo = Arc::new(PostRepositoryImpl::new(db_clone.clone()));
+    let user_repo = Arc::new(UserRepositoryImpl::new(db_clone.clone()));
+    let session_repo = Arc::new(SessionRepositoryImpl::new(db_clone.clone()));
+    let file_repo = Arc::new(FileRepositoryImpl::new(db_clone.clone()));
+    let comment_repo = Arc::new(CommentRepositoryImpl::new(db_clone));
     let stats_repo = Arc::new(StatsRepositoryImpl::new(db));
 
     // Create all services
