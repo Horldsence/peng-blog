@@ -1,0 +1,52 @@
+[package]
+name = "cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[package.metadata.default-run]
+name = "peng-blog"
+
+[[bin]]
+name = "peng-blog"
+path = "src/main.rs"
+
+[dependencies]
+# Domain and infrastructure
+domain = { path = "../domain" }
+service = { path = "../service" }
+infrastructure = { path = "../infrastructure" }
+app = { path = "../app" }
+
+# Async runtime
+tokio = { workspace = true }
+
+# CLI framework
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Interactive prompts
+dialoguer = "0.11"
+console = "0.15"
+
+# Password hashing (already has std feature in workspace)
+argon2 = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Database
+sea-orm = { workspace = true }
+
+# Environment variables
+dotenvy = { workspace = true }
+
+# UUID
+uuid = { workspace = true }
+
+# Date/time
+chrono = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
