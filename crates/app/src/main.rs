@@ -68,16 +68,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let stats_service = StatsService::new(stats_repo);
     let auth_state = AuthState::new(&jwt_secret);
 
-    let state = AppState::new(
-        post_service,
-        user_service,
-        session_service,
-        file_service,
-        comment_service,
-        stats_service,
-        auth_state,
-        upload_dir,
-    );
+    let state = AppState::builder()
+        .post_service(post_service)
+        .user_service(user_service)
+        .session_service(session_service)
+        .file_service(file_service)
+        .comment_service(comment_service)
+        .stats_service(stats_service)
+        .auth_state(auth_state)
+        .upload_dir(upload_dir)
+        .build();
 
     let app = axum::Router::new()
         .nest("/api", routes::<

@@ -105,7 +105,7 @@ where
         .stats_service
         .record_view(input)
         .await
-        .map_err(|e| ApiError::Domain(e))?;
+        .map_err(ApiError::Domain)?;
 
     Ok((
         StatusCode::OK,
@@ -136,7 +136,7 @@ where
         .stats_service
         .get_post_stats(post_id)
         .await
-        .map_err(|e| ApiError::Domain(e))?;
+        .map_err(ApiError::Domain)?;
 
     Ok((StatusCode::OK, Json(stats)))
 }

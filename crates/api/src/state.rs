@@ -69,70 +69,173 @@ where
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
 {
-    /// Create a new application state
-    ///
-    /// # Arguments
-    /// * `post_service` - Post service instance
-    /// * `user_service` - User service instance
-    /// * `session_service` - Session service instance
-    /// * `file_service` - File service instance
-    /// * `comment_service` - Comment service instance
-    /// * `stats_service` - Stats service instance
-    /// * `auth_state` - Authentication state for JWT operations
-    /// * `upload_dir` - Directory for file uploads
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// use api::{AppState, AuthState};
-    /// use service::{PostService, UserService, SessionService, FileService, CommentService, StatsService};
-    /// use infrastructure::{PostRepositoryImpl, UserRepositoryImpl, SessionRepositoryImpl, FileRepositoryImpl, CommentRepositoryImpl, StatsRepositoryImpl};
-    /// use std::sync::Arc;
-    ///
-    /// // Initialize database connection
-    /// let db = establish_connection(&database_url).await?;
-    /// let post_repo = Arc::new(PostRepositoryImpl::new(db.clone()));
-    /// let user_repo = Arc::new(UserRepositoryImpl::new(db.clone()));
-    /// let session_repo = Arc::new(SessionRepositoryImpl::new(db.clone()));
-    /// let file_repo = Arc::new(FileRepositoryImpl::new(db.clone()));
-    /// let comment_repo = Arc::new(CommentRepositoryImpl::new(db.clone()));
-    /// let stats_repo = Arc::new(StatsRepositoryImpl::new(db));
-    ///
-    /// let post_service = PostService::new(post_repo);
-    /// let user_service = UserService::new(user_repo.clone());
-    /// let session_service = SessionService::new(session_repo);
-    /// let file_service = FileService::new(file_repo, "/uploads".to_string(), "http://example.com".to_string());
-    /// let comment_service = CommentService::new(comment_repo, user_repo, "client_id".to_string(), "client_secret".to_string());
-    /// let stats_service = StatsService::new(stats_repo);
-    /// let auth_state = AuthState::new("your-secret-key");
-    ///
-    /// let state = AppState::new(post_service, user_service, session_service, file_service, comment_service, stats_service, auth_state, "/uploads".to_string());
-    /// # Ok::<(), Box<dyn std::error::Error>>(())
-    /// ```
-    pub fn new(
-        post_service: PostService<PR>,
-        user_service: UserService<UR>,
-        session_service: SessionService<SR>,
-        file_service: FileService<FR>,
-        comment_service: CommentService<CR, UR>,
-        stats_service: StatsService<STR>,
-        auth_state: AuthState,
-        upload_dir: String,
-    ) -> Self {
-        Self {
-            post_service: Arc::new(post_service),
-            user_service: Arc::new(user_service),
-            session_service: Arc::new(session_service),
-            file_service: Arc::new(file_service),
-            comment_service: Arc::new(comment_service),
-            stats_service: Arc::new(stats_service),
-            auth_state,
-            upload_dir,
-        }
+    /// Create a new builder for AppState
+    pub fn builder() -> AppStateBuilder<PR, UR, SR, FR, CR, STR> {
+        AppStateBuilder::default()
     }
 
     /// Get a reference to the authentication state
     pub fn auth_state(&self) -> &AuthState {
         &self.auth_state
+    }
+}
+
+/// Builder for creating AppState instances
+///
+/// This builder follows the builder pattern to provide a fluent API
+/// for constructing AppState with multiple parameters.
+///
+/// # Example
+///
+/// ```ignore
+/// use api::{AppState, AuthState};
+/// use service::{PostService, UserService, SessionService, FileService, CommentService, StatsService};
+/// use infrastructure::{PostRepositoryImpl, UserRepositoryImpl, SessionRepositoryImpl, FileRepositoryImpl, CommentRepositoryImpl, StatsRepositoryImpl};
+/// use std::sync::Arc;
+///
+/// // Initialize database connection
+/// let db = establish_connection(&database_url).await?;
+/// let post_repo = Arc::new(PostRepositoryImpl::new(db.clone()));
+/// let user_repo = Arc::new(UserRepositoryImpl::new(db.clone()));
+/// let session_repo = Arc::new(SessionRepositoryImpl::new(db.clone()));
+/// let file_repo = Arc::new(FileRepositoryImpl::new(db.clone()));
+/// let comment_repo = Arc::new(CommentRepositoryImpl::new(db.clone()));
+/// let stats_repo = Arc::new(StatsRepositoryImpl::new(db));
+///
+/// let post_service = PostService::new(post_repo);
+/// let user_service = UserService::new(user_repo.clone());
+/// let session_service = SessionService::new(session_repo);
+/// let file_service = FileService::new(file_repo, "/uploads".to_string(), "http://example.com".to_string());
+/// let comment_service = CommentService::new(comment_repo, user_repo, "client_id".to_string(), "client_secret".to_string());
+/// let stats_service = StatsService::new(stats_repo);
+/// let auth_state = AuthState::new("your-secret-key");
+///
+/// let state = AppState::builder()
+///     .post_service(post_service)
+///     .user_service(user_service)
+///     .session_service(session_service)
+///     .file_service(file_service)
+///     .comment_service(comment_service)
+///     .stats_service(stats_service)
+///     .auth_state(auth_state)
+///     .upload_dir("/uploads".to_string())
+///     .build();
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub struct AppStateBuilder<PR, UR, SR, FR, CR, STR>
+where
+    PR: PostRepository + Send + Sync + 'static + Clone,
+    UR: UserRepository + Send + Sync + 'static + Clone,
+    SR: SessionRepository + Send + Sync + 'static + Clone,
+    FR: FileRepository + Send + Sync + 'static + Clone,
+    CR: CommentRepository + Send + Sync + 'static + Clone,
+    STR: StatsRepository + Send + Sync + 'static + Clone,
+{
+    post_service: Option<PostService<PR>>,
+    user_service: Option<UserService<UR>>,
+    session_service: Option<SessionService<SR>>,
+    file_service: Option<FileService<FR>>,
+    comment_service: Option<CommentService<CR, UR>>,
+    stats_service: Option<StatsService<STR>>,
+    auth_state: Option<AuthState>,
+    upload_dir: Option<String>,
+}
+
+impl<PR, UR, SR, FR, CR, STR> Default for AppStateBuilder<PR, UR, SR, FR, CR, STR>
+where
+    PR: PostRepository + Send + Sync + 'static + Clone,
+    UR: UserRepository + Send + Sync + 'static + Clone,
+    SR: SessionRepository + Send + Sync + 'static + Clone,
+    FR: FileRepository + Send + Sync + 'static + Clone,
+    CR: CommentRepository + Send + Sync + 'static + Clone,
+    STR: StatsRepository + Send + Sync + 'static + Clone,
+{
+    fn default() -> Self {
+        Self {
+            post_service: None,
+            user_service: None,
+            session_service: None,
+            file_service: None,
+            comment_service: None,
+            stats_service: None,
+            auth_state: None,
+            upload_dir: None,
+        }
+    }
+}
+
+impl<PR, UR, SR, FR, CR, STR> AppStateBuilder<PR, UR, SR, FR, CR, STR>
+where
+    PR: PostRepository + Send + Sync + 'static + Clone,
+    UR: UserRepository + Send + Sync + 'static + Clone,
+    SR: SessionRepository + Send + Sync + 'static + Clone,
+    FR: FileRepository + Send + Sync + 'static + Clone,
+    CR: CommentRepository + Send + Sync + 'static + Clone,
+    STR: StatsRepository + Send + Sync + 'static + Clone,
+{
+    /// Set the post service
+    pub fn post_service(mut self, service: PostService<PR>) -> Self {
+        self.post_service = Some(service);
+        self
+    }
+
+    /// Set the user service
+    pub fn user_service(mut self, service: UserService<UR>) -> Self {
+        self.user_service = Some(service);
+        self
+    }
+
+    /// Set the session service
+    pub fn session_service(mut self, service: SessionService<SR>) -> Self {
+        self.session_service = Some(service);
+        self
+    }
+
+    /// Set the file service
+    pub fn file_service(mut self, service: FileService<FR>) -> Self {
+        self.file_service = Some(service);
+        self
+    }
+
+    /// Set the comment service
+    pub fn comment_service(mut self, service: CommentService<CR, UR>) -> Self {
+        self.comment_service = Some(service);
+        self
+    }
+
+    /// Set the stats service
+    pub fn stats_service(mut self, service: StatsService<STR>) -> Self {
+        self.stats_service = Some(service);
+        self
+    }
+
+    /// Set the auth state
+    pub fn auth_state(mut self, state: AuthState) -> Self {
+        self.auth_state = Some(state);
+        self
+    }
+
+    /// Set the upload directory
+    pub fn upload_dir(mut self, dir: String) -> Self {
+        self.upload_dir = Some(dir);
+        self
+    }
+
+    /// Build the AppState
+    ///
+    /// # Panics
+    ///
+    /// Panics if any required field is not set.
+    pub fn build(self) -> AppState<PR, UR, SR, FR, CR, STR> {
+        AppState {
+            post_service: Arc::new(self.post_service.expect("post_service must be set")),
+            user_service: Arc::new(self.user_service.expect("user_service must be set")),
+            session_service: Arc::new(self.session_service.expect("session_service must be set")),
+            file_service: Arc::new(self.file_service.expect("file_service must be set")),
+            comment_service: Arc::new(self.comment_service.expect("comment_service must be set")),
+            stats_service: Arc::new(self.stats_service.expect("stats_service must be set")),
+            auth_state: self.auth_state.expect("auth_state must be set"),
+            upload_dir: self.upload_dir.expect("upload_dir must be set"),
+        }
     }
 }
