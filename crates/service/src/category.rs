@@ -1,5 +1,5 @@
 use crate::CategoryRepository;
-use domain::{Category, CreateCategory, Result, UpdateCategory};
+use domain::{Category, CreateCategory, Error, Result, UpdateCategory};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -19,15 +19,10 @@ impl CategoryService {
         self.validate_name(&input.name)?;
 
         if let Some(parent_id) = input.parent_id {
-            self.repo.get_category(parent_id).await?.ok_or_else(|| {
-                domain::Error::Validation("Parent category not found".to_string())
-            })?;
-
-            if parent_id == input.parent_id.unwrap() {
-                return Err(domain::Error::Validation(
-                    "Category cannot be its own parent".to_string(),
-                ));
-            }
+            self.repo
+                .get_category(parent_id)
+                .await?
+                .ok_or_else(|| Error::Validation("Parent category not found".to_string()))?;
         }
 
         self.repo
@@ -39,14 +34,14 @@ impl CategoryService {
         self.repo
             .get_category(id)
             .await?
-            .ok_or_else(|| domain::Error::NotFound("Category not found".to_string()))
+            .ok_or_else(|| Error::NotFound("Category not found".to_string()))
     }
 
     pub async fn get_by_slug(&self, slug: &str) -> Result<Category> {
         self.repo
             .get_category_by_slug(slug)
             .await?
-            .ok_or_else(|| domain::Error::NotFound("Category not found".to_string()))
+            .ok_or_else(|| Error::NotFound("Category not found".to_string()))
     }
 
     pub async fn list(&self) -> Result<Vec<Category>> {
@@ -56,14 +51,15 @@ impl CategoryService {
     pub async fn update(&self, id: Uuid, input: UpdateCategory) -> Result<Category> {
         if let Some(parent_id) = input.parent_id {
             if parent_id == id {
-                return Err(domain::Error::Validation(
+                return Err(Error::Validation(
                     "Category cannot be its own parent".to_string(),
                 ));
             }
 
-            self.repo.get_category(parent_id).await?.ok_or_else(|| {
-                domain::Error::Validation("Parent category not found".to_string())
-            })?;
+            self.repo
+                .get_category(parent_id)
+                .await?
+                .ok_or_else(|| Error::Validation("Parent category not found".to_string()))?;
         }
 
         if let Some(ref name) = input.name {
@@ -82,21 +78,19 @@ impl CategoryService {
     pub async fn get_children(&self, parent_id: Option<Uuid>) -> Result<Vec<Category>> {
         self.repo.get_children(parent_id).await
     }
-}
 
-impl CategoryService {
+    // Private validation methods
+
     fn validate_slug(&self, slug: &str) -> Result<()> {
         if slug.trim().is_empty() {
-            return Err(domain::Error::Validation(
-                "Slug cannot be empty".to_string(),
-            ));
+            return Err(Error::Validation("Slug cannot be empty".to_string()));
         }
 
         if !slug
             .chars()
             .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
         {
-            return Err(domain::Error::Validation(
+            return Err(Error::Validation(
                 "Slug can only contain letters, numbers, hyphens and underscores".to_string(),
             ));
         }
@@ -106,13 +100,11 @@ impl CategoryService {
 
     fn validate_name(&self, name: &str) -> Result<()> {
         if name.trim().is_empty() {
-            return Err(domain::Error::Validation(
-                "Name cannot be empty".to_string(),
-            ));
+            return Err(Error::Validation("Name cannot be empty".to_string()));
         }
 
         if name.len() > 100 {
-            return Err(domain::Error::Validation(
+            return Err(Error::Validation(
                 "Name too long (max 100 characters)".to_string(),
             ));
         }

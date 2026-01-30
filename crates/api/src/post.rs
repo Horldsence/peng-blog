@@ -247,7 +247,7 @@ async fn set_post_category(
     let category_id: Option<Uuid> = input
         .get("category_id")
         .and_then(|v| v.as_str())
-        .map(|s| Uuid::parse_str(s))
+        .map(Uuid::parse_str)
         .transpose()
         .map_err(|e| crate::error::ApiError::Validation(format!("Invalid category_id: {}", e)))?;
 
