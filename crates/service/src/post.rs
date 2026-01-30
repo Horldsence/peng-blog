@@ -5,8 +5,8 @@
 
 use crate::repository::PostRepository;
 use domain::{Error, Post, Result, POST_DELETE, POST_PUBLISH, POST_UPDATE};
-use uuid::Uuid;
 use std::sync::Arc;
+use uuid::Uuid;
 
 // ============================================================================
 // Constants
@@ -19,13 +19,13 @@ const DEFAULT_LIST_LIMIT: u64 = 20;
 ///
 /// This service encapsulates all business rules for post operations.
 /// It uses dependency injection for repositories, making it testable.
-pub struct PostService<R: PostRepository> {
-    repo: Arc<R>,
+pub struct PostService {
+    repo: Arc<dyn PostRepository>,
 }
 
-impl<R: PostRepository> PostService<R> {
+impl PostService {
     /// Create a new PostService with given repository
-    pub fn new(repo: Arc<R>) -> Self {
+    pub fn new(repo: Arc<dyn PostRepository>) -> Self {
         Self { repo }
     }
 
@@ -54,7 +54,12 @@ impl<R: PostRepository> PostService<R> {
 
         let mut post = self.repo.get_post(id).await?;
 
-        domain::check_ownership_or_admin(post.user_id, updater_id, updater_permissions, POST_DELETE)?;
+        domain::check_ownership_or_admin(
+            post.user_id,
+            updater_id,
+            updater_permissions,
+            POST_DELETE,
+        )?;
 
         // Update fields if provided
         if let Some(title) = title {
@@ -107,21 +112,23 @@ impl<R: PostRepository> PostService<R> {
 
     /// List published posts
     pub async fn list_published(&self, limit: Option<u64>) -> Result<Vec<Post>> {
-        self.repo.list_published_posts(limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+        self.repo
+            .list_published_posts(limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 
     /// Get posts by user
-    pub async fn list_by_user(
-        &self,
-        user_id: Uuid,
-        limit: Option<u64>,
-    ) -> Result<Vec<Post>> {
-        self.repo.get_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+    pub async fn list_by_user(&self, user_id: Uuid, limit: Option<u64>) -> Result<Vec<Post>> {
+        self.repo
+            .get_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 
     /// List all posts (including unpublished) - admin only
     pub async fn list_all(&self, limit: Option<u64>) -> Result<Vec<Post>> {
-        self.repo.list_all_posts(limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+        self.repo
+            .list_all_posts(limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 
     /// List published posts by a specific user
@@ -130,7 +137,9 @@ impl<R: PostRepository> PostService<R> {
         user_id: Uuid,
         limit: Option<u64>,
     ) -> Result<Vec<Post>> {
-        self.repo.list_published_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+        self.repo
+            .list_published_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 
     /// Set category for a post with permission and ownership checks
@@ -192,16 +201,16 @@ impl<R: PostRepository> PostService<R> {
         category_id: Uuid,
         limit: Option<u64>,
     ) -> Result<Vec<Post>> {
-        self.repo.get_posts_by_category(category_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+        self.repo
+            .get_posts_by_category(category_id, limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 
     /// List published posts by tag
-    pub async fn list_by_tag(
-        &self,
-        tag_id: Uuid,
-        limit: Option<u64>,
-    ) -> Result<Vec<Post>> {
-        self.repo.get_posts_by_tag(tag_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+    pub async fn list_by_tag(&self, tag_id: Uuid, limit: Option<u64>) -> Result<Vec<Post>> {
+        self.repo
+            .get_posts_by_tag(tag_id, limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 }
 
@@ -209,7 +218,7 @@ impl<R: PostRepository> PostService<R> {
 // Private Validation Helpers
 // ============================================================================
 
-impl<R: PostRepository> PostService<R> {
+impl PostService {
     fn validate_title(&self, title: &str) -> Result<()> {
         if title.trim().is_empty() {
             return Err(Error::Validation("Title cannot be empty".to_string()));
@@ -267,8 +276,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_post_validates_empty_title() {
-        let mock_repo = MockPostRepo::new();
-        let service = PostService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockPostRepo::new());
+        let service = PostService::new(mock_repo);
 
         let user_id = Uuid::new_v4();
 
@@ -285,8 +294,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_post_validates_title_too_long() {
-        let mock_repo = MockPostRepo::new();
-        let service = PostService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockPostRepo::new());
+        let service = PostService::new(mock_repo);
 
         let user_id = Uuid::new_v4();
         let long_title = "a".repeat(201);
@@ -304,8 +313,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_post_validates_long_content() {
-        let mock_repo = MockPostRepo::new();
-        let service = PostService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockPostRepo::new());
+        let service = PostService::new(mock_repo);
 
         let _long_content = "a".repeat(10001);
         let user_id = Uuid::new_v4();
@@ -323,15 +332,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_requires_permission() {
-        let mock_repo = MockPostRepo::new();
-        let service = PostService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockPostRepo::new());
+        let service = PostService::new(mock_repo);
 
         let post_id = Uuid::new_v4();
         let user_id = Uuid::new_v4();
         let no_permissions = 0;
 
         let result = service
-            .update(post_id, None, Some("new content".to_string()), user_id, no_permissions)
+            .update(
+                post_id,
+                None,
+                Some("new content".to_string()),
+                user_id,
+                no_permissions,
+            )
             .await;
 
         assert!(result.is_err());
@@ -343,8 +358,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_post_requires_permission() {
-        let mock_repo = MockPostRepo::new();
-        let service = PostService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockPostRepo::new());
+        let service = PostService::new(mock_repo);
 
         let post_id = Uuid::new_v4();
         let user_id = Uuid::new_v4();

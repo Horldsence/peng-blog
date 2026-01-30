@@ -1,3 +1,3 @@
 pub mod auth;
 
-pub use auth::{AuthState, Claims, require_permission};
+pub use auth::{require_permission, AuthState, Claims};

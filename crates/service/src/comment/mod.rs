@@ -9,8 +9,8 @@
 //! - No special cases - all comments follow the same rules
 
 use crate::repository::{CommentRepository, UserRepository};
-use domain::{Comment, CommentResponse, CreateComment, Error, Result};
 use domain::comment::{CreateCommentGitHub, GitHubTokenResponse, GitHubUser};
+use domain::{Comment, CommentResponse, CreateComment, Error, Result};
 use reqwest::Client;
 use std::sync::Arc;
 
@@ -22,14 +22,15 @@ use std::sync::Arc;
 /// - Listing, updating, and deleting comments
 ///
 /// All operations are database-backed through the CommentRepository trait.
-pub struct CommentService<CR: CommentRepository, UR: UserRepository> {
-    comment_repo: Arc<CR>,
-    user_repo: Arc<UR>,
+#[derive(Clone)]
+pub struct CommentService {
+    comment_repo: Arc<dyn CommentRepository>,
+    user_repo: Arc<dyn UserRepository>,
     github_client_id: String,
     github_client_secret: String,
 }
 
-impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
+impl CommentService {
     /// Create a new comment service
     ///
     /// # Arguments
@@ -38,8 +39,8 @@ impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
     /// * `github_client_id` - GitHub OAuth client ID
     /// * `github_client_secret` - GitHub OAuth client secret
     pub fn new(
-        comment_repo: Arc<CR>,
-        user_repo: Arc<UR>,
+        comment_repo: Arc<dyn CommentRepository>,
+        user_repo: Arc<dyn UserRepository>,
         github_client_id: String,
         github_client_secret: String,
     ) -> Self {
@@ -127,7 +128,10 @@ impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
         // Step 2: Get user information
         let github_user: GitHubUser = client
             .get("https://api.github.com/user")
-            .header("Authorization", format!("Bearer {}", token_response.access_token))
+            .header(
+                "Authorization",
+                format!("Bearer {}", token_response.access_token),
+            )
             .header("User-Agent", "peng-blog")
             .send()
             .await
@@ -173,10 +177,7 @@ impl<CR: CommentRepository, UR: UserRepository> CommentService<CR, UR> {
         post_id: uuid::Uuid,
         limit: u64,
     ) -> Result<Vec<CommentResponse>> {
-        let comments = self
-            .comment_repo
-            .list_post_comments(post_id, limit)
-            .await?;
+        let comments = self.comment_repo.list_post_comments(post_id, limit).await?;
 
         let mut responses = Vec::new();
         for comment in comments {
@@ -320,7 +321,11 @@ mod tests {
             Ok(comments.get(&id).cloned())
         }
 
-        async fn list_post_comments(&self, _post_id: uuid::Uuid, _limit: u64) -> Result<Vec<Comment>> {
+        async fn list_post_comments(
+            &self,
+            _post_id: uuid::Uuid,
+            _limit: u64,
+        ) -> Result<Vec<Comment>> {
             Ok(Vec::new())
         }
 
@@ -383,8 +388,17 @@ mod tests {
             Ok(None)
         }
 
-        async fn update_permissions(&self, _user_id: uuid::Uuid, _permissions: u64) -> Result<User> {
-            Ok(User::new(uuid::Uuid::new_v4(), "test".to_string(), "hash".to_string(), 0))
+        async fn update_permissions(
+            &self,
+            _user_id: uuid::Uuid,
+            _permissions: u64,
+        ) -> Result<User> {
+            Ok(User::new(
+                uuid::Uuid::new_v4(),
+                "test".to_string(),
+                "hash".to_string(),
+                0,
+            ))
         }
 
         async fn list_users(&self, _limit: u64) -> Result<Vec<User>> {

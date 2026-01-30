@@ -11,8 +11,10 @@
 use crate::entity::comment;
 use crate::entity::prelude::*;
 use async_trait::async_trait;
-use domain::{Error, Result, Comment};
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Set};
+use domain::{Comment, Error, Result};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Set,
+};
 use std::sync::Arc;
 
 /// Concrete implementation of CommentRepository
@@ -83,7 +85,10 @@ impl service::CommentRepository for CommentRepositoryImpl {
             .await
             .map_err(|e| Error::Internal(format!("Failed to list comments: {}", e)))?;
 
-        Ok(models.into_iter().map(|m| self.model_to_domain(m)).collect())
+        Ok(models
+            .into_iter()
+            .map(|m| self.model_to_domain(m))
+            .collect())
     }
 
     /// Update a comment
@@ -128,7 +133,9 @@ impl service::CommentRepository for CommentRepositoryImpl {
             }
         } else if let Some(uid) = user_id {
             if model.user_id != Some(uid.to_string()) {
-                return Err(Error::Validation("You can only delete your own comments".to_string()));
+                return Err(Error::Validation(
+                    "You can only delete your own comments".to_string(),
+                ));
             }
         } else {
             return Err(Error::Validation("Invalid user".to_string()));
@@ -158,13 +165,9 @@ impl CommentRepositoryImpl {
     /// Convert database model to domain type
     fn model_to_domain(&self, model: comment::Model) -> Comment {
         Comment {
-            id: uuid::Uuid::parse_str(&model.id)
-                .unwrap_or_else(|_| uuid::Uuid::new_v4()),
-            post_id: uuid::Uuid::parse_str(&model.post_id)
-                .unwrap_or_else(|_| uuid::Uuid::new_v4()),
-            user_id: model.user_id.and_then(|id| {
-                uuid::Uuid::parse_str(&id).ok()
-            }),
+            id: uuid::Uuid::parse_str(&model.id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
+            post_id: uuid::Uuid::parse_str(&model.post_id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
+            user_id: model.user_id.and_then(|id| uuid::Uuid::parse_str(&id).ok()),
             github_username: model.github_username,
             github_avatar_url: model.github_avatar_url,
             content: model.content,
@@ -188,10 +191,10 @@ mod tests {
     async fn test_comment_repository_structure() {
         // Note: This is a placeholder test
         // Real tests would use a test database or mock
-        
+
         let post_id = uuid::Uuid::new_v4();
         let user_id = uuid::Uuid::new_v4();
-        
+
         // Test registered user comment
         let comment = Comment::from_user(post_id, user_id, "Test comment".to_string());
         assert_eq!(comment.post_id, post_id);
@@ -199,7 +202,7 @@ mod tests {
         assert!(comment.github_username.is_none());
         assert!(comment.is_owned_by(user_id));
         assert!(!comment.is_from_github());
-        
+
         // Test GitHub user comment
         let github_user = domain::GitHubUser {
             id: 12345,
@@ -208,7 +211,7 @@ mod tests {
             name: Some("Test User".to_string()),
             email: Some("test@example.com".to_string()),
         };
-        
+
         let gh_comment = Comment::from_github(post_id, &github_user, "GitHub comment".to_string());
         assert_eq!(gh_comment.post_id, post_id);
         assert!(gh_comment.user_id.is_none());
@@ -221,15 +224,15 @@ mod tests {
     async fn test_comment_update() {
         let post_id = uuid::Uuid::new_v4();
         let user_id = uuid::Uuid::new_v4();
-        
+
         let mut comment = Comment::from_user(post_id, user_id, "Original content".to_string());
         let original_updated = comment.updated_at;
-        
+
         // Wait a bit to ensure timestamp changes
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-        
+
         comment.update_content("Updated content".to_string());
-        
+
         assert_eq!(comment.content, "Updated content".to_string());
         assert!(comment.updated_at > original_updated);
     }

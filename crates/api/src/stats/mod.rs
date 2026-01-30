@@ -19,34 +19,13 @@ use axum::{
 use domain::{RecordViewRequest, StatsResponse};
 use uuid::Uuid;
 
-use crate::{
-    error::ApiError,
-    state::AppState,
-    PostRepository,
-    UserRepository,
-    SessionRepository,
-    FileRepository,
-    CommentRepository,
-    StatsRepository,
-    CategoryRepository,
-    TagRepository,
-};
+use crate::{error::ApiError, state::AppState};
 
 // ============================================================================
 // Routes
 // ============================================================================
 
-pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub fn routes() -> Router<AppState> {
     Router::new()
         // GET /api/stats/visits - Get global visitor stats
         .route("/visits", axum::routing::get(get_visits))
@@ -68,19 +47,7 @@ where
 /// Get global visitor statistics
 ///
 /// This endpoint is public - no authentication required.
-pub async fn get_visits<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub async fn get_visits(State(state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
     let stats = state
         .stats_service
         .get_visit_stats()
@@ -95,20 +62,10 @@ where
 ///
 /// This endpoint is public - no authentication required.
 /// Request body: {"post_id": "uuid"} (optional)
-pub async fn record_visit<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn record_visit(
+    State(state): State<AppState>,
     Json(input): Json<RecordViewRequest>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     state
         .stats_service
         .record_view(input)
@@ -125,20 +82,10 @@ where
 /// Get view count for a specific post
 ///
 /// This endpoint is public - no authentication required.
-pub async fn get_post_views<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn get_post_views(
+    State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     let post_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid post ID: {}", e)))?;
 
@@ -155,20 +102,10 @@ where
 /// Record a view for a specific post
 ///
 /// This endpoint is public - no authentication required.
-pub async fn record_post_view<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn record_post_view(
+    State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     let post_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid post ID: {}", e)))?;
 
@@ -192,19 +129,7 @@ where
 /// Get total statistics (admin only)
 ///
 /// This endpoint requires admin authentication.
-pub async fn get_total_stats<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub async fn get_total_stats(State(state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
     // Note: Admin check would be done via middleware in real implementation
     // For now, we'll just allow access
 

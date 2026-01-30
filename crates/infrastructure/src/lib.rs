@@ -16,27 +16,27 @@
 pub mod entity;
 
 // Repository implementations
-pub mod post;
-pub mod user;
 pub mod category;
-pub mod tag;
-pub mod session;
-pub mod file;
 pub mod comment;
+pub mod file;
+pub mod post;
+pub mod session;
 pub mod stats;
+pub mod tag;
+pub mod user;
 
 // Database migrations
 pub mod migrations;
 
 // Re-exports for convenience
-pub use post::*;
-pub use user::*;
 pub use category::*;
-pub use tag::*;
-pub use session::*;
-pub use file::*;
 pub use comment::*;
+pub use file::*;
+pub use post::*;
+pub use session::*;
 pub use stats::*;
+pub use tag::*;
+pub use user::*;
 
 use sea_orm::{Database, DatabaseConnection, DbErr};
 use std::sync::Arc;

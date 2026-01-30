@@ -101,10 +101,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_tag_structure() {
-        let tag = Tag::new(
-            "Rust".to_string(),
-            "rust".to_string(),
-        );
+        let tag = Tag::new("Rust".to_string(), "rust".to_string());
 
         assert_eq!(tag.name, "Rust");
         assert_eq!(tag.slug, "rust");

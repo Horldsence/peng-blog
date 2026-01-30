@@ -1,3 +1,4 @@
+use crate::middleware::auth::AuthError;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -6,7 +7,6 @@ use axum::{
 use domain::Error as DomainError;
 use serde_json::json;
 use thiserror::Error;
-use crate::middleware::auth::AuthError;
 
 /// API error types
 #[derive(Debug, Error)]
@@ -70,24 +70,14 @@ impl IntoResponse for ApiError {
             ApiError::Domain(DomainError::Unauthorized(msg)) => {
                 (StatusCode::UNAUTHORIZED, "unauthorized", msg)
             }
-            ApiError::Domain(DomainError::Conflict(msg)) => {
-                (StatusCode::CONFLICT, "conflict", msg)
-            }
+            ApiError::Domain(DomainError::Conflict(msg)) => (StatusCode::CONFLICT, "conflict", msg),
             ApiError::Domain(DomainError::Internal(msg)) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "internal", msg)
             }
-            ApiError::Validation(msg) => {
-                (StatusCode::BAD_REQUEST, "validation", msg)
-            }
-            ApiError::NotFound(msg) => {
-                (StatusCode::NOT_FOUND, "not_found", msg)
-            }
-            ApiError::Unauthorized(msg) => {
-                (StatusCode::UNAUTHORIZED, "unauthorized", msg)
-            }
-            ApiError::Internal(msg) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "internal", msg)
-            }
+            ApiError::Validation(msg) => (StatusCode::BAD_REQUEST, "validation", msg),
+            ApiError::NotFound(msg) => (StatusCode::NOT_FOUND, "not_found", msg),
+            ApiError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, "unauthorized", msg),
+            ApiError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "internal", msg),
             ApiError::Auth(auth_err) => {
                 // Let AuthError handle its own response
                 return auth_err.into_response();

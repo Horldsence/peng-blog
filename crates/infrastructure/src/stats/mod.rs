@@ -8,12 +8,12 @@
 //! - Clear error mapping
 //! - No special cases
 
-use crate::entity::{stats, post_stats};
 use crate::entity::prelude::*;
+use crate::entity::{post_stats, stats};
 use async_trait::async_trait;
-use domain::{Error, Result, PostStats, VisitStats, StatsResponse};
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+use domain::{Error, PostStats, Result, StatsResponse, VisitStats};
 use sea_orm::prelude::Expr;
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use service::StatsRepository;
 use std::sync::Arc;
 
@@ -56,9 +56,10 @@ impl StatsRepository for StatsRepositoryImpl {
         Ok(VisitStats {
             total_visits: model.total_visits as u64,
             today_visits: model.today_visits as u64,
-            last_updated: model.last_updated.parse().map_err(|e| {
-                Error::Internal(format!("Invalid last_updated in database: {}", e))
-            })?,
+            last_updated: model
+                .last_updated
+                .parse()
+                .map_err(|e| Error::Internal(format!("Invalid last_updated in database: {}", e)))?,
         })
     }
 
@@ -118,9 +119,8 @@ impl StatsRepository for StatsRepositoryImpl {
             .map_err(|e| Error::Internal(format!("Failed to get post stats: {}", e)))?
         {
             return Ok(PostStats {
-                post_id: uuid::Uuid::parse_str(&model.post_id).map_err(|e| {
-                    Error::Internal(format!("Invalid post_id in database: {}", e))
-                })?,
+                post_id: uuid::Uuid::parse_str(&model.post_id)
+                    .map_err(|e| Error::Internal(format!("Invalid post_id in database: {}", e)))?,
                 views: model.views as u64,
                 last_viewed_at: model.last_viewed_at.parse().map_err(|e| {
                     Error::Internal(format!("Invalid last_viewed_at in database: {}", e))
@@ -153,7 +153,10 @@ impl StatsRepository for StatsRepositoryImpl {
         // Increment views
         PostStatsEntity::update_many()
             .filter(post_stats::Column::PostId.eq(post_id.to_string()))
-            .col_expr(post_stats::Column::Views, Expr::col(post_stats::Column::Views).add(1))
+            .col_expr(
+                post_stats::Column::Views,
+                Expr::col(post_stats::Column::Views).add(1),
+            )
             .exec(&*self.db)
             .await
             .map_err(|e| Error::Internal(format!("Failed to increment post view: {}", e)))?;
@@ -185,13 +188,15 @@ impl StatsRepository for StatsRepositoryImpl {
         let total_posts = PostEntity::find()
             .count(&*self.db)
             .await
-            .map_err(|e| Error::Internal(format!("Failed to count posts: {}", e)))? as u64;
+            .map_err(|e| Error::Internal(format!("Failed to count posts: {}", e)))?
+            as u64;
 
         // Get total comments count
         let total_comments = CommentEntity::find()
             .count(&*self.db)
             .await
-            .map_err(|e| Error::Internal(format!("Failed to count comments: {}", e)))? as u64;
+            .map_err(|e| Error::Internal(format!("Failed to count comments: {}", e)))?
+            as u64;
 
         Ok(StatsResponse {
             total_visits: visit_stats.total_visits,

@@ -2,8 +2,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
-    Router,
+    Json, Router,
 };
 use domain::{CreateCategory, UpdateCategory, USER_MANAGE};
 
@@ -11,19 +10,9 @@ use crate::error::ApiResult;
 use crate::middleware::auth::Claims;
 use uuid::Uuid;
 
-use crate::{state::AppState, PostRepository, UserRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository, CategoryRepository, TagRepository};
+use crate::state::AppState;
 
-pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", axum::routing::get(list_categories))
         .route("/", axum::routing::post(create_category))
@@ -33,19 +22,7 @@ where
         .route("/:id/children", axum::routing::get(get_children))
 }
 
-async fn list_categories<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
-) -> ApiResult<impl IntoResponse>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+async fn list_categories(State(state): State<AppState>) -> ApiResult<impl IntoResponse> {
     let categories = state
         .category_service
         .list()
@@ -55,21 +32,11 @@ where
     Ok((StatusCode::OK, Json(categories)))
 }
 
-async fn create_category<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+async fn create_category(
+    State(state): State<AppState>,
     user: Claims,
     Json(input): Json<CreateCategory>,
-) -> ApiResult<impl IntoResponse>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> ApiResult<impl IntoResponse> {
     domain::check_permission(user.permissions, USER_MANAGE)?;
 
     let category = state
@@ -81,20 +48,10 @@ where
     Ok((StatusCode::CREATED, Json(category)))
 }
 
-async fn get_category<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+async fn get_category(
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
-) -> ApiResult<impl IntoResponse>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> ApiResult<impl IntoResponse> {
     let category = state
         .category_service
         .get(id)
@@ -104,22 +61,12 @@ where
     Ok((StatusCode::OK, Json(category)))
 }
 
-async fn update_category<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+async fn update_category(
+    State(state): State<AppState>,
     user: Claims,
     Path(id): Path<Uuid>,
     Json(input): Json<UpdateCategory>,
-) -> ApiResult<impl IntoResponse>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> ApiResult<impl IntoResponse> {
     domain::check_permission(user.permissions, USER_MANAGE)?;
 
     let category = state
@@ -131,21 +78,11 @@ where
     Ok((StatusCode::OK, Json(category)))
 }
 
-async fn delete_category<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+async fn delete_category(
+    State(state): State<AppState>,
     user: Claims,
     Path(id): Path<Uuid>,
-) -> ApiResult<impl IntoResponse>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> ApiResult<impl IntoResponse> {
     domain::check_permission(user.permissions, USER_MANAGE)?;
 
     state
@@ -157,20 +94,10 @@ where
     Ok((StatusCode::NO_CONTENT, Json(serde_json::json!({}))))
 }
 
-async fn get_children<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+async fn get_children(
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
-) -> ApiResult<impl IntoResponse>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> ApiResult<impl IntoResponse> {
     let categories = state
         .category_service
         .get_children(Some(id))

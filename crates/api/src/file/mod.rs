@@ -18,34 +18,12 @@ use axum::{
 use domain::UploadFile;
 use uuid::Uuid;
 
-use crate::{
-    error::ApiError,
-    middleware::auth::Claims,
-    state::AppState,
-    PostRepository,
-    UserRepository,
-    SessionRepository,
-    FileRepository,
-    CommentRepository,
-    StatsRepository,
-    CategoryRepository,
-    TagRepository,
-};
+use crate::{error::ApiError, middleware::auth::Claims, state::AppState};
 
 // ============================================================================
 // Routes
 // ============================================================================
-pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub fn routes() -> Router<AppState> {
     Router::new()
         // POST /api/files - Upload a file
         .route("/", axum::routing::post(upload_file))
@@ -68,38 +46,30 @@ where
 ///
 /// Request body: multipart/form-data with file field
 /// Response: FileResponse with file metadata
-pub async fn upload_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
+pub async fn upload_file(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+    State(state): State<AppState>,
     mut multipart: axum_extra::extract::Multipart,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     let user_id = Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
 
-    while let Some(field) = multipart.next_field().await
+    while let Some(field) = multipart
+        .next_field()
+        .await
         .map_err(|e| ApiError::Internal(format!("Failed to read multipart: {}", e)))?
     {
         let name = field.name().unwrap_or("").to_string();
 
         if name == "file" {
-            let filename = field.file_name()
-                .unwrap_or("unknown")
-                .to_string();
-            let content_type = field.content_type()
+            let filename = field.file_name().unwrap_or("unknown").to_string();
+            let content_type = field
+                .content_type()
                 .unwrap_or("application/octet-stream")
                 .to_string();
 
-            let data = field.bytes()
+            let data = field
+                .bytes()
                 .await
                 .map_err(|e| ApiError::Internal(format!("Failed to read file data: {}", e)))?
                 .to_vec();
@@ -125,20 +95,10 @@ where
 
 /// GET /api/files/:id
 /// Get file metadata
-pub async fn get_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn get_file(
+    State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     let file_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;
 
@@ -156,20 +116,10 @@ where
 
 /// GET /api/files/:id/download
 /// Download file content
-pub async fn download_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn download_file(
+    State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     let file_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;
 
@@ -182,7 +132,8 @@ where
     let file = file_opt.ok_or_else(|| ApiError::NotFound("File not found".to_string()))?;
 
     // Read file from disk
-    let file_path = format!("{}/{}",
+    let file_path = format!(
+        "{}/{}",
         state.upload_dir.trim_end_matches('/'),
         file.filename
     );
@@ -193,7 +144,10 @@ where
 
     let headers = [
         (header::CONTENT_TYPE, file.content_type),
-        (header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", file.original_filename)),
+        (
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{}\"", file.original_filename),
+        ),
     ];
 
     Ok((headers, file_content))
@@ -201,20 +155,10 @@ where
 
 /// GET /api/files?limit=50
 /// List files uploaded by the current user
-pub async fn list_files<PR, UR, SR, FR, CR, STR, CTR, TR>(
+pub async fn list_files(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, ApiError> {
     let user_id = Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
 
@@ -231,21 +175,11 @@ where
 
 /// DELETE /api/files/:id
 /// Delete a file
-pub async fn delete_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
+pub async fn delete_file(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+    State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     let file_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;
     let user_id = Uuid::parse_str(&user.sub)

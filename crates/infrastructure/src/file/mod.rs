@@ -11,8 +11,10 @@
 use crate::entity::file;
 use crate::entity::prelude::*;
 use async_trait::async_trait;
-use domain::{Error, Result, File};
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Set};
+use domain::{Error, File, Result};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Set,
+};
 use std::sync::Arc;
 
 /// Concrete implementation of FileRepository
@@ -71,17 +73,15 @@ impl service::FileRepository for FileRepositoryImpl {
             .await
             .map_err(|e| Error::Internal(format!("Failed to get file: {}", e)))?;
 
-        Ok(model.map(|m| {
-            File {
-                id: uuid::Uuid::parse_str(&m.id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
-                user_id: uuid::Uuid::parse_str(&m.user_id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
-                filename: m.filename,
-                original_filename: m.original_filename,
-                content_type: m.content_type,
-                size_bytes: m.size_bytes as u64,
-                url: m.url,
-                created_at: m.created_at.parse().unwrap_or_else(|_| chrono::Utc::now()),
-            }
+        Ok(model.map(|m| File {
+            id: uuid::Uuid::parse_str(&m.id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
+            user_id: uuid::Uuid::parse_str(&m.user_id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
+            filename: m.filename,
+            original_filename: m.original_filename,
+            content_type: m.content_type,
+            size_bytes: m.size_bytes as u64,
+            url: m.url,
+            created_at: m.created_at.parse().unwrap_or_else(|_| chrono::Utc::now()),
         }))
     }
 
@@ -128,7 +128,9 @@ impl service::FileRepository for FileRepositoryImpl {
             .ok_or_else(|| Error::NotFound("File not found".to_string()))?;
 
         if model.user_id != user_id.to_string() {
-            return Err(Error::Validation("You can only delete your own files".to_string()));
+            return Err(Error::Validation(
+                "You can only delete your own files".to_string(),
+            ));
         }
 
         FileEntity::delete_by_id(id.to_string())
@@ -148,7 +150,7 @@ mod tests {
     async fn test_file_repository_structure() {
         // Note: This is a placeholder test
         // Real tests would use a test database or mock
-        
+
         let user_id = uuid::Uuid::new_v4();
         let file = File::new(
             user_id,
@@ -158,7 +160,7 @@ mod tests {
             100,
             "http://example.com/test.txt".to_string(),
         );
-        
+
         assert_eq!(file.user_id, user_id);
         assert_eq!(file.filename, "test.txt");
         assert_eq!(file.size_bytes, 100);

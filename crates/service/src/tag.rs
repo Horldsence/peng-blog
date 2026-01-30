@@ -1,14 +1,16 @@
+use crate::TagRepository;
 use domain::{CreateTag, Result, Tag};
 use std::sync::Arc;
-use crate::TagRepository;
 use uuid::Uuid;
 
-pub struct TagService<TR: TagRepository> {
-    repo: Arc<TR>,
+/// Service for tag business logic
+#[derive(Clone)]
+pub struct TagService {
+    repo: Arc<dyn TagRepository>,
 }
 
-impl<TR: TagRepository> TagService<TR> {
-    pub fn new(repo: Arc<TR>) -> Self {
+impl TagService {
+    pub fn new(repo: Arc<dyn TagRepository>) -> Self {
         Self { repo }
     }
 
@@ -40,13 +42,20 @@ impl<TR: TagRepository> TagService<TR> {
     pub async fn delete(&self, id: Uuid) -> Result<()> {
         self.repo.delete_tag(id).await
     }
+}
 
+impl TagService {
     fn validate_slug(&self, slug: &str) -> Result<()> {
         if slug.trim().is_empty() {
-            return Err(domain::Error::Validation("Slug cannot be empty".to_string()));
+            return Err(domain::Error::Validation(
+                "Slug cannot be empty".to_string(),
+            ));
         }
 
-        if !slug.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        if !slug
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+        {
             return Err(domain::Error::Validation(
                 "Slug can only contain letters, numbers, hyphens and underscores".to_string(),
             ));
@@ -57,7 +66,9 @@ impl<TR: TagRepository> TagService<TR> {
 
     fn validate_name(&self, name: &str) -> Result<()> {
         if name.trim().is_empty() {
-            return Err(domain::Error::Validation("Name cannot be empty".to_string()));
+            return Err(domain::Error::Validation(
+                "Name cannot be empty".to_string(),
+            ));
         }
 
         if name.len() > 50 {
@@ -73,8 +84,8 @@ impl<TR: TagRepository> TagService<TR> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::{mock, predicate::*};
     use domain::Error;
+    use mockall::{mock, predicate::*};
 
     mock! {
         TagRepo {}
@@ -131,7 +142,9 @@ mod tests {
 
         assert!(result.is_err());
         match result {
-            Err(Error::Validation(msg)) => assert!(msg.contains("letters, numbers, hyphens and underscores")),
+            Err(Error::Validation(msg)) => {
+                assert!(msg.contains("letters, numbers, hyphens and underscores"))
+            }
             _ => panic!("Expected validation error for invalid slug"),
         }
     }

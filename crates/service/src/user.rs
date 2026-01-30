@@ -5,8 +5,8 @@
 
 use crate::repository::UserRepository;
 use domain::{Error, Result, User, DEFAULT_USER_PERMISSIONS, USER_MANAGE};
-use uuid::Uuid;
 use std::sync::Arc;
+use uuid::Uuid;
 
 // ============================================================================
 // Constants
@@ -22,13 +22,13 @@ const ADMIN_COUNT_CHECK_LIMIT: u64 = 1000;
 ///
 /// This service encapsulates all business rules for user operations.
 /// It uses dependency injection for repositories, making it testable.
-pub struct UserService<R: UserRepository> {
-    repo: Arc<R>,
+pub struct UserService {
+    repo: Arc<dyn UserRepository>,
 }
 
-impl<R: UserRepository> UserService<R> {
+impl UserService {
     /// Create a new UserService with given repository
-    pub fn new(repo: Arc<R>) -> Self {
+    pub fn new(repo: Arc<dyn UserRepository>) -> Self {
         Self { repo }
     }
 
@@ -104,19 +104,24 @@ impl<R: UserRepository> UserService<R> {
         }
 
         // Get requester and target user
-        let _requester = self.repo.find_by_id(requester_id).await?
+        let _requester = self
+            .repo
+            .find_by_id(requester_id)
+            .await?
             .ok_or_else(|| Error::NotFound("Requester not found".to_string()))?;
 
-        let target_user = self.repo.find_by_id(target_user_id).await?
+        let target_user = self
+            .repo
+            .find_by_id(target_user_id)
+            .await?
             .ok_or_else(|| Error::NotFound("Target user not found".to_string()))?;
 
         // Prevent users from removing their own admin privileges
-        if requester_id == target_user_id
-            && (new_permissions & USER_MANAGE) == 0 {
-                return Err(Error::Validation(
-                    "Cannot remove your own admin privileges".to_string(),
-                ));
-            }
+        if requester_id == target_user_id && (new_permissions & USER_MANAGE) == 0 {
+            return Err(Error::Validation(
+                "Cannot remove your own admin privileges".to_string(),
+            ));
+        }
 
         // Prevent removing permissions from the last admin
         if target_user.has_permission(USER_MANAGE) && (new_permissions & USER_MANAGE) == 0 {
@@ -143,11 +148,7 @@ impl<R: UserRepository> UserService<R> {
     /// List all users (admin only)
     ///
     /// Only users with USER_MANAGE permission can call this.
-    pub async fn list(
-        &self,
-        requester_permissions: u64,
-        limit: Option<u64>,
-    ) -> Result<Vec<User>> {
+    pub async fn list(&self, requester_permissions: u64, limit: Option<u64>) -> Result<Vec<User>> {
         // Check if requester has admin permission
         if (requester_permissions & USER_MANAGE) == 0 {
             return Err(Error::Validation(
@@ -155,7 +156,9 @@ impl<R: UserRepository> UserService<R> {
             ));
         }
 
-        self.repo.list_users(limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+        self.repo
+            .list_users(limit.unwrap_or(DEFAULT_LIST_LIMIT))
+            .await
     }
 
     /// Check if user exists by username
@@ -179,7 +182,7 @@ impl<R: UserRepository> UserService<R> {
 // Private Validation Helpers
 // ============================================================================
 
-impl<R: UserRepository> UserService<R> {
+impl UserService {
     fn validate_username(&self, username: &str) -> Result<()> {
         if username.trim().is_empty() {
             return Err(Error::Validation("Username cannot be empty".to_string()));
@@ -194,14 +197,14 @@ impl<R: UserRepository> UserService<R> {
                 "Username too long (max 30 characters)".to_string(),
             ));
         }
-        
+
         // Check for invalid characters (alphanumeric and underscore only)
         if !username.chars().all(|c| c.is_alphanumeric() || c == '_') {
             return Err(Error::Validation(
                 "Username can only contain letters, numbers, and underscores".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 
@@ -211,17 +214,17 @@ impl<R: UserRepository> UserService<R> {
                 "Password must be at least 8 characters".to_string(),
             ));
         }
-        
+
         // Check for at least one letter and one number
         let has_letter = password.chars().any(|c| c.is_alphabetic());
         let has_number = password.chars().any(|c| c.is_numeric());
-        
+
         if !has_letter || !has_number {
             return Err(Error::Validation(
                 "Password must contain at least one letter and one number".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -233,8 +236,8 @@ impl<R: UserRepository> UserService<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use domain::{ADMIN_PERMISSIONS, DEFAULT_USER_PERMISSIONS};
     use async_trait::async_trait;
+    use domain::{ADMIN_PERMISSIONS, DEFAULT_USER_PERMISSIONS};
     use mockall::mock;
 
     // Mock repository for testing
@@ -256,10 +259,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_empty_username() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
-        let result = service.register("".to_string(), "password123".to_string()).await;
+        let result = service
+            .register("".to_string(), "password123".to_string())
+            .await;
 
         assert!(result.is_err());
         match result {
@@ -270,10 +275,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_short_username() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
-        let result = service.register("ab".to_string(), "password123".to_string()).await;
+        let result = service
+            .register("ab".to_string(), "password123".to_string())
+            .await;
 
         assert!(result.is_err());
         match result {
@@ -284,8 +291,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_long_username() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
         let long_username = "a".repeat(31);
         let result = service
@@ -301,10 +308,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_short_password() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
-        let result = service.register("username".to_string(), "short".to_string()).await;
+        let result = service
+            .register("username".to_string(), "short".to_string())
+            .await;
 
         assert!(result.is_err());
         match result {
@@ -315,8 +324,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_password_requirements() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
         // Password without number
         let result = service
@@ -343,8 +352,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_permissions_requires_admin() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
         let user_id = Uuid::new_v4();
         let target_id = Uuid::new_v4();
@@ -365,18 +374,20 @@ mod tests {
     async fn test_cannot_remove_own_admin() {
         let mut mock_repo = MockUserRepo::new();
         let user_id = Uuid::new_v4();
-        
+
         mock_repo
             .expect_find_by_id()
             .times(2)
             .with(mockall::predicate::eq(user_id))
-            .returning(move |_| Ok(Some(User::new(
-                user_id,
-                "testuser".to_string(),
-                "password".to_string(),
-                ADMIN_PERMISSIONS,
-            ))));
-        
+            .returning(move |_| {
+                Ok(Some(User::new(
+                    user_id,
+                    "testuser".to_string(),
+                    "password".to_string(),
+                    ADMIN_PERMISSIONS,
+                )))
+            });
+
         let service = UserService::new(Arc::new(mock_repo));
 
         let no_admin = DEFAULT_USER_PERMISSIONS;
@@ -394,8 +405,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_requires_admin() {
-        let mock_repo = MockUserRepo::new();
-        let service = UserService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockUserRepo::new());
+        let service = UserService::new(mock_repo);
 
         let no_permissions = 0;
 

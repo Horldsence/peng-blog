@@ -3,46 +3,16 @@
 //! This module provides HTTP handlers for authentication operations.
 //! All auth routes are public (no authentication required).
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-    Router,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json, Router};
 use domain::{LoginRequest, LoginResponse, RegisterRequest, UserInfo};
 
-use crate::{
-    error::ApiError,
-    middleware::auth::Claims,
-    state::AppState,
-    PostRepository,
-    UserRepository,
-    SessionRepository,
-    FileRepository,
-    CommentRepository,
-    StatsRepository,
-    CategoryRepository,
-    TagRepository,
-};
+use crate::{error::ApiError, middleware::auth::Claims, state::AppState};
 
 // ============================================================================
 // Routes
 // ============================================================================
 
-pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<
-    AppState<PR, UR, SR, FR, CR, STR, CTR, TR>,
->
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub fn routes() -> Router<AppState> {
     Router::new()
         // POST /api/auth/register - Register a new user (public)
         .route("/register", axum::routing::post(register))
@@ -58,20 +28,10 @@ where
 
 /// POST /api/auth/register
 /// Register a new user (public endpoint)
-pub async fn register<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn register(
+    State(state): State<AppState>,
     Json(input): Json<RegisterRequest>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     validate_username(&input.username)?;
     validate_password(&input.password)?;
 
@@ -98,22 +58,14 @@ where
 
 /// POST /api/auth/login
 /// Login with username/password (public endpoint)
-pub async fn login<PR, UR, SR, FR, CR, STR, CTR, TR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
+pub async fn login(
+    State(state): State<AppState>,
     Json(input): Json<LoginRequest>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+) -> Result<impl IntoResponse, ApiError> {
     if input.username.trim().is_empty() || input.password.trim().is_empty() {
-        return Err(ApiError::Validation("Username and password required".to_string()));
+        return Err(ApiError::Validation(
+            "Username and password required".to_string(),
+        ));
     }
 
     let user = state
@@ -142,29 +94,19 @@ where
 
 /// GET /api/auth/me
 /// Get current user info (requires authentication)
-pub async fn me<PR, UR, SR, FR, CR, STR, CTR, TR>(
+pub async fn me(
     user: Claims,
-    State(_state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
-) -> Result<impl IntoResponse, ApiError>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+    State(_state): State<AppState>,
+) -> Result<impl IntoResponse, ApiError> {
     let user_id = uuid::Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
-    
+
     let user_info = domain::UserInfo {
         id: user_id,
         username: user.username,
         permissions: user.permissions,
     };
-    
+
     Ok((StatusCode::OK, Json(user_info)))
 }
 

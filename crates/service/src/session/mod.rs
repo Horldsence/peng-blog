@@ -21,16 +21,15 @@ use std::sync::Arc;
 /// - Cleaning up expired sessions
 ///
 /// All operations are database-backed through the SessionRepository trait.
-pub struct SessionService<SR: SessionRepository> {
-    session_repo: Arc<SR>,
+#[derive(Clone)]
+pub struct SessionService {
+    session_repo: Arc<dyn SessionRepository>,
 }
 
-impl<SR: SessionRepository> SessionService<SR> {
+impl SessionService {
     /// Create a new session service
-    pub fn new(session_repo: Arc<SR>) -> Self {
-        Self {
-            session_repo,
-        }
+    pub fn new(session_repo: Arc<dyn SessionRepository>) -> Self {
+        Self { session_repo }
     }
 
     /// Create a new session for a user
@@ -62,7 +61,7 @@ impl<SR: SessionRepository> SessionService<SR> {
     /// * `Err(Error)` - Database error
     pub async fn validate_session(&self, token: &str) -> Result<Option<Session>> {
         let session = self.session_repo.get_session(token).await?;
-        
+
         if let Some(session) = session {
             if session.is_expired() {
                 // Delete expired session on access
@@ -71,7 +70,7 @@ impl<SR: SessionRepository> SessionService<SR> {
             }
             return Ok(Some(session));
         }
-        
+
         Ok(None)
     }
 
@@ -117,7 +116,7 @@ mod tests {
     use super::*;
     use crate::repository::SessionRepository;
     use async_trait::async_trait;
-    use domain::{Session, Result};
+    use domain::{Result, Session};
     use std::collections::HashMap;
     use std::sync::Arc;
     use tokio::sync::RwLock;
@@ -171,10 +170,10 @@ mod tests {
             sessions: Arc::new(RwLock::new(HashMap::new())),
         });
         let service = SessionService::new(repo);
-        
+
         let user_id = uuid::Uuid::new_v4();
         let session = service.create_session(user_id, false).await.unwrap();
-        
+
         assert_eq!(session.user_id, user_id);
         assert!(!session.id.is_empty());
         assert!(!session.is_expired());
@@ -186,15 +185,15 @@ mod tests {
             sessions: Arc::new(RwLock::new(HashMap::new())),
         });
         let service = SessionService::new(repo);
-        
+
         let user_id = uuid::Uuid::new_v4();
         let session = service.create_session(user_id, false).await.unwrap();
-        
+
         // Valid session
         let validated = service.validate_session(&session.id).await.unwrap();
         assert!(validated.is_some());
         assert_eq!(validated.unwrap().user_id, user_id);
-        
+
         // Invalid session
         let invalid = service.validate_session("invalid").await.unwrap();
         assert!(invalid.is_none());
@@ -206,12 +205,12 @@ mod tests {
             sessions: Arc::new(RwLock::new(HashMap::new())),
         });
         let service = SessionService::new(repo);
-        
+
         let user_id = uuid::Uuid::new_v4();
         let session = service.create_session(user_id, false).await.unwrap();
-        
+
         service.destroy_session(&session.id).await.unwrap();
-        
+
         let validated = service.validate_session(&session.id).await.unwrap();
         assert!(validated.is_none());
     }

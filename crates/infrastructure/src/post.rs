@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use domain::{Error, Post, Result};
-use service::repository::PostRepository;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
-    QueryFilter, QueryOrder, QuerySelect, Set,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
+    QuerySelect, Set,
 };
+use service::repository::PostRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -52,14 +52,14 @@ fn entity_to_active_model(entity: crate::entity::post::Model) -> crate::entity::
     }
 }
 
-fn parse_datetime_option(opt_str: &Option<String>) -> Result<Option<chrono::DateTime<chrono::Utc>>> {
+fn parse_datetime_option(
+    opt_str: &Option<String>,
+) -> Result<Option<chrono::DateTime<chrono::Utc>>> {
     match opt_str {
         None => Ok(None),
-        Some(s) => {
-            chrono::DateTime::parse_from_rfc3339(s)
-                .map(|dt| Some(dt.with_timezone(&chrono::Utc)))
-                .map_err(|e| Error::Internal(format!("Invalid datetime: {}", e)))
-        }
+        Some(s) => chrono::DateTime::parse_from_rfc3339(s)
+            .map(|dt| Some(dt.with_timezone(&chrono::Utc)))
+            .map_err(|e| Error::Internal(format!("Invalid datetime: {}", e))),
     }
 }
 
@@ -140,17 +140,9 @@ impl PostRepository for PostRepositoryImpl {
             .limit(limit)
             .all(self.db.as_ref())
             .await
-            .map_err(|e| {
-                Error::Internal(format!(
-                    "Failed to list published posts: {}",
-                    e
-                ))
-            })?;
+            .map_err(|e| Error::Internal(format!("Failed to list published posts: {}", e)))?;
 
-        models
-            .into_iter()
-            .map(model_to_post)
-            .collect()
+        models.into_iter().map(model_to_post).collect()
     }
 
     async fn delete_post(&self, id: Uuid) -> Result<()> {
@@ -168,17 +160,9 @@ impl PostRepository for PostRepositoryImpl {
             .limit(limit)
             .all(self.db.as_ref())
             .await
-            .map_err(|e| {
-                Error::Internal(format!(
-                    "Failed to list posts by user: {}",
-                    e
-                ))
-            })?;
+            .map_err(|e| Error::Internal(format!("Failed to list posts by user: {}", e)))?;
 
-        models
-            .into_iter()
-            .map(model_to_post)
-            .collect()
+        models.into_iter().map(model_to_post).collect()
     }
 
     async fn list_published_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>> {
@@ -190,16 +174,10 @@ impl PostRepository for PostRepositoryImpl {
             .all(self.db.as_ref())
             .await
             .map_err(|e| {
-                Error::Internal(format!(
-                    "Failed to list published posts by user: {}",
-                    e
-                ))
+                Error::Internal(format!("Failed to list published posts by user: {}", e))
             })?;
 
-        models
-            .into_iter()
-            .map(model_to_post)
-            .collect()
+        models.into_iter().map(model_to_post).collect()
     }
 
     async fn list_all_posts(&self, limit: u64) -> Result<Vec<Post>> {
@@ -208,17 +186,9 @@ impl PostRepository for PostRepositoryImpl {
             .limit(limit)
             .all(self.db.as_ref())
             .await
-            .map_err(|e| {
-                Error::Internal(format!(
-                    "Failed to list all posts: {}",
-                    e
-                ))
-            })?;
+            .map_err(|e| Error::Internal(format!("Failed to list all posts: {}", e)))?;
 
-        models
-            .into_iter()
-            .map(model_to_post)
-            .collect()
+        models.into_iter().map(model_to_post).collect()
     }
 
     async fn update_post_category(&self, post_id: Uuid, category_id: Option<Uuid>) -> Result<()> {
@@ -233,7 +203,10 @@ impl PostRepository for PostRepositoryImpl {
         let mut active: crate::entity::post::ActiveModel = post.into();
         active.category_id = Set(category_id.map(|id| id.to_string()));
 
-        active.update(self.db.as_ref()).await.map_err(|e| Error::Internal(format!("Failed to update post: {}", e)))?;
+        active
+            .update(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to update post: {}", e)))?;
 
         Ok(())
     }
@@ -259,16 +232,13 @@ impl PostRepository for PostRepositoryImpl {
             tag_id: Set(tag_id.to_string()),
         };
 
-        post_tag
-            .insert(self.db.as_ref())
-            .await
-            .map_err(|e| {
-                if e.to_string().contains("UNIQUE") {
-                    Error::Validation("Tag already added to post".to_string())
-                } else {
-                    Error::Internal(format!("Failed to add tag to post: {}", e))
-                }
-            })?;
+        post_tag.insert(self.db.as_ref()).await.map_err(|e| {
+            if e.to_string().contains("UNIQUE") {
+                Error::Validation("Tag already added to post".to_string())
+            } else {
+                Error::Internal(format!("Failed to add tag to post: {}", e))
+            }
+        })?;
 
         Ok(())
     }

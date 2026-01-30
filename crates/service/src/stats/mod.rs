@@ -9,9 +9,9 @@
 //! - Periodic cleanup for daily resets
 
 use crate::repository::StatsRepository;
-use domain::{Result, VisitStats};
-use domain::stats::{RecordViewRequest, StatsResponse};
 use chrono::Utc;
+use domain::stats::{RecordViewRequest, StatsResponse};
+use domain::{Result, VisitStats};
 use std::sync::Arc;
 
 /// Stats service for tracking visitors and post views
@@ -23,19 +23,18 @@ use std::sync::Arc;
 /// - Resetting daily counters
 ///
 /// All operations are database-backed through the StatsRepository trait.
-pub struct StatsService<SR: StatsRepository> {
-    stats_repo: Arc<SR>,
+#[derive(Clone)]
+pub struct StatsService {
+    stats_repo: Arc<dyn StatsRepository>,
 }
 
-impl<SR: StatsRepository> StatsService<SR> {
+impl StatsService {
     /// Create a new stats service
     ///
     /// # Arguments
     /// * `stats_repo` - The stats repository implementation (wrapped in Arc)
-    pub fn new(stats_repo: Arc<SR>) -> Self {
-        Self {
-            stats_repo,
-        }
+    pub fn new(stats_repo: Arc<dyn StatsRepository>) -> Self {
+        Self { stats_repo }
     }
 
     /// Record a page view
@@ -53,15 +52,15 @@ impl<SR: StatsRepository> StatsService<SR> {
         // Determine if it's today
         let _now = Utc::now();
         let is_today = true; // Simplification - always today
-        
+
         // Increment global visit count
         self.stats_repo.increment_visit(is_today).await?;
-        
+
         // If it's a post view, increment post view count
         if let Some(post_id) = request.post_id {
             self.stats_repo.increment_post_view(post_id).await?;
         }
-        
+
         Ok(())
     }
 
@@ -123,7 +122,7 @@ impl<SR: StatsRepository> StatsService<SR> {
         let stats = self.stats_repo.get_visit_stats().await?;
         let today = Utc::now().date_naive();
         let last_updated = stats.last_updated.date_naive();
-        
+
         Ok(today != last_updated)
     }
 }
@@ -173,7 +172,10 @@ mod tests {
 
         async fn get_or_create_post_stats(&self, post_id: uuid::Uuid) -> Result<PostStats> {
             let mut stats = self.post_stats.write().await;
-            Ok(stats.entry(post_id).or_insert_with(|| PostStats::new(post_id)).clone())
+            Ok(stats
+                .entry(post_id)
+                .or_insert_with(|| PostStats::new(post_id))
+                .clone())
         }
 
         async fn increment_post_view(&self, post_id: uuid::Uuid) -> Result<()> {
@@ -203,13 +205,11 @@ mod tests {
     async fn test_record_view() {
         let repo = Arc::new(MockStatsRepo::new());
         let service = StatsService::new(repo);
-        
-        let request = RecordViewRequest {
-            post_id: None,
-        };
-        
+
+        let request = RecordViewRequest { post_id: None };
+
         service.record_view(request).await.unwrap();
-        
+
         let stats = service.get_visit_stats().await.unwrap();
         assert_eq!(stats.total_visits, 1);
         assert_eq!(stats.today_visits, 1);
@@ -219,14 +219,14 @@ mod tests {
     async fn test_record_post_view() {
         let repo = Arc::new(MockStatsRepo::new());
         let service = StatsService::new(repo);
-        
+
         let post_id = uuid::Uuid::new_v4();
         let request = RecordViewRequest {
             post_id: Some(post_id),
         };
-        
+
         service.record_view(request).await.unwrap();
-        
+
         let post_stats = service.get_post_stats(post_id).await.unwrap();
         assert_eq!(post_stats.views, 1);
     }
@@ -235,15 +235,15 @@ mod tests {
     async fn test_reset_today_visits() {
         let repo = Arc::new(MockStatsRepo::new());
         let service = StatsService::new(repo);
-        
+
         // Record some visits
         let request = RecordViewRequest { post_id: None };
         service.record_view(request.clone()).await.unwrap();
         service.record_view(request.clone()).await.unwrap();
-        
+
         // Reset today's visits
         service.reset_today_visits().await.unwrap();
-        
+
         let stats = service.get_visit_stats().await.unwrap();
         assert_eq!(stats.total_visits, 2);
         assert_eq!(stats.today_visits, 0);
@@ -253,10 +253,10 @@ mod tests {
     async fn test_get_total_stats() {
         let repo = Arc::new(MockStatsRepo::new());
         let service = StatsService::new(repo);
-        
+
         let request = RecordViewRequest { post_id: None };
         service.record_view(request).await.unwrap();
-        
+
         let stats = service.get_total_stats().await.unwrap();
         assert_eq!(stats.total_visits, 1);
         assert_eq!(stats.today_visits, 1);

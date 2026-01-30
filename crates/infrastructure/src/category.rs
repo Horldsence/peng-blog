@@ -39,7 +39,12 @@ impl CategoryRepositoryImpl {
 
 #[async_trait]
 impl CategoryRepository for CategoryRepositoryImpl {
-    async fn create_category(&self, name: String, slug: String, parent_id: Option<Uuid>) -> Result<Category> {
+    async fn create_category(
+        &self,
+        name: String,
+        slug: String,
+        parent_id: Option<Uuid>,
+    ) -> Result<Category> {
         let category = category::ActiveModel {
             id: Set(Uuid::new_v4().to_string()),
             name: Set(name),
@@ -48,13 +53,18 @@ impl CategoryRepository for CategoryRepositoryImpl {
             created_at: Set(chrono::Utc::now().to_rfc3339()),
         };
 
-        let result = category.insert(self.db.as_ref()).await.map_err(|e| match e {
-            DbErr::RecordNotFound(_) => domain::Error::NotFound("Category not found".to_string()),
-            DbErr::Custom(err) if err.contains("UNIQUE") => {
-                domain::Error::Validation("Slug already exists".to_string())
-            }
-            _ => domain::Error::Internal(e.to_string()),
-        })?;
+        let result = category
+            .insert(self.db.as_ref())
+            .await
+            .map_err(|e| match e {
+                DbErr::RecordNotFound(_) => {
+                    domain::Error::NotFound("Category not found".to_string())
+                }
+                DbErr::Custom(err) if err.contains("UNIQUE") => {
+                    domain::Error::Validation("Slug already exists".to_string())
+                }
+                _ => domain::Error::Internal(e.to_string()),
+            })?;
 
         Ok(Self::entity_to_domain(result))
     }
@@ -87,7 +97,12 @@ impl CategoryRepository for CategoryRepositoryImpl {
         Ok(result.into_iter().map(Self::entity_to_domain).collect())
     }
 
-    async fn update_category(&self, id: Uuid, name: Option<String>, parent_id: Option<Uuid>) -> Result<Category> {
+    async fn update_category(
+        &self,
+        id: Uuid,
+        name: Option<String>,
+        parent_id: Option<Uuid>,
+    ) -> Result<Category> {
         let category = category::Entity::find_by_id(id.to_string())
             .one(self.db.as_ref())
             .await
@@ -125,7 +140,9 @@ impl CategoryRepository for CategoryRepositoryImpl {
         for post_model in posts {
             let mut active: post::ActiveModel = post_model.into();
             active.category_id = Set(None);
-            active.update(self.db.as_ref()).await
+            active
+                .update(self.db.as_ref())
+                .await
                 .map_err(|e| domain::Error::Internal(e.to_string()))?;
         }
 
@@ -164,11 +181,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_category_structure() {
-        let category = Category::new(
-            "Technology".to_string(),
-            "technology".to_string(),
-            None,
-        );
+        let category = Category::new("Technology".to_string(), "technology".to_string(), None);
 
         assert_eq!(category.name, "Technology");
         assert_eq!(category.slug, "technology");
@@ -179,11 +192,7 @@ mod tests {
     #[tokio::test]
     async fn test_category_with_parent() {
         let parent_id = Uuid::new_v4();
-        let category = Category::new(
-            "Rust".to_string(),
-            "rust".to_string(),
-            Some(parent_id),
-        );
+        let category = Category::new("Rust".to_string(), "rust".to_string(), Some(parent_id));
 
         assert_eq!(category.name, "Rust");
         assert_eq!(category.parent_id, Some(parent_id));

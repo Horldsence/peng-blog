@@ -1,11 +1,14 @@
-use async_trait::async_trait;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use service::repository::UserRepository;
+use async_trait::async_trait;
 use domain::{Error, Result, User};
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
+    QuerySelect, Set,
+};
+use service::repository::UserRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -69,11 +72,16 @@ fn model_to_user(model: crate::entity::user::Model) -> Result<User> {
 
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
-    async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User> {
+    async fn create_user(
+        &self,
+        username: String,
+        password: String,
+        permissions: u64,
+    ) -> Result<User> {
         let password_hash = self.hash_password(&password)?;
         let user_id = Uuid::new_v4();
         let created_at = chrono::Utc::now();
-        
+
         crate::entity::user::ActiveModel {
             id: Set(user_id.to_string()),
             username: Set(username.clone()),
@@ -168,10 +176,7 @@ impl UserRepository for UserRepositoryImpl {
             .await
             .map_err(|e| Error::Internal(format!("Failed to list users: {}", e)))?;
 
-        models
-            .into_iter()
-            .map(model_to_user)
-            .collect()
+        models.into_iter().map(model_to_user).collect()
     }
 
     async fn update_password(&self, user_id: Uuid, new_password: String) -> Result<()> {
@@ -184,7 +189,7 @@ impl UserRepository for UserRepositoryImpl {
 
         // Hash new password and update
         let password_hash = self.hash_password(&new_password)?;
-        
+
         crate::entity::user::ActiveModel {
             id: Set(model.id),
             username: Set(model.username),
@@ -207,7 +212,10 @@ impl UserRepository for UserRepositoryImpl {
             .map_err(|e| Error::Internal(format!("Failed to delete user: {}", e)))?;
 
         if result.rows_affected == 0 {
-            return Err(Error::NotFound(format!("User with id {} not found", user_id)));
+            return Err(Error::NotFound(format!(
+                "User with id {} not found",
+                user_id
+            )));
         }
 
         Ok(())

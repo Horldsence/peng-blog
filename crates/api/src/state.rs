@@ -1,13 +1,12 @@
 //! Application State
 //!
 //! This module defines the shared application state that is passed to all route handlers.
-//! The state is generic over repository implementations, allowing for easy testing
+//! The state uses trait objects for services, allowing for easy testing
 //! and swapping of different database backends.
 
 use service::{
-    CategoryRepository, CategoryService, CommentRepository, CommentService, FileRepository,
-    FileService, PostRepository, PostService, SessionRepository, SessionService, StatsRepository,
-    StatsService, TagRepository, TagService, UserRepository, UserService,
+    CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
+    TagService, UserService,
 };
 use std::sync::Arc;
 
@@ -16,53 +15,33 @@ use crate::middleware::auth::AuthState;
 /// Shared application state
 ///
 /// This struct holds all the services and shared data needed by route handlers.
-/// It is generic over repository types to support different implementations
-/// (e.g., real database vs. mock for testing).
-///
-/// # Type Parameters
-/// * `PR` - Post repository implementation
-/// * `UR` - User repository implementation
-/// * `SR` - Session repository implementation
-/// * `FR` - File repository implementation
-/// * `CR` - Comment repository implementation
-/// * `STR` - Stats repository implementation
-/// * `CTR` - Category repository implementation
-/// * `TR` - Tag repository implementation
+/// It uses trait objects for services to support different implementations
+/// (e.g., real database vs. mock for testing) without generic type parameters.
 #[derive(Clone)]
-pub struct AppState<PR, UR, SR, FR, CR, STR, CTR, TR>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+pub struct AppState {
     /// Post service with business logic for post operations
-    pub post_service: Arc<PostService<PR>>,
+    pub post_service: Arc<PostService>,
 
     /// User service with business logic for user operations
-    pub user_service: Arc<UserService<UR>>,
+    pub user_service: Arc<UserService>,
 
     /// Session service with business logic for session operations
-    pub session_service: Arc<SessionService<SR>>,
+    pub session_service: Arc<SessionService>,
 
     /// File service with business logic for file operations
-    pub file_service: Arc<FileService<FR>>,
+    pub file_service: Arc<FileService>,
 
     /// Comment service with business logic for comment operations
-    pub comment_service: Arc<CommentService<CR, UR>>,
+    pub comment_service: Arc<CommentService>,
 
     /// Stats service with business logic for statistics operations
-    pub stats_service: Arc<StatsService<STR>>,
+    pub stats_service: Arc<StatsService>,
 
     /// Category service with business logic for category operations
-    pub category_service: Arc<CategoryService<CTR>>,
+    pub category_service: Arc<CategoryService>,
 
     /// Tag service with business logic for tag operations
-    pub tag_service: Arc<TagService<TR>>,
+    pub tag_service: Arc<TagService>,
 
     /// Authentication state for JWT token operations
     pub auth_state: AuthState,
@@ -71,19 +50,9 @@ where
     pub upload_dir: String,
 }
 
-impl<PR, UR, SR, FR, CR, STR, CTR, TR> AppState<PR, UR, SR, FR, CR, STR, CTR, TR>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
+impl AppState {
     /// Create a new builder for AppState
-    pub fn builder() -> AppStateBuilder<PR, UR, SR, FR, CR, STR, CTR, TR> {
+    pub fn builder() -> AppStateBuilder {
         AppStateBuilder::default()
     }
 }
@@ -136,103 +105,57 @@ where
 ///     .build();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-pub struct AppStateBuilder<PR, UR, SR, FR, CR, STR, CTR, TR>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
-    post_service: Option<PostService<PR>>,
-    user_service: Option<UserService<UR>>,
-    session_service: Option<SessionService<SR>>,
-    file_service: Option<FileService<FR>>,
-    comment_service: Option<CommentService<CR, UR>>,
-    stats_service: Option<StatsService<STR>>,
-    category_service: Option<CategoryService<CTR>>,
-    tag_service: Option<TagService<TR>>,
+#[derive(Default)]
+pub struct AppStateBuilder {
+    post_service: Option<PostService>,
+    user_service: Option<UserService>,
+    session_service: Option<SessionService>,
+    file_service: Option<FileService>,
+    comment_service: Option<CommentService>,
+    stats_service: Option<StatsService>,
+    category_service: Option<CategoryService>,
+    tag_service: Option<TagService>,
     auth_state: Option<AuthState>,
     upload_dir: Option<String>,
 }
 
-impl<PR, UR, SR, FR, CR, STR, CTR, TR> Default for AppStateBuilder<PR, UR, SR, FR, CR, STR, CTR, TR>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
-    fn default() -> Self {
-        Self {
-            post_service: None,
-            user_service: None,
-            session_service: None,
-            file_service: None,
-            comment_service: None,
-            stats_service: None,
-            category_service: None,
-            tag_service: None,
-            auth_state: None,
-            upload_dir: None,
-        }
-    }
-}
-
-impl<PR, UR, SR, FR, CR, STR, CTR, TR> AppStateBuilder<PR, UR, SR, FR, CR, STR, CTR, TR>
-where
-    PR: PostRepository + Send + Sync + 'static + Clone,
-    UR: UserRepository + Send + Sync + 'static + Clone,
-    SR: SessionRepository + Send + Sync + 'static + Clone,
-    FR: FileRepository + Send + Sync + 'static + Clone,
-    CR: CommentRepository + Send + Sync + 'static + Clone,
-    STR: StatsRepository + Send + Sync + 'static + Clone,
-    CTR: CategoryRepository + Send + Sync + 'static + Clone,
-    TR: TagRepository + Send + Sync + 'static + Clone,
-{
-    pub fn post_service(mut self, service: PostService<PR>) -> Self {
+impl AppStateBuilder {
+    pub fn post_service(mut self, service: PostService) -> Self {
         self.post_service = Some(service);
         self
     }
 
-    pub fn user_service(mut self, service: UserService<UR>) -> Self {
+    pub fn user_service(mut self, service: UserService) -> Self {
         self.user_service = Some(service);
         self
     }
 
-    pub fn session_service(mut self, service: SessionService<SR>) -> Self {
+    pub fn session_service(mut self, service: SessionService) -> Self {
         self.session_service = Some(service);
         self
     }
 
-    pub fn file_service(mut self, service: FileService<FR>) -> Self {
+    pub fn file_service(mut self, service: FileService) -> Self {
         self.file_service = Some(service);
         self
     }
 
-    pub fn comment_service(mut self, service: CommentService<CR, UR>) -> Self {
+    pub fn comment_service(mut self, service: CommentService) -> Self {
         self.comment_service = Some(service);
         self
     }
 
-    pub fn stats_service(mut self, service: StatsService<STR>) -> Self {
+    pub fn stats_service(mut self, service: StatsService) -> Self {
         self.stats_service = Some(service);
         self
     }
 
-    pub fn category_service(mut self, service: CategoryService<CTR>) -> Self {
+    pub fn category_service(mut self, service: CategoryService) -> Self {
         self.category_service = Some(service);
         self
     }
 
-    pub fn tag_service(mut self, service: TagService<TR>) -> Self {
+    pub fn tag_service(mut self, service: TagService) -> Self {
         self.tag_service = Some(service);
         self
     }
@@ -252,7 +175,7 @@ where
     /// # Panics
     ///
     /// Panics if any required field is not set.
-    pub fn build(self) -> AppState<PR, UR, SR, FR, CR, STR, CTR, TR> {
+    pub fn build(self) -> AppState {
         AppState {
             post_service: Arc::new(self.post_service.expect("post_service must be set")),
             user_service: Arc::new(self.user_service.expect("user_service must be set")),

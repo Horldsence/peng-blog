@@ -8,8 +8,8 @@
 //! - Clear up/down paths
 //! - No special cases
 
-use sea_orm_migration::prelude::*;
 use sea_orm::Statement;
+use sea_orm_migration::prelude::*;
 
 /// Main migrator
 pub struct Migrator;
@@ -56,16 +56,26 @@ impl MigrationTrait for CreateUser {
             CREATE INDEX idx_user_username ON user(username);
             CREATE INDEX idx_user_created_at ON user(created_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE user";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -94,16 +104,26 @@ impl MigrationTrait for CreatePost {
             CREATE INDEX idx_post_published_at ON post(published_at);
             CREATE INDEX idx_post_created_at ON post(created_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE post";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -129,16 +149,26 @@ impl MigrationTrait for CreateSession {
             CREATE INDEX idx_session_user_id ON session(user_id);
             CREATE INDEX idx_session_expires_at ON session(expires_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE session";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -168,16 +198,26 @@ impl MigrationTrait for CreateFile {
             CREATE INDEX idx_file_user_id ON file(user_id);
             CREATE INDEX idx_file_created_at ON file(created_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE file";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -209,16 +249,26 @@ impl MigrationTrait for CreateComment {
             CREATE INDEX idx_comment_user_id ON comment(user_id);
             CREATE INDEX idx_comment_created_at ON comment(created_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE comment";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -243,16 +293,26 @@ impl MigrationTrait for CreateVisitStats {
             INSERT INTO visit_stats (id, total_visits, today_visits, last_updated)
             VALUES (1, 0, 0, '1970-01-01T00:00:00+00:00');
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE visit_stats";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -277,16 +337,26 @@ impl MigrationTrait for CreatePostStats {
             );
             CREATE INDEX idx_post_stats_post_id ON post_stats(post_id);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE post_stats";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -302,9 +372,14 @@ impl MigrationName for AddViewsToPost {
 impl MigrationTrait for AddViewsToPost {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "ALTER TABLE post ADD COLUMN views INTEGER NOT NULL DEFAULT 0;";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -325,9 +400,14 @@ impl MigrationTrait for AddViewsToPost {
             CREATE INDEX idx_post_user_id ON post(user_id);
             CREATE INDEX idx_post_published_at ON post(published_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -354,16 +434,26 @@ impl MigrationTrait for CreateCategory {
             CREATE INDEX idx_category_parent_id ON category(parent_id);
             CREATE INDEX idx_category_slug ON category(slug);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE category;";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -387,16 +477,26 @@ impl MigrationTrait for CreateTag {
             );
             CREATE INDEX idx_tag_slug ON tag(slug);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE tag;";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -421,16 +521,26 @@ impl MigrationTrait for CreatePostTag {
             );
             CREATE INDEX idx_post_tag_tag_id ON post_tag(tag_id);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let sql = "DROP TABLE post_tag;";
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }
 
@@ -449,9 +559,14 @@ impl MigrationTrait for AddCategoryToPost {
             ALTER TABLE post ADD COLUMN category_id TEXT;
             CREATE INDEX idx_post_category_id ON post(category_id);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -475,8 +590,13 @@ impl MigrationTrait for AddCategoryToPost {
             CREATE INDEX idx_post_published_at ON post(published_at);
             CREATE INDEX idx_post_created_at ON post(created_at);
         "#;
-        manager.get_connection().execute(
-            Statement::from_string(manager.get_database_backend(), sql.to_owned())
-        ).await.map(|_| ())
+        manager
+            .get_connection()
+            .execute(Statement::from_string(
+                manager.get_database_backend(),
+                sql.to_owned(),
+            ))
+            .await
+            .map(|_| ())
     }
 }

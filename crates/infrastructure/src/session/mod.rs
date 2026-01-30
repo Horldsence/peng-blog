@@ -8,8 +8,8 @@
 //! - Clear error mapping
 //! - No special cases
 
-use crate::entity::session;
 use crate::entity::prelude::*;
+use crate::entity::session;
 use async_trait::async_trait;
 use chrono::Utc;
 use domain::{Error, Result, Session};
@@ -74,13 +74,11 @@ impl service::SessionRepository for SessionRepositoryImpl {
             .await
             .map_err(|e| Error::Internal(format!("Failed to get session: {}", e)))?;
 
-        Ok(model.map(|m| {
-            Session {
-                id: m.id,
-                user_id: uuid::Uuid::parse_str(&m.user_id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
-                expires_at: m.expires_at.parse().unwrap_or_else(|_| chrono::Utc::now()),
-                created_at: m.created_at.parse().unwrap_or_else(|_| chrono::Utc::now()),
-            }
+        Ok(model.map(|m| Session {
+            id: m.id,
+            user_id: uuid::Uuid::parse_str(&m.user_id).unwrap_or_else(|_| uuid::Uuid::new_v4()),
+            expires_at: m.expires_at.parse().unwrap_or_else(|_| chrono::Utc::now()),
+            created_at: m.created_at.parse().unwrap_or_else(|_| chrono::Utc::now()),
         }))
     }
 
@@ -122,20 +120,19 @@ impl service::SessionRepository for SessionRepositoryImpl {
 mod tests {
     use super::*;
 
-
     #[tokio::test]
     async fn test_session_repository() {
         // Note: This is a placeholder test
         // Real tests would use a test database or mock
         // For now, we just show the structure
-        
+
         let user_id = uuid::Uuid::new_v4();
-        
+
         // Create session
         let session = Session::new(user_id);
         assert_eq!(session.user_id, user_id);
         assert!(!session.is_expired());
-        
+
         // Create session with remember me
         let long_session = Session::with_remember(user_id);
         assert_eq!(long_session.user_id, user_id);

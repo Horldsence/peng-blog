@@ -78,7 +78,12 @@ pub trait PostRepository: Send + Sync {
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     /// Create a new user with password hashing
-    async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User>;
+    async fn create_user(
+        &self,
+        username: String,
+        password: String,
+        permissions: u64,
+    ) -> Result<User>;
 
     /// Find a user by username
     async fn find_by_username(&self, username: &str) -> Result<Option<User>>;
@@ -174,7 +179,12 @@ pub trait CommentRepository: Send + Sync {
     async fn update_comment(&self, comment: domain::Comment) -> Result<domain::Comment>;
 
     /// Delete a comment by ID
-    async fn delete_comment(&self, id: Uuid, user_id: Option<Uuid>, is_github_user: bool) -> Result<()>;
+    async fn delete_comment(
+        &self,
+        id: Uuid,
+        user_id: Option<Uuid>,
+        is_github_user: bool,
+    ) -> Result<()>;
 
     /// Get comment count for a post
     async fn get_post_comment_count(&self, post_id: Uuid) -> Result<u64>;
@@ -211,7 +221,12 @@ pub trait StatsRepository: Send + Sync {
 
 #[async_trait]
 pub trait CategoryRepository: Send + Sync {
-    async fn create_category(&self, name: String, slug: String, parent_id: Option<Uuid>) -> Result<Category>;
+    async fn create_category(
+        &self,
+        name: String,
+        slug: String,
+        parent_id: Option<Uuid>,
+    ) -> Result<Category>;
 
     async fn get_category(&self, id: Uuid) -> Result<Option<Category>>;
 
@@ -219,7 +234,12 @@ pub trait CategoryRepository: Send + Sync {
 
     async fn list_categories(&self) -> Result<Vec<Category>>;
 
-    async fn update_category(&self, id: Uuid, name: Option<String>, parent_id: Option<Uuid>) -> Result<Category>;
+    async fn update_category(
+        &self,
+        id: Uuid,
+        name: Option<String>,
+        parent_id: Option<Uuid>,
+    ) -> Result<Category>;
 
     async fn delete_category(&self, id: Uuid) -> Result<()>;
 

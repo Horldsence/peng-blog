@@ -9,7 +9,7 @@
 //! - File system operations are abstracted through repository
 
 use crate::repository::FileRepository;
-use domain::{Error, File, Result, UploadFile, FileResponse};
+use domain::{Error, File, FileResponse, Result, UploadFile};
 use std::sync::Arc;
 
 /// File service for managing user uploads
@@ -21,20 +21,21 @@ use std::sync::Arc;
 /// - Deleting files
 ///
 /// All operations are database-backed through the FileRepository trait.
-pub struct FileService<FR: FileRepository> {
-    file_repo: Arc<FR>,
+#[derive(Clone)]
+pub struct FileService {
+    file_repo: Arc<dyn FileRepository>,
     upload_dir: String,
     base_url: String,
 }
 
-impl<FR: FileRepository> FileService<FR> {
+impl FileService {
     /// Create a new file service
     ///
     /// # Arguments
     /// * `file_repo` - The file repository implementation (wrapped in Arc)
     /// * `upload_dir` - Directory where files are stored (absolute path)
     /// * `base_url` - Base URL for file access (e.g., "http://example.com")
-    pub fn new(file_repo: Arc<FR>, upload_dir: String, base_url: String) -> Self {
+    pub fn new(file_repo: Arc<dyn FileRepository>, upload_dir: String, base_url: String) -> Self {
         Self {
             file_repo,
             upload_dir,
@@ -52,17 +53,29 @@ impl<FR: FileRepository> FileService<FR> {
     /// * `Ok(FileResponse)` - The uploaded file information
     /// * `Err(Error::Validation)` - File size exceeds limit or invalid type
     /// * `Err(Error::Internal)` - File system or database error
-    pub async fn upload_file(&self, user_id: uuid::Uuid, upload: UploadFile) -> Result<FileResponse> {
+    pub async fn upload_file(
+        &self,
+        user_id: uuid::Uuid,
+        upload: UploadFile,
+    ) -> Result<FileResponse> {
         // Validate file size (max 10MB)
         const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024;
         if upload.data.len() as u64 > MAX_FILE_SIZE {
-            return Err(Error::Validation("File size exceeds 10MB limit".to_string()));
+            return Err(Error::Validation(
+                "File size exceeds 10MB limit".to_string(),
+            ));
         }
 
         // Validate content type (only allow images and documents)
-        let allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp",
+        let allowed_types = [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
             "application/pdf",
-            "text/plain", "text/markdown"];
+            "text/plain",
+            "text/markdown",
+        ];
         if !allowed_types.contains(&upload.content_type.as_str()) {
             return Err(Error::Validation(format!(
                 "Invalid content type: {}. Allowed types: {}",
@@ -139,14 +152,17 @@ impl<FR: FileRepository> FileService<FR> {
     /// * `Err(Error)` - Database error
     pub async fn list_files(&self, user_id: uuid::Uuid, limit: u64) -> Result<Vec<FileResponse>> {
         let files = self.file_repo.list_files_by_user(user_id, limit).await?;
-        Ok(files.into_iter().map(|file| FileResponse {
-            id: file.id,
-            url: file.url,
-            filename: file.filename,
-            original_filename: file.original_filename,
-            content_type: file.content_type,
-            size_bytes: file.size_bytes,
-        }).collect())
+        Ok(files
+            .into_iter()
+            .map(|file| FileResponse {
+                id: file.id,
+                url: file.url,
+                filename: file.filename,
+                original_filename: file.original_filename,
+                content_type: file.content_type,
+                size_bytes: file.size_bytes,
+            })
+            .collect())
     }
 
     /// Delete a file
@@ -165,19 +181,27 @@ impl<FR: FileRepository> FileService<FR> {
         let file = file_opt.ok_or_else(|| Error::NotFound("File not found".to_string()))?;
 
         if !file.is_owned_by(user_id) {
-            return Err(Error::Validation("You can only delete your own files".to_string()));
+            return Err(Error::Validation(
+                "You can only delete your own files".to_string(),
+            ));
         }
 
         // Delete from database
         self.file_repo.delete_file(id, user_id).await?;
 
         // Delete from filesystem (best effort)
-        let file_path = format!("{}/{}", self.upload_dir.trim_end_matches('/'), file.filename);
+        let file_path = format!(
+            "{}/{}",
+            self.upload_dir.trim_end_matches('/'),
+            file.filename
+        );
         let _ = tokio::fs::remove_file(file_path).await;
 
         Ok(())
     }
+}
 
+impl FileService {
     /// Generate a unique filename
     ///
     /// # Arguments
@@ -230,7 +254,8 @@ mod tests {
 
         async fn list_files_by_user(&self, user_id: uuid::Uuid, _limit: u64) -> Result<Vec<File>> {
             let files = self.files.read().await;
-            Ok(files.values()
+            Ok(files
+                .values()
                 .filter(|f| f.user_id == user_id)
                 .cloned()
                 .collect())

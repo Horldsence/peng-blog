@@ -16,24 +16,27 @@
 //! - Core (business logic) depends on Domain (types)
 //! - Domain (types) is implemented by Infrastructure (data access)
 
-pub mod post;
-pub mod user;
 pub mod category;
-pub mod tag;
+pub mod comment;
+pub mod file;
+pub mod post;
 pub mod repository;
 pub mod session;
-pub mod file;
-pub mod comment;
 pub mod stats;
+pub mod tag;
+pub mod user;
 
-pub use repository::{PostRepository, UserRepository, CategoryRepository, TagRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository};
-pub use post::PostService;
-pub use user::UserService;
 pub use category::CategoryService;
-pub use tag::TagService;
-pub use session::SessionService;
-pub use file::FileService;
 pub use comment::CommentService;
+pub use file::FileService;
+pub use post::PostService;
+pub use repository::{
+    CategoryRepository, CommentRepository, FileRepository, PostRepository, SessionRepository,
+    StatsRepository, TagRepository, UserRepository,
+};
+pub use session::SessionService;
 pub use stats::StatsService;
+pub use tag::TagService;
+pub use user::UserService;
 
 pub use domain::{Error, Result};

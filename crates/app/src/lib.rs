@@ -1,30 +1,21 @@
 use api::{routes, AuthState};
-use service::{PostService, UserService, SessionService, FileService, CommentService, StatsService, CategoryService, TagService};
+use infrastructure::MigratorTrait;
 use infrastructure::{
-    establish_connection, Migrator, PostRepositoryImpl, UserRepositoryImpl,
-    SessionRepositoryImpl, FileRepositoryImpl, CommentRepositoryImpl, StatsRepositoryImpl,
-    CategoryRepositoryImpl, TagRepositoryImpl,
+    establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, FileRepositoryImpl,
+    Migrator, PostRepositoryImpl, SessionRepositoryImpl, StatsRepositoryImpl, TagRepositoryImpl,
+    UserRepositoryImpl,
+};
+use service::{
+    CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
+    TagService, UserService,
 };
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use infrastructure::MigratorTrait;
-
-// Type alias for concrete AppState used in production
-pub type AppState = api::AppState<
-    PostRepositoryImpl,
-    UserRepositoryImpl,
-    SessionRepositoryImpl,
-    FileRepositoryImpl,
-    CommentRepositoryImpl,
-    StatsRepositoryImpl,
-    CategoryRepositoryImpl,
-    TagRepositoryImpl,
->;
 
 /// Start the blog server
-/// 
+///
 /// This function initializes the database, runs migrations, and starts the web server.
 /// It uses environment variables for configuration:
 /// - DATABASE_URL: SQLite database connection string (default: required)
@@ -43,20 +34,18 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
-    let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite://blog.db".to_string());
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://blog.db".to_string());
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "change-this-secret-in-production".to_string());
-    let upload_dir = std::env::var("UPLOAD_DIR")
-        .unwrap_or_else(|_| "./uploads".to_string());
-    let base_url = std::env::var("BASE_URL")
-        .unwrap_or_else(|_| "http://localhost:3000".to_string());
-    
+    let upload_dir = std::env::var("UPLOAD_DIR").unwrap_or_else(|_| "./uploads".to_string());
+    let base_url =
+        std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+
     tracing::info!("DATABASE_URL: {}", database_url);
-    let github_client_id = std::env::var("GITHUB_CLIENT_ID")
-        .unwrap_or_else(|_| "".to_string());
-    let github_client_secret = std::env::var("GITHUB_CLIENT_SECRET")
-        .unwrap_or_else(|_| "".to_string());
+    let github_client_id = std::env::var("GITHUB_CLIENT_ID").unwrap_or_else(|_| "".to_string());
+    let github_client_secret =
+        std::env::var("GITHUB_CLIENT_SECRET").unwrap_or_else(|_| "".to_string());
 
     let db = establish_connection(&database_url).await?;
 
@@ -82,13 +71,18 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let user_service = UserService::new(user_repo.clone());
     let session_service = SessionService::new(session_repo);
     let file_service = FileService::new(file_repo, upload_dir.clone(), base_url);
-    let comment_service = CommentService::new(comment_repo, user_repo, github_client_id, github_client_secret);
+    let comment_service = CommentService::new(
+        comment_repo,
+        user_repo,
+        github_client_id,
+        github_client_secret,
+    );
     let stats_service = StatsService::new(stats_repo);
     let category_service = CategoryService::new(category_repo);
     let tag_service = TagService::new(tag_repo);
     let auth_state = AuthState::new(&jwt_secret);
 
-    let state = AppState::builder()
+    let state = api::AppState::builder()
         .post_service(post_service)
         .user_service(user_service)
         .session_service(session_service)
@@ -102,16 +96,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .build();
 
     let app = axum::Router::new()
-        .nest("/api", routes::<
-            PostRepositoryImpl,
-            UserRepositoryImpl,
-            SessionRepositoryImpl,
-            FileRepositoryImpl,
-            CommentRepositoryImpl,
-            StatsRepositoryImpl,
-            CategoryRepositoryImpl,
-            TagRepositoryImpl,
-        >())
+        .nest("/api", routes())
         .fallback_service(ServeDir::new("static"))
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())

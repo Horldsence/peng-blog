@@ -1,14 +1,16 @@
+use crate::CategoryRepository;
 use domain::{Category, CreateCategory, Result, UpdateCategory};
 use std::sync::Arc;
-use crate::CategoryRepository;
 use uuid::Uuid;
 
-pub struct CategoryService<CR: CategoryRepository> {
-    repo: Arc<CR>,
+/// Service for category business logic
+#[derive(Clone)]
+pub struct CategoryService {
+    repo: Arc<dyn CategoryRepository>,
 }
 
-impl<CR: CategoryRepository> CategoryService<CR> {
-    pub fn new(repo: Arc<CR>) -> Self {
+impl CategoryService {
+    pub fn new(repo: Arc<dyn CategoryRepository>) -> Self {
         Self { repo }
     }
 
@@ -28,7 +30,9 @@ impl<CR: CategoryRepository> CategoryService<CR> {
             }
         }
 
-        self.repo.create_category(input.name, input.slug, input.parent_id).await
+        self.repo
+            .create_category(input.name, input.slug, input.parent_id)
+            .await
     }
 
     pub async fn get(&self, id: Uuid) -> Result<Category> {
@@ -66,7 +70,9 @@ impl<CR: CategoryRepository> CategoryService<CR> {
             self.validate_name(name)?;
         }
 
-        self.repo.update_category(id, input.name, input.parent_id).await
+        self.repo
+            .update_category(id, input.name, input.parent_id)
+            .await
     }
 
     pub async fn delete(&self, id: Uuid) -> Result<()> {
@@ -76,13 +82,20 @@ impl<CR: CategoryRepository> CategoryService<CR> {
     pub async fn get_children(&self, parent_id: Option<Uuid>) -> Result<Vec<Category>> {
         self.repo.get_children(parent_id).await
     }
+}
 
+impl CategoryService {
     fn validate_slug(&self, slug: &str) -> Result<()> {
         if slug.trim().is_empty() {
-            return Err(domain::Error::Validation("Slug cannot be empty".to_string()));
+            return Err(domain::Error::Validation(
+                "Slug cannot be empty".to_string(),
+            ));
         }
 
-        if !slug.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        if !slug
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+        {
             return Err(domain::Error::Validation(
                 "Slug can only contain letters, numbers, hyphens and underscores".to_string(),
             ));
@@ -93,7 +106,9 @@ impl<CR: CategoryRepository> CategoryService<CR> {
 
     fn validate_name(&self, name: &str) -> Result<()> {
         if name.trim().is_empty() {
-            return Err(domain::Error::Validation("Name cannot be empty".to_string()));
+            return Err(domain::Error::Validation(
+                "Name cannot be empty".to_string(),
+            ));
         }
 
         if name.len() > 100 {
@@ -109,8 +124,8 @@ impl<CR: CategoryRepository> CategoryService<CR> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::{mock, predicate::*};
     use domain::Error;
+    use mockall::{mock, predicate::*};
 
     mock! {
         CategoryRepo {}
@@ -139,8 +154,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_category_validates_empty_slug() {
-        let mock_repo = MockCategoryRepo::new();
-        let service = CategoryService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockCategoryRepo::new());
+        let service = CategoryService::new(mock_repo);
 
         let input = CreateCategory {
             name: "Test".to_string(),
@@ -159,8 +174,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_category_validates_invalid_slug() {
-        let mock_repo = MockCategoryRepo::new();
-        let service = CategoryService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockCategoryRepo::new());
+        let service = CategoryService::new(mock_repo);
 
         let input = CreateCategory {
             name: "Test".to_string(),
@@ -172,15 +187,17 @@ mod tests {
 
         assert!(result.is_err());
         match result {
-            Err(Error::Validation(msg)) => assert!(msg.contains("letters, numbers, hyphens and underscores")),
+            Err(Error::Validation(msg)) => {
+                assert!(msg.contains("letters, numbers, hyphens and underscores"))
+            }
             _ => panic!("Expected validation error for invalid slug"),
         }
     }
 
     #[tokio::test]
     async fn test_create_category_validates_empty_name() {
-        let mock_repo = MockCategoryRepo::new();
-        let service = CategoryService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockCategoryRepo::new());
+        let service = CategoryService::new(mock_repo);
 
         let input = CreateCategory {
             name: "".to_string(),
@@ -199,8 +216,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_category_validates_long_name() {
-        let mock_repo = MockCategoryRepo::new();
-        let service = CategoryService::new(Arc::new(mock_repo));
+        let mock_repo = Arc::new(MockCategoryRepo::new());
+        let service = CategoryService::new(mock_repo);
 
         let input = CreateCategory {
             name: "a".repeat(101),
