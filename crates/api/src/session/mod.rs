@@ -28,13 +28,15 @@ use crate::{
     FileRepository,
     CommentRepository,
     StatsRepository,
+    CategoryRepository,
+    TagRepository,
 };
 
 // ============================================================================
 // Routes
 // ============================================================================
 
-pub fn routes<PR, UR, SR, FR, CR, STR>() -> Router<AppState<PR, UR, SR, FR, CR, STR>>
+pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
     UR: UserRepository + Send + Sync + 'static + Clone,
@@ -42,6 +44,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     Router::new()
         // POST /api/sessions - Create session (login with cookie)
@@ -79,8 +83,8 @@ pub struct SessionResponse {
 
 /// POST /api/sessions
 /// Create a new session and set cookie
-pub async fn create_session<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn create_session<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Json(input): Json<CreateSessionRequest>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -90,6 +94,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     // Validate input
     if input.username.trim().is_empty() || input.password.trim().is_empty() {
@@ -133,8 +139,8 @@ where
 
 /// DELETE /api/sessions
 /// Delete current session (logout)
-pub async fn delete_session<PR, UR, SR, FR, CR, STR>(
-    State(_state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn delete_session<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(_state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
 ) -> Result<impl IntoResponse, ApiError>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
@@ -143,6 +149,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     // Delete session (we'll get the token from cookie in a real implementation)
     // For now, just return success - the cookie will be cleared on client side
@@ -158,9 +166,9 @@ where
 
 /// GET /api/sessions/me
 /// Get current session info
-pub async fn get_session_info<PR, UR, SR, FR, CR, STR>(
+pub async fn get_session_info<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(_state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(_state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
 ) -> Result<impl IntoResponse, ApiError>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
@@ -169,6 +177,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let user_info = domain::UserInfo {
         id: Uuid::parse_str(&user.sub)
@@ -182,8 +192,8 @@ where
 
 /// POST /api/sessions/github
 /// Handle GitHub OAuth callback
-pub async fn github_callback<PR, UR, SR, FR, CR, STR>(
-    State(_state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn github_callback<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(_state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Json(_input): Json<serde_json::Value>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -193,6 +203,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     // This will be implemented to handle GitHub OAuth callback
     // For now, return placeholder

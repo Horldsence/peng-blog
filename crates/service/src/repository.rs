@@ -11,7 +11,7 @@
 //! - No concrete database types in traits
 
 use async_trait::async_trait;
-use domain::{Post, Result, User};
+use domain::{Category, Post, Result, Tag, User};
 use uuid::Uuid;
 
 // ============================================================================
@@ -47,6 +47,24 @@ pub trait PostRepository: Send + Sync {
 
     /// List all posts (including unpublished) - admin only
     async fn list_all_posts(&self, limit: u64) -> Result<Vec<Post>>;
+
+    /// Update post category
+    async fn update_post_category(&self, post_id: Uuid, category_id: Option<Uuid>) -> Result<()>;
+
+    /// Get posts by category
+    async fn get_posts_by_category(&self, category_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+
+    /// Add tag to post
+    async fn add_tag_to_post(&self, post_id: Uuid, tag_id: Uuid) -> Result<()>;
+
+    /// Remove tag from post
+    async fn remove_tag_from_post(&self, post_id: Uuid, tag_id: Uuid) -> Result<()>;
+
+    /// Get tags for a post
+    async fn get_post_tags(&self, post_id: Uuid) -> Result<Vec<Tag>>;
+
+    /// Get posts by tag
+    async fn get_posts_by_tag(&self, tag_id: Uuid, limit: u64) -> Result<Vec<Post>>;
 }
 
 // ============================================================================
@@ -189,4 +207,34 @@ pub trait StatsRepository: Send + Sync {
 
     /// Get total statistics (admin only)
     async fn get_total_stats(&self) -> Result<domain::stats::StatsResponse>;
+}
+
+#[async_trait]
+pub trait CategoryRepository: Send + Sync {
+    async fn create_category(&self, name: String, slug: String, parent_id: Option<Uuid>) -> Result<Category>;
+
+    async fn get_category(&self, id: Uuid) -> Result<Option<Category>>;
+
+    async fn get_category_by_slug(&self, slug: &str) -> Result<Option<Category>>;
+
+    async fn list_categories(&self) -> Result<Vec<Category>>;
+
+    async fn update_category(&self, id: Uuid, name: Option<String>, parent_id: Option<Uuid>) -> Result<Category>;
+
+    async fn delete_category(&self, id: Uuid) -> Result<()>;
+
+    async fn get_children(&self, parent_id: Option<Uuid>) -> Result<Vec<Category>>;
+}
+
+#[async_trait]
+pub trait TagRepository: Send + Sync {
+    async fn create_tag(&self, name: String, slug: String) -> Result<Tag>;
+
+    async fn get_tag(&self, id: Uuid) -> Result<Option<Tag>>;
+
+    async fn get_tag_by_slug(&self, slug: &str) -> Result<Option<Tag>>;
+
+    async fn list_tags(&self) -> Result<Vec<Tag>>;
+
+    async fn delete_tag(&self, id: Uuid) -> Result<()>;
 }

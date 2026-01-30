@@ -23,6 +23,8 @@ use crate::{
     FileRepository,
     CommentRepository,
     StatsRepository,
+    CategoryRepository,
+    TagRepository,
 };
 use domain::{USER_MANAGE, check_permission, check_ownership_or_admin};
 
@@ -55,7 +57,7 @@ pub struct UpdatePermissionsRequest {
 // Routes
 // ============================================================================
 
-pub fn routes<PR, UR, SR, FR, CR, STR>() -> Router<AppState<PR, UR, SR, FR, CR, STR>>
+pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
     UR: UserRepository + Send + Sync + 'static + Clone,
@@ -63,6 +65,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     Router::new()
         // GET /api/users - List all users (admin only)
@@ -84,8 +88,8 @@ where
 
 /// GET /api/users
 /// List all users (admin only)
-async fn list_users<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+async fn list_users<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     user: Claims,
     Query(params): Query<ListUsersQuery>,
 ) -> Result<impl IntoResponse, ApiError>
@@ -96,6 +100,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     check_permission(user.permissions, USER_MANAGE)?;
     
@@ -110,8 +116,8 @@ where
 
 /// GET /api/users/:id
 /// Get user info (self or admin)
-async fn get_user<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+async fn get_user<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     user: Claims,
     Path(user_id): Path<Uuid>,
 ) -> Result<impl IntoResponse, ApiError>
@@ -122,6 +128,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let requester_id = uuid::Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
@@ -139,8 +147,8 @@ where
 
 /// PATCH /api/users/:id/permissions
 /// Update user permissions (admin only)
-async fn update_permissions<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+async fn update_permissions<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     user: Claims,
     Path(user_id): Path<Uuid>,
     Json(input): Json<UpdatePermissionsRequest>,
@@ -152,6 +160,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     check_permission(user.permissions, USER_MANAGE)?;
     
@@ -174,8 +184,8 @@ where
 
 /// GET /api/users/:id/posts
 /// Get public posts by a specific user (public endpoint)
-async fn list_user_posts<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+async fn list_user_posts<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(user_id): Path<Uuid>,
     Query(params): Query<ListPostsQuery>,
 ) -> Result<impl IntoResponse, ApiError>
@@ -186,6 +196,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let posts = state
         .post_service

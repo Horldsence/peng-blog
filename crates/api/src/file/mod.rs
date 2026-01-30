@@ -28,12 +28,14 @@ use crate::{
     FileRepository,
     CommentRepository,
     StatsRepository,
+    CategoryRepository,
+    TagRepository,
 };
 
 // ============================================================================
 // Routes
 // ============================================================================
-pub fn routes<PR, UR, SR, FR, CR, STR>() -> Router<AppState<PR, UR, SR, FR, CR, STR>>
+pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
     UR: UserRepository + Send + Sync + 'static + Clone,
@@ -41,6 +43,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     Router::new()
         // POST /api/files - Upload a file
@@ -64,9 +68,9 @@ where
 ///
 /// Request body: multipart/form-data with file field
 /// Response: FileResponse with file metadata
-pub async fn upload_file<PR, UR, SR, FR, CR, STR>(
+pub async fn upload_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     mut multipart: axum_extra::extract::Multipart,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -76,6 +80,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let user_id = Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
@@ -119,8 +125,8 @@ where
 
 /// GET /api/files/:id
 /// Get file metadata
-pub async fn get_file<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn get_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -130,6 +136,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let file_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;
@@ -148,8 +156,8 @@ where
 
 /// GET /api/files/:id/download
 /// Download file content
-pub async fn download_file<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn download_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -159,6 +167,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let file_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;
@@ -191,9 +201,9 @@ where
 
 /// GET /api/files?limit=50
 /// List files uploaded by the current user
-pub async fn list_files<PR, UR, SR, FR, CR, STR>(
+pub async fn list_files<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
 ) -> Result<impl IntoResponse, ApiError>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
@@ -202,6 +212,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let user_id = Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
@@ -219,9 +231,9 @@ where
 
 /// DELETE /api/files/:id
 /// Delete a file
-pub async fn delete_file<PR, UR, SR, FR, CR, STR>(
+pub async fn delete_file<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -231,6 +243,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let file_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;

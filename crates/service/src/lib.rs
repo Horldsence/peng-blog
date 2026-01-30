@@ -18,15 +18,19 @@
 
 pub mod post;
 pub mod user;
+pub mod category;
+pub mod tag;
 pub mod repository;
 pub mod session;
 pub mod file;
 pub mod comment;
 pub mod stats;
 
-pub use repository::{PostRepository, UserRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository};
+pub use repository::{PostRepository, UserRepository, CategoryRepository, TagRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository};
 pub use post::PostService;
 pub use user::UserService;
+pub use category::CategoryService;
+pub use tag::TagService;
 pub use session::SessionService;
 pub use file::FileService;
 pub use comment::CommentService;

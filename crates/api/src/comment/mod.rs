@@ -27,13 +27,15 @@ use crate::{
     FileRepository,
     CommentRepository,
     StatsRepository,
+    CategoryRepository,
+    TagRepository,
 };
 
 // ============================================================================
 // Routes
 // ============================================================================
 
-pub fn routes<PR, UR, SR, FR, CR, STR>() -> Router<AppState<PR, UR, SR, FR, CR, STR>>
+pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> Router<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
     UR: UserRepository + Send + Sync + 'static + Clone,
@@ -41,6 +43,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     Router::new()
         // GET /api/comments/github/auth - Get GitHub OAuth URL (most specific)
@@ -71,8 +75,8 @@ where
 /// - redirect_uri: OAuth callback URL
 ///
 /// This endpoint is public - no authentication required.
-pub async fn github_auth_url<PR, UR, SR, FR, CR, STR>(
-    State(_state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn github_auth_url<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(_state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
 ) -> Result<impl IntoResponse, ApiError>
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
@@ -81,6 +85,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     // Note: In a real implementation, we would:
     // 1. Generate a random state
@@ -105,9 +111,9 @@ where
 /// - content: Comment content
 ///
 /// Requires JWT authentication.
-pub async fn create_comment<PR, UR, SR, FR, CR, STR>(
+pub async fn create_comment<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Json(input): Json<CreateComment>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -117,6 +123,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let user_id = Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
@@ -140,8 +148,8 @@ where
 ///
 /// This endpoint is public - no authentication required.
 /// The service will perform the full GitHub OAuth flow.
-pub async fn create_comment_github<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn create_comment_github<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Json(input): Json<CreateCommentGitHub>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -151,6 +159,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let response = state
         .comment_service
@@ -172,8 +182,8 @@ where
 /// - limit: Maximum number of comments to return (default: 50)
 ///
 /// This endpoint is public - no authentication required.
-pub async fn list_post_comments<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn list_post_comments<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -183,6 +193,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let post_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid post ID: {}", e)))?;
@@ -202,8 +214,8 @@ where
 /// Get a single comment by ID
 ///
 /// This endpoint is public - no authentication required.
-pub async fn get_comment<PR, UR, SR, FR, CR, STR>(
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+pub async fn get_comment<PR, UR, SR, FR, CR, STR, CTR, TR>(
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -213,6 +225,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let comment_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid comment ID: {}", e)))?;
@@ -237,9 +251,9 @@ where
 ///
 /// Only the comment author can update their own comment.
 /// Requires JWT authentication for registered users.
-pub async fn update_comment<PR, UR, SR, FR, CR, STR>(
+pub async fn update_comment<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
     Json(input): Json<serde_json::Value>,
 ) -> Result<impl IntoResponse, ApiError>
@@ -250,6 +264,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let comment_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid comment ID: {}", e)))?;
@@ -283,9 +299,9 @@ where
 ///
 /// Only the comment author can delete their own comment.
 /// Requires JWT authentication for registered users.
-pub async fn delete_comment<PR, UR, SR, FR, CR, STR>(
+pub async fn delete_comment<PR, UR, SR, FR, CR, STR, CTR, TR>(
     user: Claims,
-    State(state): State<AppState<PR, UR, SR, FR, CR, STR>>,
+    State(state): State<AppState<PR, UR, SR, FR, CR, STR, CTR, TR>>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ApiError>
 where
@@ -295,6 +311,8 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     let comment_id = Uuid::parse_str(&id)
         .map_err(|e| ApiError::Validation(format!("Invalid comment ID: {}", e)))?;

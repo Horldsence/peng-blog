@@ -26,6 +26,10 @@ impl MigratorTrait for Migrator {
             Box::new(CreateVisitStats),
             Box::new(CreatePostStats),
             Box::new(AddViewsToPost),
+            Box::new(CreateCategory),
+            Box::new(CreateTag),
+            Box::new(CreatePostTag),
+            Box::new(AddCategoryToPost),
         ]
     }
 }
@@ -320,6 +324,156 @@ impl MigrationTrait for AddViewsToPost {
             ALTER TABLE post_new RENAME TO post;
             CREATE INDEX idx_post_user_id ON post(user_id);
             CREATE INDEX idx_post_published_at ON post(published_at);
+        "#;
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+}
+
+struct CreateCategory;
+
+impl MigrationName for CreateCategory {
+    fn name(&self) -> &str {
+        "m20250101_000007_create_category"
+    }
+}
+
+#[async_trait::async_trait]
+impl MigrationTrait for CreateCategory {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = r#"
+            CREATE TABLE category (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                slug TEXT NOT NULL UNIQUE,
+                parent_id TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (parent_id) REFERENCES category(id) ON DELETE SET NULL
+            );
+            CREATE INDEX idx_category_parent_id ON category(parent_id);
+            CREATE INDEX idx_category_slug ON category(slug);
+        "#;
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = "DROP TABLE category;";
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+}
+
+struct CreateTag;
+
+impl MigrationName for CreateTag {
+    fn name(&self) -> &str {
+        "m20250101_000008_create_tag"
+    }
+}
+
+#[async_trait::async_trait]
+impl MigrationTrait for CreateTag {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = r#"
+            CREATE TABLE tag (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                slug TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX idx_tag_slug ON tag(slug);
+        "#;
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = "DROP TABLE tag;";
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+}
+
+struct CreatePostTag;
+
+impl MigrationName for CreatePostTag {
+    fn name(&self) -> &str {
+        "m20250101_000009_create_post_tag"
+    }
+}
+
+#[async_trait::async_trait]
+impl MigrationTrait for CreatePostTag {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = r#"
+            CREATE TABLE post_tag (
+                post_id TEXT NOT NULL,
+                tag_id TEXT NOT NULL,
+                PRIMARY KEY (post_id, tag_id),
+                FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE,
+                FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE
+            );
+            CREATE INDEX idx_post_tag_tag_id ON post_tag(tag_id);
+        "#;
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = "DROP TABLE post_tag;";
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+}
+
+struct AddCategoryToPost;
+
+impl MigrationName for AddCategoryToPost {
+    fn name(&self) -> &str {
+        "m20250101_000010_add_category_to_post"
+    }
+}
+
+#[async_trait::async_trait]
+impl MigrationTrait for AddCategoryToPost {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let sql = r#"
+            ALTER TABLE post ADD COLUMN category_id TEXT;
+            CREATE INDEX idx_post_category_id ON post(category_id);
+        "#;
+        manager.get_connection().execute(
+            Statement::from_string(manager.get_database_backend(), sql.to_owned())
+        ).await.map(|_| ())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // SQLite doesn't support DROP COLUMN directly, need to recreate table
+        let sql = r#"
+            CREATE TABLE post_new (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                published_at TEXT,
+                created_at TEXT NOT NULL,
+                views INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+            );
+            INSERT INTO post_new (id, user_id, title, content, published_at, created_at, views)
+            SELECT id, user_id, title, content, published_at, created_at, views FROM post;
+            DROP TABLE post;
+            ALTER TABLE post_new RENAME TO post;
+            CREATE INDEX idx_post_user_id ON post(user_id);
+            CREATE INDEX idx_post_published_at ON post(published_at);
+            CREATE INDEX idx_post_created_at ON post(created_at);
         "#;
         manager.get_connection().execute(
             Statement::from_string(manager.get_database_backend(), sql.to_owned())

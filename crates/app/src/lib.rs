@@ -1,8 +1,9 @@
 use api::{routes, AuthState};
-use service::{PostService, UserService, SessionService, FileService, CommentService, StatsService};
+use service::{PostService, UserService, SessionService, FileService, CommentService, StatsService, CategoryService, TagService};
 use infrastructure::{
     establish_connection, Migrator, PostRepositoryImpl, UserRepositoryImpl,
     SessionRepositoryImpl, FileRepositoryImpl, CommentRepositoryImpl, StatsRepositoryImpl,
+    CategoryRepositoryImpl, TagRepositoryImpl,
 };
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -18,6 +19,8 @@ pub type AppState = api::AppState<
     FileRepositoryImpl,
     CommentRepositoryImpl,
     StatsRepositoryImpl,
+    CategoryRepositoryImpl,
+    TagRepositoryImpl,
 >;
 
 /// Start the blog server
@@ -69,8 +72,10 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let user_repo = Arc::new(UserRepositoryImpl::new(db_clone.clone()));
     let session_repo = Arc::new(SessionRepositoryImpl::new(db_clone.clone()));
     let file_repo = Arc::new(FileRepositoryImpl::new(db_clone.clone()));
-    let comment_repo = Arc::new(CommentRepositoryImpl::new(db_clone));
-    let stats_repo = Arc::new(StatsRepositoryImpl::new(db));
+    let comment_repo = Arc::new(CommentRepositoryImpl::new(db_clone.clone()));
+    let stats_repo = Arc::new(StatsRepositoryImpl::new(db_clone.clone()));
+    let category_repo = Arc::new(CategoryRepositoryImpl::new(db_clone.clone()));
+    let tag_repo = Arc::new(TagRepositoryImpl::new(db_clone));
 
     // Create all services
     let post_service = PostService::new(post_repo);
@@ -79,6 +84,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let file_service = FileService::new(file_repo, upload_dir.clone(), base_url);
     let comment_service = CommentService::new(comment_repo, user_repo, github_client_id, github_client_secret);
     let stats_service = StatsService::new(stats_repo);
+    let category_service = CategoryService::new(category_repo);
+    let tag_service = TagService::new(tag_repo);
     let auth_state = AuthState::new(&jwt_secret);
 
     let state = AppState::builder()
@@ -88,6 +95,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .file_service(file_service)
         .comment_service(comment_service)
         .stats_service(stats_service)
+        .category_service(category_service)
+        .tag_service(tag_service)
         .auth_state(auth_state)
         .upload_dir(upload_dir)
         .build();
@@ -100,6 +109,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             FileRepositoryImpl,
             CommentRepositoryImpl,
             StatsRepositoryImpl,
+            CategoryRepositoryImpl,
+            TagRepositoryImpl,
         >())
         .fallback_service(ServeDir::new("static"))
         .layer(TraceLayer::new_for_http())

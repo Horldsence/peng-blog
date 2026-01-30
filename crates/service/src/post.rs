@@ -132,6 +132,77 @@ impl<R: PostRepository> PostService<R> {
     ) -> Result<Vec<Post>> {
         self.repo.list_published_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
     }
+
+    /// Set category for a post with permission and ownership checks
+    pub async fn set_category(
+        &self,
+        post_id: Uuid,
+        category_id: Option<Uuid>,
+        user_id: Uuid,
+        permissions: u64,
+    ) -> Result<()> {
+        domain::check_permission(permissions, POST_UPDATE)?;
+
+        let post = self.repo.get_post(post_id).await?;
+        domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
+
+        self.repo.update_post_category(post_id, category_id).await
+    }
+
+    /// Add tag to post with permission and ownership checks
+    pub async fn add_tag(
+        &self,
+        post_id: Uuid,
+        tag_id: Uuid,
+        user_id: Uuid,
+        permissions: u64,
+    ) -> Result<()> {
+        domain::check_permission(permissions, POST_UPDATE)?;
+
+        let post = self.repo.get_post(post_id).await?;
+        domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
+
+        self.repo.add_tag_to_post(post_id, tag_id).await
+    }
+
+    /// Remove tag from post with permission and ownership checks
+    pub async fn remove_tag(
+        &self,
+        post_id: Uuid,
+        tag_id: Uuid,
+        user_id: Uuid,
+        permissions: u64,
+    ) -> Result<()> {
+        domain::check_permission(permissions, POST_UPDATE)?;
+
+        let post = self.repo.get_post(post_id).await?;
+        domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
+
+        self.repo.remove_tag_from_post(post_id, tag_id).await
+    }
+
+    /// Get tags for a post
+    pub async fn get_tags(&self, post_id: Uuid) -> Result<Vec<domain::Tag>> {
+        self.repo.get_post_tags(post_id).await
+    }
+
+    /// List published posts by category
+    pub async fn list_by_category(
+        &self,
+        category_id: Uuid,
+        limit: Option<u64>,
+    ) -> Result<Vec<Post>> {
+        self.repo.get_posts_by_category(category_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+    }
+
+    /// List published posts by tag
+    pub async fn list_by_tag(
+        &self,
+        tag_id: Uuid,
+        limit: Option<u64>,
+    ) -> Result<Vec<Post>> {
+        self.repo.get_posts_by_tag(tag_id, limit.unwrap_or(DEFAULT_LIST_LIMIT)).await
+    }
 }
 
 // ============================================================================
@@ -167,6 +238,7 @@ impl<R: PostRepository> PostService<R> {
 mod tests {
     use super::*;
     use async_trait::async_trait;
+    use domain::Tag;
     use mockall::mock;
     use std::sync::Arc;
 
@@ -184,6 +256,12 @@ mod tests {
             async fn get_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>>;
             async fn list_published_posts_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<Post>>;
             async fn list_all_posts(&self, limit: u64) -> Result<Vec<Post>>;
+            async fn update_post_category(&self, post_id: Uuid, category_id: Option<Uuid>) -> Result<()>;
+            async fn get_posts_by_category(&self, category_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+            async fn add_tag_to_post(&self, post_id: Uuid, tag_id: Uuid) -> Result<()>;
+            async fn remove_tag_from_post(&self, post_id: Uuid, tag_id: Uuid) -> Result<()>;
+            async fn get_post_tags(&self, post_id: Uuid) -> Result<Vec<Tag>>;
+            async fn get_posts_by_tag(&self, tag_id: Uuid, limit: u64) -> Result<Vec<Post>>;
         }
     }
 

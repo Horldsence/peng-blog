@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub struct Comment {
     pub id: Uuid,
     pub post_id: Uuid,
-    pub user_id: Option<Uuid>,          // None for GitHub users
+    pub user_id: Option<Uuid>,           // None for GitHub users
     pub github_username: Option<String>, // Set for GitHub users
     pub github_avatar_url: Option<String>,
     pub content: String,
@@ -31,11 +31,7 @@ impl Comment {
     }
 
     /// Create a new comment from GitHub user
-    pub fn from_github(
-        post_id: Uuid,
-        github_user: &GitHubUser,
-        content: String,
-    ) -> Self {
+    pub fn from_github(post_id: Uuid, github_user: &GitHubUser, content: String) -> Self {
         Self {
             id: Uuid::new_v4(),
             post_id,
@@ -76,7 +72,7 @@ pub struct CreateComment {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateCommentGitHub {
     pub post_id: Uuid,
-    pub github_code: String,  // OAuth authorization code
+    pub github_code: String, // OAuth authorization code
     pub content: String,
 }
 
@@ -95,12 +91,17 @@ pub struct CommentResponse {
 
 impl From<&Comment> for CommentResponse {
     fn from(comment: &Comment) -> Self {
-        let (username, avatar_url, is_github_user) = if let Some(github_username) = &comment.github_username {
-            (github_username.clone(), comment.github_avatar_url.clone(), true)
-        } else {
-            // For registered users, username will be filled by service layer
-            (String::new(), None, false)
-        };
+        let (username, avatar_url, is_github_user) =
+            if let Some(github_username) = &comment.github_username {
+                (
+                    github_username.clone(),
+                    comment.github_avatar_url.clone(),
+                    true,
+                )
+            } else {
+                // For registered users, username will be filled by service layer
+                (String::new(), None, false)
+            };
 
         Self {
             id: comment.id,

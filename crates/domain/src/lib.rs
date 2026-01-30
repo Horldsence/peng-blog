@@ -6,22 +6,28 @@
 //! The domain layer defines the core business entities and rules that are
 //! independent of any infrastructure or API concerns.
 
-pub mod post;
-pub mod user;
-pub mod error;
-pub mod session;
-pub mod file;
+pub mod category;
 pub mod comment;
+pub mod error;
+pub mod file;
+pub mod post;
+pub mod session;
 pub mod stats;
+pub mod tag;
+pub mod user;
 
 // Re-export commonly used types for convenience
+pub use category::{Category, CreateCategory, UpdateCategory};
+pub use comment::{
+    Comment, CommentResponse, CreateComment, CreateCommentGitHub, GitHubAuthRequest, GitHubUser,
+};
 pub use error::{Error, Result};
-pub use post::{Post, CreatePost, UpdatePost};
-pub use user::{User, UserInfo, RegisterRequest, LoginRequest, LoginResponse};
-pub use session::{Session, CreateSession};
-pub use file::{File, UploadFile, FileResponse};
-pub use comment::{Comment, CreateComment, CreateCommentGitHub, CommentResponse, GitHubUser, GitHubAuthRequest};
-pub use stats::{VisitStats, PostStats, DailyStats, StatsResponse, RecordViewRequest};
+pub use file::{File, FileResponse, UploadFile};
+pub use post::{CreatePost, Post, UpdatePost};
+pub use session::{CreateSession, Session};
+pub use stats::{DailyStats, PostStats, RecordViewRequest, StatsResponse, VisitStats};
+pub use tag::{CreateTag, Tag};
+pub use user::{LoginRequest, LoginResponse, RegisterRequest, User, UserInfo};
 
 // ============================================================================
 // Permission Constants (Bit Flags)
@@ -50,7 +56,8 @@ pub const USER_MANAGE: u64 = 1 << 4;
 pub const DEFAULT_USER_PERMISSIONS: u64 = POST_CREATE | POST_UPDATE | POST_PUBLISH;
 
 /// Admin permissions - all permissions combined
-pub const ADMIN_PERMISSIONS: u64 = POST_CREATE | POST_UPDATE | POST_DELETE | POST_PUBLISH | USER_MANAGE;
+pub const ADMIN_PERMISSIONS: u64 =
+    POST_CREATE | POST_UPDATE | POST_DELETE | POST_PUBLISH | USER_MANAGE;
 
 // ============================================================================
 // Permission Checking Helpers
@@ -79,11 +86,11 @@ pub fn check_ownership_or_admin(
     if resource_owner_id == requester_id {
         return Ok(());
     }
-    
+
     if (requester_permissions & admin_permission) != 0 {
         return Ok(());
     }
-    
+
     Err(Error::Validation(
         "Permission denied: you must be the resource owner or have admin privileges".to_string(),
     ))

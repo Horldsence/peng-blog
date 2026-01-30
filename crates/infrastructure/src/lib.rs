@@ -18,6 +18,8 @@ pub mod entity;
 // Repository implementations
 pub mod post;
 pub mod user;
+pub mod category;
+pub mod tag;
 pub mod session;
 pub mod file;
 pub mod comment;
@@ -29,6 +31,8 @@ pub mod migrations;
 // Re-exports for convenience
 pub use post::*;
 pub use user::*;
+pub use category::*;
+pub use tag::*;
 pub use session::*;
 pub use file::*;
 pub use comment::*;

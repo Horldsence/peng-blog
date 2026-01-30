@@ -14,13 +14,15 @@ pub mod session;
 pub mod file;
 pub mod comment;
 pub mod stats;
+pub mod category;
+pub mod tag;
 
 // Re-export commonly used types for convenience
 pub use state::AppState;
 pub use error::ApiResult;
 
 // Re-export repository traits for generic type parameters
-pub use service::{PostRepository, UserRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository};
+pub use service::{PostRepository, UserRepository, SessionRepository, FileRepository, CommentRepository, StatsRepository, CategoryRepository, TagRepository};
 pub use middleware::auth::{AuthState, Claims};
 
 // ============================================================================
@@ -30,7 +32,7 @@ pub use middleware::auth::{AuthState, Claims};
 /// Create complete API router by merging all route modules
 ///
 /// This function encapsulates routing structure, keeping main.rs clean.
-/// Routes are organized by resource type: auth, posts, users, sessions, files, comments, and stats.
+/// Routes are organized by resource type: auth, posts, users, sessions, files, comments, stats, categories, and tags.
 ///
 /// Returns a router that requires application state to be provided via `with_state()`.
 ///
@@ -41,8 +43,8 @@ pub use middleware::auth::{AuthState, Claims};
 ///     .nest("/api", api::routes())
 ///     .with_state(app_state);
 /// ```
-pub fn routes<PR, UR, SR, FR, CR, STR>() -> axum::Router<
-    AppState<PR, UR, SR, FR, CR, STR>
+pub fn routes<PR, UR, SR, FR, CR, STR, CTR, TR>() -> axum::Router<
+    AppState<PR, UR, SR, FR, CR, STR, CTR, TR>
 >
 where
     PR: PostRepository + Send + Sync + 'static + Clone,
@@ -51,13 +53,17 @@ where
     FR: FileRepository + Send + Sync + 'static + Clone,
     CR: CommentRepository + Send + Sync + 'static + Clone,
     STR: StatsRepository + Send + Sync + 'static + Clone,
+    CTR: CategoryRepository + Send + Sync + 'static + Clone,
+    TR: TagRepository + Send + Sync + 'static + Clone,
 {
     axum::Router::new()
-        .nest("/auth", auth::routes::<PR, UR, SR, FR, CR, STR>())
-        .nest("/posts", post::routes::<PR, UR, SR, FR, CR, STR>())
-        .nest("/users", user::routes::<PR, UR, SR, FR, CR, STR>())
-        .nest("/sessions", session::routes::<PR, UR, SR, FR, CR, STR>())
-        .nest("/files", file::routes::<PR, UR, SR, FR, CR, STR>())
-        .nest("/comments", comment::routes::<PR, UR, SR, FR, CR, STR>())
-        .nest("/stats", stats::routes::<PR, UR, SR, FR, CR, STR>())
+        .nest("/auth", auth::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/posts", post::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/users", user::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/sessions", session::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/files", file::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/comments", comment::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/stats", stats::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/categories", category::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
+        .nest("/tags", tag::routes::<PR, UR, SR, FR, CR, STR, CTR, TR>())
 }

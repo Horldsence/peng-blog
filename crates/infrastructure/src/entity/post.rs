@@ -14,29 +14,62 @@ pub struct Model {
     /// Primary key - stored as string (UUID as string for SQLite compatibility)
     #[sea_orm(primary_key)]
     pub id: String,
-    
+
     /// ID of the user who owns this post
     pub user_id: String,
-    
+
     /// Post title
     pub title: String,
-    
+
     /// Post content (markdown)
     pub content: String,
-    
+
+    pub category_id: Option<String>,
+
     /// Optional ISO 8601 datetime string when post was published
     pub published_at: Option<String>,
-    
+
     /// ISO 8601 datetime string when post was created
     pub created_at: String,
-    
+
     /// Number of times this post has been viewed
     pub views: i64,
 }
 
 /// Relations for Post entity
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::category::Entity",
+        from = "Column::CategoryId",
+        to = "super::category::Column::Id",
+        on_update = "Cascade",
+        on_delete = "SetNull"
+    )]
+    Category,
+    #[sea_orm(has_many = "super::post_tag::Entity")]
+    PostTags,
+}
+
+impl Related<super::category::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Category.def()
+    }
+}
+
+impl Related<super::post_tag::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::PostTags.def()
+    }
+}
+
+impl Related<super::tag::Entity> for Entity {
+    fn to() -> RelationDef {
+        // SeaORM 1.1 doesn't support through() in the same way
+        // We use find_also_related in queries instead
+        super::post_tag::Entity::has_many(super::tag::Entity).into()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {
     /// Hook that runs before inserting a new record

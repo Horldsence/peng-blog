@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 /// Domain errors that can occur throughout the application
 #[derive(Debug, Error, Clone, Serialize, Deserialize)]
