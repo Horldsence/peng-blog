@@ -4,7 +4,7 @@
 //! It coordinates repository calls and enforces business rules.
 
 use domain::PostRepository;
-use domain::{Error, Post, Result, POST_DELETE, POST_PUBLISH, POST_UPDATE};
+use domain::{Error, Post, Result, SearchPostsRequest, SearchPostsResponse, POST_DELETE, POST_PUBLISH, POST_UPDATE};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -212,6 +212,17 @@ impl PostService {
             .get_posts_by_tag(tag_id, limit.unwrap_or(DEFAULT_LIST_LIMIT))
             .await
     }
+
+    /// Search posts by query
+    pub async fn search(&self, request: SearchPostsRequest) -> Result<SearchPostsResponse> {
+        let query = request.query.trim();
+        if query.is_empty() {
+            return Err(Error::Validation("Search query cannot be empty".to_string()));
+        }
+        let limit = request.limit.unwrap_or(DEFAULT_LIST_LIMIT);
+        let offset = request.offset.unwrap_or(0);
+        self.repo.search_posts(query, limit, offset).await
+    }
 }
 
 // ============================================================================
@@ -271,6 +282,7 @@ mod tests {
             async fn remove_tag_from_post(&self, post_id: Uuid, tag_id: Uuid) -> Result<()>;
             async fn get_post_tags(&self, post_id: Uuid) -> Result<Vec<Tag>>;
             async fn get_posts_by_tag(&self, tag_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+            async fn search_posts(&self, query: &str, limit: u64, offset: u64) -> Result<SearchPostsResponse>;
         }
     }
 

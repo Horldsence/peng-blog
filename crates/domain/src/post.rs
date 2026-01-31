@@ -69,3 +69,19 @@ pub struct UpdatePost {
     pub title: Option<String>,
     pub content: Option<String>,
 }
+
+/// Request to search posts
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchPostsRequest {
+    pub query: String,
+    pub limit: Option<u64>,
+    pub offset: Option<u64>,
+}
+
+/// Response for search posts
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchPostsResponse {
+    pub posts: Vec<Post>,
+    pub total: u64,
+    pub query: String,
+}

@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use domain::{Error, Post, PostRepository, Result};
+use domain::{Error, Post, PostRepository, Result, SearchPostsResponse};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
-    QuerySelect, Set,
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, EntityTrait, PaginatorTrait,
+    QueryFilter, QueryOrder, QuerySelect, Set,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -297,5 +297,43 @@ impl PostRepository for PostRepositoryImpl {
             .collect();
 
         Ok(posts)
+    }
+
+    async fn search_posts(&self, query: &str, limit: u64, offset: u64) -> Result<SearchPostsResponse> {
+        let search_pattern = format!("%{query}%");
+
+        // Build condition: (title LIKE ? OR content LIKE ?) AND published_at IS NOT NULL
+        let condition = Condition::all()
+            .add(
+                Condition::any()
+                    .add(crate::entity::post::Column::Title.like(&search_pattern))
+                    .add(crate::entity::post::Column::Content.like(&search_pattern)),
+            )
+            .add(crate::entity::post::Column::PublishedAt.is_not_null());
+
+        // Get total count
+        let total = crate::entity::post::Entity::find()
+            .filter(condition.clone())
+            .count(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to count search results: {}", e)))?;
+
+        // Get paginated results
+        let models = crate::entity::post::Entity::find()
+            .filter(condition)
+            .order_by_desc(crate::entity::post::Column::PublishedAt)
+            .limit(limit)
+            .offset(offset)
+            .all(self.db.as_ref())
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to search posts: {}", e)))?;
+
+        let posts = models.into_iter().map(model_to_post).collect::<Result<Vec<_>>>()?;
+
+        Ok(SearchPostsResponse {
+            posts,
+            total,
+            query: query.to_string(),
+        })
     }
 }

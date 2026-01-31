@@ -24,7 +24,7 @@ pub use comment::{
 };
 pub use error::{Error, Result};
 pub use file::{File, FileResponse, UploadFile};
-pub use post::{CreatePost, Post, UpdatePost};
+pub use post::{CreatePost, Post, SearchPostsRequest, SearchPostsResponse, UpdatePost};
 pub use repository::{
     CategoryRepository, CommentRepository, FileRepository, PostRepository, SessionRepository,
     StatsRepository, TagRepository, UserRepository,

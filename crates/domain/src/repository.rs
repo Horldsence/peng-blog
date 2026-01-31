@@ -11,7 +11,7 @@
 //! - No concrete database types in traits
 
 use async_trait::async_trait;
-use crate::{Category, Comment, File, Post, Result, Session, Tag, User, VisitStats, PostStats};
+use crate::{Category, Comment, File, Post, Result, SearchPostsResponse, Session, Tag, User, VisitStats, PostStats};
 use crate::stats::StatsResponse;
 use uuid::Uuid;
 
@@ -66,6 +66,9 @@ pub trait PostRepository: Send + Sync {
 
     /// Get posts by tag
     async fn get_posts_by_tag(&self, tag_id: Uuid, limit: u64) -> Result<Vec<Post>>;
+
+    /// Search posts by query string (title and content)
+    async fn search_posts(&self, query: &str, limit: u64, offset: u64) -> Result<SearchPostsResponse>;
 }
 
 // ============================================================================

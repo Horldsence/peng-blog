@@ -4,7 +4,7 @@ use axum::{
     response::IntoResponse,
     Json, Router,
 };
-use domain::post::{CreatePost, UpdatePost};
+use domain::post::{CreatePost, SearchPostsRequest, UpdatePost};
 
 use crate::error::ApiResult;
 use crate::middleware::auth::Claims;
@@ -23,6 +23,15 @@ pub struct ListQuery {
     tag_id: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct SearchQuery {
+    pub q: String,
+    #[serde(default = "default_limit")]
+    pub limit: u64,
+    #[serde(default)]
+    pub offset: u64,
+}
+
 fn default_limit() -> u64 {
     20
 }
@@ -35,6 +44,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         // Public routes - no authentication required
         .route("/", axum::routing::get(list_posts))
+        .route("/search", axum::routing::get(search_posts))
         .route("/{id}", axum::routing::get(get_post))
         .route("/{id}/tags", axum::routing::get(get_post_tags))
         // Protected routes - require authentication via Claims extractor
@@ -364,4 +374,23 @@ async fn unpublish_post(
         .map_err(crate::error::ApiError::Domain)?;
 
     Ok((StatusCode::OK, Json(post)))
+}
+
+async fn search_posts(
+    State(state): State<AppState>,
+    Query(params): Query<SearchQuery>,
+) -> ApiResult<impl IntoResponse> {
+    let request = SearchPostsRequest {
+        query: params.q,
+        limit: Some(params.limit),
+        offset: Some(params.offset),
+    };
+
+    let response = state
+        .post_service
+        .search(request)
+        .await
+        .map_err(crate::error::ApiError::Domain)?;
+
+    Ok((StatusCode::OK, Json(response)))
 }
