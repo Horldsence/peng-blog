@@ -146,7 +146,9 @@ async fn update_user(
     // For now, only permissions updates are supported via PATCH
     // Other user profile updates can be added here later
 
-    Err(ApiError::Validation("No valid fields to update".to_string()))
+    Err(ApiError::Validation(
+        "No valid fields to update".to_string(),
+    ))
 }
 
 /// DELETE /users/{id}

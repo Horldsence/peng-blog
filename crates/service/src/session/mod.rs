@@ -114,8 +114,8 @@ impl SessionService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use domain::SessionRepository;
     use async_trait::async_trait;
+    use domain::SessionRepository;
     use domain::{Result, Session};
     use std::collections::HashMap;
     use std::sync::Arc;

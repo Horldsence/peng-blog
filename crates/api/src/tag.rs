@@ -75,11 +75,7 @@ async fn list_tags(
     State(state): State<AppState>,
     Query(params): Query<ListTagsQuery>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let tags = state
-        .tag_service
-        .list()
-        .await
-        .map_err(ApiError::Domain)?;
+    let tags = state.tag_service.list().await.map_err(ApiError::Domain)?;
 
     // TODO: Implement proper pagination in service layer
     let total = tags.len() as u64;
@@ -113,11 +109,7 @@ async fn get_tag(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let tag = state
-        .tag_service
-        .get(id)
-        .await
-        .map_err(ApiError::Domain)?;
+    let tag = state.tag_service.get(id).await.map_err(ApiError::Domain)?;
 
     Ok(resp::ok(tag))
 }

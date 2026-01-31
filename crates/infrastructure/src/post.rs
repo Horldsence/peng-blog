@@ -299,7 +299,12 @@ impl PostRepository for PostRepositoryImpl {
         Ok(posts)
     }
 
-    async fn search_posts(&self, query: &str, limit: u64, offset: u64) -> Result<SearchPostsResponse> {
+    async fn search_posts(
+        &self,
+        query: &str,
+        limit: u64,
+        offset: u64,
+    ) -> Result<SearchPostsResponse> {
         let search_pattern = format!("%{query}%");
 
         // Build condition: (title LIKE ? OR content LIKE ?) AND published_at IS NOT NULL
@@ -328,7 +333,10 @@ impl PostRepository for PostRepositoryImpl {
             .await
             .map_err(|e| Error::Internal(format!("Failed to search posts: {}", e)))?;
 
-        let posts = models.into_iter().map(model_to_post).collect::<Result<Vec<_>>>()?;
+        let posts = models
+            .into_iter()
+            .map(model_to_post)
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(SearchPostsResponse {
             posts,

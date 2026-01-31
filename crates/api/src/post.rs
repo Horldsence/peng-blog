@@ -117,7 +117,10 @@ pub fn routes() -> Router<AppState> {
         .route("/{id}", axum::routing::delete(delete_post))
         .route("/{id}/comments", axum::routing::post(create_comment))
         .route("/{id}/tags", axum::routing::post(add_post_tag))
-        .route("/{id}/tags/{tag_id}", axum::routing::delete(remove_post_tag))
+        .route(
+            "/{id}/tags/{tag_id}",
+            axum::routing::delete(remove_post_tag),
+        )
 }
 
 /// GET /posts
@@ -139,7 +142,9 @@ async fn list_posts(
     let _offset = (params.page - 1) * params.per_page;
 
     // Check if user is admin
-    let is_admin = user.as_ref().map_or(false, |u| (u.permissions & USER_MANAGE) != 0);
+    let is_admin = user
+        .as_ref()
+        .map_or(false, |u| (u.permissions & USER_MANAGE) != 0);
 
     // Determine which posts to show based on status filter
     let show_drafts = params.status == "draft" || params.status == "all";

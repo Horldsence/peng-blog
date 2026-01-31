@@ -12,18 +12,11 @@
 //! | POST | /auth/logout | Logout (client-side token removal) |
 //! | GET | /auth/me | Get current user info |
 
-use axum::{
-    extract::State,
-    response::IntoResponse,
-    Json, Router,
-};
+use axum::{extract::State, response::IntoResponse, Json, Router};
 use domain::{LoginRequest, LoginResponse, RegisterRequest, UserInfo};
 
 use crate::{
-    error::ApiError,
-    middleware::auth::Claims,
-    response::helpers as resp,
-    state::AppState,
+    error::ApiError, middleware::auth::Claims, response::helpers as resp, state::AppState,
 };
 
 /// Create auth routes
@@ -111,10 +104,7 @@ async fn logout() -> impl IntoResponse {
 
 /// GET /auth/me
 /// Get current user info (requires authentication)
-async fn me(
-    user: Claims,
-    State(_state): State<AppState>,
-) -> Result<impl IntoResponse, ApiError> {
+async fn me(user: Claims, State(_state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
     let user_id = uuid::Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
 

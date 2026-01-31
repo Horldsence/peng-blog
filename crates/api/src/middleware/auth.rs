@@ -30,7 +30,10 @@ pub fn set_jwt_secret(secret: String) {
 
 /// Get the global JWT secret key
 fn get_jwt_secret() -> &'static str {
-    JWT_SECRET.get().map(|s| s.as_str()).unwrap_or("change-this-secret-in-production")
+    JWT_SECRET
+        .get()
+        .map(|s| s.as_str())
+        .unwrap_or("change-this-secret-in-production")
 }
 
 /// JWT Claims structure

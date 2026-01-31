@@ -1,9 +1,9 @@
 use clap::{Parser, Subcommand};
 use console::style;
 use dialoguer::{Confirm, Input, Password};
+use domain::UserRepository;
 use domain::{ADMIN_PERMISSIONS, DEFAULT_USER_PERMISSIONS};
 use infrastructure::{establish_connection, Migrator, MigratorTrait, UserRepositoryImpl};
-use domain::UserRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 

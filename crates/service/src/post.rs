@@ -4,7 +4,10 @@
 //! It coordinates repository calls and enforces business rules.
 
 use domain::PostRepository;
-use domain::{Error, Post, Result, SearchPostsRequest, SearchPostsResponse, POST_DELETE, POST_PUBLISH, POST_UPDATE};
+use domain::{
+    Error, Post, Result, SearchPostsRequest, SearchPostsResponse, POST_DELETE, POST_PUBLISH,
+    POST_UPDATE,
+};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -217,7 +220,9 @@ impl PostService {
     pub async fn search(&self, request: SearchPostsRequest) -> Result<SearchPostsResponse> {
         let query = request.query.trim();
         if query.is_empty() {
-            return Err(Error::Validation("Search query cannot be empty".to_string()));
+            return Err(Error::Validation(
+                "Search query cannot be empty".to_string(),
+            ));
         }
         let limit = request.limit.unwrap_or(DEFAULT_LIST_LIMIT);
         let offset = request.offset.unwrap_or(0);

@@ -227,8 +227,8 @@ impl FileService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use domain::FileRepository;
     use async_trait::async_trait;
+    use domain::FileRepository;
     use domain::{File, Result};
     use std::collections::HashMap;
     use std::sync::Arc;
