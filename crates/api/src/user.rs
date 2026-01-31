@@ -69,8 +69,7 @@ pub fn routes() -> Router<AppState> {
         .route("/", axum::routing::get(list_users))
         .route("/{id}", axum::routing::get(get_user))
         .route("/{id}", axum::routing::patch(update_user))
-        // Note: Delete user endpoint removed - not implemented in UserService
-        // .route("/{id}", axum::routing::delete(delete_user))
+        .route("/{id}", axum::routing::delete(delete_user))
         .route("/{id}/posts", axum::routing::get(list_user_posts))
 }
 
@@ -150,28 +149,24 @@ async fn update_user(
     Err(ApiError::Validation("No valid fields to update".to_string()))
 }
 
-// Note: Delete user endpoint removed - not implemented in UserService
-// /// DELETE /users/{id}
-// /// Delete a user (self or admin)
-// async fn delete_user(
-//     State(state): State<AppState>,
-//     user: Claims,
-//     Path(user_id): Path<Uuid>,
-// ) -> Result<impl IntoResponse, ApiError> {
-//     let requester_id = Uuid::parse_str(&user.sub)
-//         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
-//
-//     check_ownership_or_admin(user_id, requester_id, user.permissions, USER_MANAGE)
-//         .map_err(|e| ApiError::Unauthorized(e.to_string()))?;
-//
-//     state
-//         .user_service
-//         .delete(user_id)
-//         .await
-//         .map_err(ApiError::Domain)?;
-//
-//     Ok(resp::no_content())
-// }
+/// DELETE /users/{id}
+/// Delete a user (self or admin)
+async fn delete_user(
+    State(state): State<AppState>,
+    user: Claims,
+    Path(user_id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let requester_id = Uuid::parse_str(&user.sub)
+        .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
+
+    state
+        .user_service
+        .delete(user_id, requester_id, user.permissions)
+        .await
+        .map_err(ApiError::Domain)?;
+
+    Ok(resp::no_content())
+}
 
 /// GET /users/{id}/posts
 /// Get posts by a specific user

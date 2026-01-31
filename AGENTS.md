@@ -591,7 +591,7 @@ Peng Blog API v2 提供 **RESTful API 端点**，完整文档位于 `docs/api/`�
 - `docs/api/CHANGES_v2.md` - API v1 到 v2 迁移指南
 
 **其他文档:**
-- `docs/api/USERS.md` - 用户管理 API
+- `docs/api/USERS.md` - 用户管理 API（含 DELETE 端点）
 - `docs/api/COMMENTS.md` - 评论系统 API（含 GitHub OAuth）
 - `docs/api/FILES.md` - 文件上传下载 API
 - `docs/api/STATS.md` - 统计分析 API

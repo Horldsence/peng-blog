@@ -1,8 +1,6 @@
 /**
  * API 统一导出文件
  * 
- * 这个文件将所有 API 模块集中导出，方便在应用中使用
- * 
  * 使用方式：
  * import { authApi, postsApi } from '@/api';
  * 
@@ -19,6 +17,8 @@ import { sessionsApi } from './sessions';
 import { filesApi } from './files';
 import { commentsApi } from './comments';
 import { statsApi } from './stats';
+import { categoriesApi } from './categories';
+import { tagsApi } from './tags';
 
 // 重新导出所有 API 模块
 export { authApi } from './auth';
@@ -28,6 +28,8 @@ export { sessionsApi } from './sessions';
 export { filesApi } from './files';
 export { commentsApi } from './comments';
 export { statsApi } from './stats';
+export { categoriesApi } from './categories';
+export { tagsApi } from './tags';
 
 // 创建统一的 API 对象
 export const api = {
@@ -38,6 +40,8 @@ export const api = {
   files: filesApi,
   comments: commentsApi,
   stats: statsApi,
+  categories: categoriesApi,
+  tags: tagsApi,
 };
 
 // 默认导出统一 API 对象

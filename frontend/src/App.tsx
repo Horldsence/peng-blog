@@ -1,9 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { MainLayout } from './components/layouts/MainLayout';
+import { HomePage } from './pages/HomePage';
+import { PostDetailPage } from './pages/PostDetailPage';
+import { TagsPage } from './pages/TagsPage';
+import { CategoriesPage } from './pages/CategoriesPage';
+import { SearchPage } from './pages/SearchPage';
 import LoginForm from './components/LoginForm';
 import Register from './pages/Register';
-import PostDetail from './pages/PostDetail';
 import PostEditor from './pages/PostEditor';
 import Admin from './pages/Admin';
 import './App.css';
@@ -20,11 +25,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <div className="app">
+    <ThemeProvider>
+      <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* 主应用路由（带布局） */}
+          <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
+          <Route path="/posts" element={<MainLayout><HomePage /></MainLayout>} />
+          <Route path="/post/:id" element={<MainLayout><PostDetailPage /></MainLayout>} />
+          <Route path="/tags" element={<MainLayout><TagsPage /></MainLayout>} />
+          <Route path="/categories" element={<MainLayout><CategoriesPage /></MainLayout>} />
+          <Route path="/search" element={<MainLayout><SearchPage /></MainLayout>} />
 
+          {/* 认证路由（不带布局） */}
           <Route
             path="/login"
             element={
@@ -35,52 +47,58 @@ const App: React.FC = () => {
               </div>
             }
           />
-
           <Route path="/register" element={<Register />} />
 
-          <Route path="/post/:id" element={<PostDetail />} />
-
+          {/* 管理员路由 */}
           <Route
             path="/admin/posts/new"
             element={
               <ProtectedRoute>
-                <PostEditor />
+                <MainLayout>
+                  <PostEditor />
+                </MainLayout>
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/admin/posts/edit/:id"
             element={
               <ProtectedRoute>
-                <PostEditor />
+                <MainLayout>
+                  <PostEditor />
+                </MainLayout>
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                <Admin />
+                <MainLayout>
+                  <Admin />
+                </MainLayout>
               </ProtectedRoute>
             }
           />
 
+          {/* 关于页面 */}
           <Route
             path="/about"
             element={
-              <div className="about-page">
-                <h2>关于 Peng Blog</h2>
-                <p>Peng Blog 是一个现代化的博客平台，支持文章发布、评论、文件上传等功能。</p>
-              </div>
+              <MainLayout>
+                <div style={{ padding: '32px' }}>
+                  <h2>关于 Peng Blog</h2>
+                  <p>基于 Rust + Fluent UI 2 构建的现代化博客系统</p>
+                </div>
+              </MainLayout>
             }
           />
 
+          {/* 404 重定向 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </div>
-    </Router>
+      </Router>
+    </ThemeProvider>
   );
 };
 

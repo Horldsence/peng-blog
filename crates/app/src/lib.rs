@@ -1,4 +1,4 @@
-use api::{routes, AuthState};
+use api::{routes, AuthState, middleware::auth::set_jwt_secret};
 use infrastructure::MigratorTrait;
 use infrastructure::{
     establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, FileRepositoryImpl,
@@ -38,6 +38,10 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://blog.db".to_string());
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "change-this-secret-in-production".to_string());
+    
+    // Set the global JWT secret for token validation
+    set_jwt_secret(jwt_secret.clone());
+    
     let upload_dir = std::env::var("UPLOAD_DIR").unwrap_or_else(|_| "./uploads".to_string());
     let base_url =
         std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());

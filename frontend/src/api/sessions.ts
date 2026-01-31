@@ -2,51 +2,39 @@ import { http } from '../utils/request';
 import type {
   Session,
   SessionCreateRequest,
-  ApiResponse
+  ApiResponseV2
 } from '../types';
 
-/**
- * 会话 API 模块
- * 处理会话的创建、获取和删除操作
- */
 export const sessionsApi = {
   /**
-   * 创建会话
-   * 使用用户名和密码创建会话
-   * @param data 会话创建请求
-   * @returns 创建的会话信息
+   * 创建会话（登录）
    */
   createSession: (data: SessionCreateRequest) => {
-    return http.post<Session>('/sessions', data);
+    return http.post<ApiResponseV2<Session>>('/sessions', data);
   },
 
   /**
-   * 删除会话
-   * @param id 会话 ID
-   * @returns 删除成功的消息
+   * 删除当前会话（登出）
    */
-  deleteSession: (id: string) => {
-    return http.delete<ApiResponse<{ message: string }>>(`/sessions/${id}`);
+  deleteSession: () => {
+    return http.delete<void>('/sessions');
   },
 
   /**
-   * 获取当前会话
-   * @returns 当前会话信息
+   * 获取当前会话信息
+   * API v2: 端点从 /sessions/current 改为 /sessions/info
    */
   getCurrentSession: () => {
-    return http.get<Session>('/sessions/current');
+    return http.get<ApiResponseV2<Session>>('/sessions/info');
   },
 
   /**
    * GitHub OAuth 回调
-   * 使用授权码获取会话
-   * @param code GitHub 授权码
-   * @returns 创建的会话信息
+   * API v2: 从 GET /sessions/github/callback 改为 POST /sessions/github
    */
   githubCallback: (code: string) => {
-    return http.get<Session>('/sessions/github/callback', { params: { code } } as any);
+    return http.post<ApiResponseV2<Session>>('/sessions/github', { code });
   },
 };
 
-// 默认导出
 export default sessionsApi;

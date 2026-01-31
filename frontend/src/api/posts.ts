@@ -3,81 +3,126 @@ import type {
   Post,
   PostCreateRequest,
   PostUpdateRequest,
+  PostPatchRequest,
   PostListParams,
-  PaginatedResponse,
-  ApiResponse
+  PostSearchParams,
+  ApiResponseV2,
+  ApiListResponseV2,
+  Tag,
+  Comment
 } from '../types';
 
-/**
- * 文章 API 模块
- * 处理文章的增删改查操作
- */
 export const postsApi = {
   /**
    * 获取文章列表
-   * 支持分页和按用户过滤
-   * @param params 查询参数
-   * @returns 文章列表
+   * API v2: 支持按 author, category, tag, status 过滤
    */
   getPosts: (params?: PostListParams) => {
-    return http.get<PaginatedResponse<Post>>('/posts', { params } as any);
+    return http.get<ApiListResponseV2<Post>>('/posts', { params } as any);
+  },
+
+  /**
+   * 搜索文章
+   * API v2 新增端点
+   */
+  searchPosts: (params: PostSearchParams) => {
+    return http.get<ApiListResponseV2<Post>>('/posts/search', { params } as any);
   },
 
   /**
    * 获取单篇文章
-   * @param id 文章 ID
-   * @returns 文章详情
    */
   getPost: (id: string) => {
-    return http.get<Post>(`/posts/${id}`);
+    return http.get<ApiResponseV2<Post>>(`/posts/${id}`);
   },
 
   /**
    * 创建文章
-   * @param data 文章数据
-   * @returns 创建成功的文章
+   * API v2: 创建时不需要传 published 字段，默认为 draft
    */
   createPost: (data: PostCreateRequest) => {
-    return http.post<Post>('/posts', data);
+    return http.post<ApiResponseV2<Post>>('/posts', data);
   },
 
   /**
-   * 更新文章
-   * @param id 文章 ID
-   * @param data 更新的文章数据
-   * @returns 更新后的文章
+   * 全量更新文章
+   * API v2: 使用 PUT 方法
    */
   updatePost: (id: string, data: PostUpdateRequest) => {
-    return http.put<Post>(`/posts/${id}`, data);
+    return http.put<ApiResponseV2<Post>>(`/posts/${id}`, data);
+  },
+
+  /**
+   * 部分更新文章
+   * API v2 新增方法：用于发布/取消发布、更改分类等
+   */
+  patchPost: (id: string, data: PostPatchRequest) => {
+    return http.patch<ApiResponseV2<Post>>(`/posts/${id}`, data);
   },
 
   /**
    * 删除文章
-   * @param id 文章 ID
-   * @returns 删除成功的消息
+   * API v2: 返回 204 No Content
    */
   deletePost: (id: string) => {
-    return http.delete<ApiResponse<{ message: string }>>(`/posts/${id}`);
+    return http.delete<void>(`/posts/${id}`);
   },
 
   /**
    * 发布文章
-   * @param id 文章 ID
-   * @returns 发布后的文章
+   * API v2: 使用 PATCH 方法
    */
   publishPost: (id: string) => {
-    return http.post<Post>(`/posts/${id}/publish`);
+    return http.patch<ApiResponseV2<Post>>(`/posts/${id}`, { status: 'published' });
   },
 
   /**
    * 取消发布文章
-   * @param id 文章 ID
-   * @returns 取消发布后的文章
+   * API v2: 使用 PATCH 方法
    */
   unpublishPost: (id: string) => {
-    return http.post<Post>(`/posts/${id}/unpublish`);
+    return http.patch<ApiResponseV2<Post>>(`/posts/${id}`, { status: 'draft' });
+  },
+
+  /**
+   * 获取文章评论列表
+   * API v2: 端点从 /comments 改为 /posts/{id}/comments
+   */
+  getPostComments: (postId: string, params?: { page?: number; per_page?: number }) => {
+    return http.get<ApiListResponseV2<Comment>>(`/posts/${postId}/comments`, { params } as any);
+  },
+
+  /**
+   * 为文章添加评论
+   * API v2: 端点从 /comments 改为 /posts/{id}/comments
+   */
+  createPostComment: (postId: string, data: { content: string }) => {
+    return http.post<ApiResponseV2<Comment>>(`/posts/${postId}/comments`, data);
+  },
+
+  /**
+   * 获取文章的所有标签
+   * API v2 新增方法
+   */
+  getPostTags: (postId: string) => {
+    return http.get<ApiResponseV2<Tag[]>>(`/posts/${postId}/tags`);
+  },
+
+  /**
+   * 为文章添加标签
+   * API v2: 使用 POST /posts/{id}/tags + { tag_id }
+   */
+  addPostTag: (postId: string, tagId: string) => {
+    return http.post<ApiResponseV2<Tag[]>>(`/posts/${postId}/tags`, { tag_id: tagId });
+  },
+
+  /**
+   * 移除文章的标签
+   * API v2: 使用 DELETE /posts/{id}/tags/{tag_id}
+   */
+  removePostTag: (postId: string, tagId: string) => {
+    return http.delete<ApiResponseV2<Tag[]>>(`/posts/${postId}/tags/${tagId}`);
   },
 };
 
-// 默认导出
 export default postsApi;

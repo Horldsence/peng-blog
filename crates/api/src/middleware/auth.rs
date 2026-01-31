@@ -16,7 +16,22 @@ use axum::{
 use domain::USER_MANAGE;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Global JWT secret key - set at application startup
+static JWT_SECRET: OnceLock<String> = OnceLock::new();
+
+/// Set the global JWT secret key
+/// This should be called once at application startup
+pub fn set_jwt_secret(secret: String) {
+    let _ = JWT_SECRET.set(secret);
+}
+
+/// Get the global JWT secret key
+fn get_jwt_secret() -> &'static str {
+    JWT_SECRET.get().map(|s| s.as_str()).unwrap_or("change-this-secret-in-production")
+}
 
 /// JWT Claims structure
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -162,11 +177,10 @@ where
             .strip_prefix("Bearer ")
             .ok_or(AuthError::InvalidToken)?;
 
-        // Decode token with a default secret key
-        // Note: In production, this should use the secret from app state
+        // Decode token with the global JWT secret key
         let token_data = decode::<Claims>(
             token,
-            &DecodingKey::from_secret(b"change-this-secret-in-production"),
+            &DecodingKey::from_secret(get_jwt_secret().as_bytes()),
             &Validation::new(Algorithm::HS256),
         )
         .map_err(|_| AuthError::InvalidToken)?;

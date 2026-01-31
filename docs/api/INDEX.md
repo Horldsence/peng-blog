@@ -106,7 +106,7 @@ curl -X PATCH http://localhost:3000/api/posts/{post_id} \
 | GET | `/users` | Yes | USER_MANAGE | List all users |
 | GET | `/users/{id}` | Yes | Self/Admin | Get user info |
 | PATCH | `/users/{id}` | Yes | Self/Admin | Update user |
-| DELETE | `/users/{id}` | Yes | Self/Admin | Delete user |
+| DELETE | `/users/{id}` | Yes | Self/Admin | Delete user (cannot delete last admin) |
 | GET | `/users/{id}/posts` | No | - | Get user's posts |
 
 ### Posts

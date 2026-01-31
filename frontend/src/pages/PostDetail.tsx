@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { postsApi, commentsApi, authApi, statsApi } from '../api';
+import { postsApi, authApi, statsApi } from '../api';
 import type { Post, Comment } from '../types';
 
 const PostDetail: React.FC = () => {
@@ -31,17 +31,16 @@ const PostDetail: React.FC = () => {
       setError('');
 
       try {
-        const postData = await postsApi.getPost(id);
-        setPost(postData);
+        const postResponse = await postsApi.getPost(id);
+        setPost(postResponse.data);
 
         await statsApi.recordPostView(id);
 
-        const commentsData = await commentsApi.getCommentsByPost(id, {
+        const commentsResponse = await postsApi.getPostComments(id, {
           page: 1,
-          page_size: 50,
+          per_page: 50,
         });
-        // 后端返回的是纯数组格式，适配为前端需要的格式
-        setComments(Array.isArray(commentsData) ? commentsData : (commentsData.data || []));
+        setComments(commentsResponse.data);
       } catch (err: any) {
         const errorMessage = err.message || '获取文章详情失败';
         setError(errorMessage);
@@ -72,12 +71,11 @@ const PostDetail: React.FC = () => {
     setSubmittingComment(true);
 
     try {
-      const newComment = await commentsApi.createComment({
-        post_id: id,
+      const response = await postsApi.createPostComment(id, {
         content: commentContent,
       });
 
-      setComments([...comments, newComment]);
+      setComments([...comments, response.data]);
       setCommentContent('');
     } catch (err: any) {
       alert(err.message || '发表评论失败');
@@ -150,7 +148,7 @@ const PostDetail: React.FC = () => {
             <span className="meta-item">
               📅 创建于 {formatDate(post.created_at)}
             </span>
-            {post.updated_at !== post.created_at && (
+            {post.updated_at && post.updated_at !== post.created_at && (
               <span className="meta-item">
                 🔄 更新于 {formatDate(post.updated_at)}
               </span>

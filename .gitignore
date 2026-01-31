@@ -24,7 +24,9 @@ Thumbs.db
 # Linux
 ~$
 
-
+# Frontend
+/frontend/node_modules
+/node_modules
 
 # IDEs
 .idea

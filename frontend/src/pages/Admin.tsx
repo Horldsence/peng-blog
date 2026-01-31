@@ -46,16 +46,14 @@ const Admin: React.FC = () => {
 
     try {
       if (activeTab === 'dashboard') {
-        const adminStats = await statsApi.getAdminStats();
-        setStats(adminStats);
+        const statsResponse = await statsApi.getAdminStats();
+        setStats(statsResponse.data);
       } else if (activeTab === 'posts') {
-        const postsData = await postsApi.getPosts({ page: 1, page_size: 50 });
-        // 后端返回的是纯数组格式，适配为前端需要的格式
-        setPosts(Array.isArray(postsData) ? postsData : (postsData.data || []));
+        const postsResponse = await postsApi.getPosts({ page: 1, per_page: 50 });
+        setPosts(postsResponse.data);
       } else if (activeTab === 'users') {
-        const usersData = await usersApi.getUsers({ page: 1, page_size: 50 });
-        // 后端返回的是纯数组格式，适配为前端需要的格式
-        setUsers(Array.isArray(usersData) ? usersData : (usersData.data || []));
+        const usersResponse = await usersApi.getUsers({ page: 1, per_page: 50 });
+        setUsers(usersResponse.data);
       }
     } catch (err: any) {
       const errorMessage = err.message || '获取数据失败';

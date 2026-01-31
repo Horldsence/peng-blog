@@ -21,7 +21,8 @@ const PostEditor: React.FC = () => {
 
       setFetchLoading(true);
       try {
-        const post = await postsApi.getPost(id);
+        const response = await postsApi.getPost(id);
+        const post = response.data;
         setTitle(post.title);
         setContent(post.content);
         setPublished(!!post.published_at);
@@ -53,16 +54,26 @@ const PostEditor: React.FC = () => {
         const updateData: PostUpdateRequest = {
           title: title.trim(),
           content: content.trim(),
-          published: shouldPublish,
         };
         await postsApi.updatePost(id, updateData);
+
+        if (shouldPublish) {
+          await postsApi.publishPost(id);
+        } else if (!shouldPublish && published) {
+          await postsApi.unpublishPost(id);
+        }
       } else {
         const createData: PostCreateRequest = {
           title: title.trim(),
           content: content.trim(),
-          published: shouldPublish,
         };
-        const newPost = await postsApi.createPost(createData);
+        const response = await postsApi.createPost(createData);
+        const newPost = response.data;
+
+        if (shouldPublish) {
+          await postsApi.publishPost(newPost.id);
+        }
+
         navigate(`/post/${newPost.id}`);
         return;
       }

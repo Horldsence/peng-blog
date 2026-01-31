@@ -28,9 +28,9 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const globalStats = await statsApi.getGlobalStats();
-        setStats(globalStats);
-        
+        const response = await statsApi.getGlobalStats();
+        setStats(response.data);
+
         // 记录访问
         await statsApi.recordVisit();
       } catch (error) {
@@ -67,9 +67,9 @@ const Home: React.FC = () => {
       // 记录文章阅读
       await statsApi.recordPostView(post.id);
       // 获取更新后的阅读量
-      const postViews = await statsApi.getPostViews(post.id);
+      const response = await statsApi.getPostViews(post.id);
       // 更新文章阅读量显示
-      setSelectedPost(prev => prev ? { ...prev, views: postViews.views } : null);
+      setSelectedPost(prev => prev ? { ...prev, views: response.data.views } : null);
     } catch (error) {
       console.error('记录文章阅读失败:', error);
     }
@@ -178,7 +178,7 @@ const Home: React.FC = () => {
                   <span className="meta-item">
                     📅 创建于 {formatDate(selectedPost.created_at)}
                   </span>
-                  {selectedPost.updated_at !== selectedPost.created_at && (
+                  {selectedPost.updated_at && selectedPost.updated_at !== selectedPost.created_at && (
                     <span className="meta-item">
                       🔄 更新于 {formatDate(selectedPost.updated_at)}
                     </span>

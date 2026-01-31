@@ -176,6 +176,54 @@ impl UserService {
             Err(_) => false,
         }
     }
+
+    /// Delete a user (admin only or self-delete)
+    ///
+    /// Users can delete their own account. Admins can delete any account
+    /// except the last admin account.
+    pub async fn delete(
+        &self,
+        target_user_id: Uuid,
+        requester_id: Uuid,
+        requester_permissions: u64,
+    ) -> Result<()> {
+        // Check if requester is the target or has admin permission
+        let is_self = target_user_id == requester_id;
+        let is_admin = (requester_permissions & USER_MANAGE) != 0;
+
+        if !is_self && !is_admin {
+            return Err(Error::Unauthorized(
+                "You can only delete your own account".to_string(),
+            ));
+        }
+
+        // Check if target user exists
+        let target_user = self
+            .repo
+            .find_by_id(target_user_id)
+            .await?
+            .ok_or_else(|| Error::NotFound("User not found".to_string()))?;
+
+        // If deleting an admin, check that this is not the last admin
+        let is_target_admin = (target_user.permissions & USER_MANAGE) != 0;
+        if is_target_admin && is_admin {
+            // Count remaining admins
+            let users = self.repo.list_users(ADMIN_COUNT_CHECK_LIMIT).await?;
+            let admin_count = users
+                .iter()
+                .filter(|u| (u.permissions & USER_MANAGE) != 0)
+                .count();
+
+            if admin_count <= 1 {
+                return Err(Error::Validation(
+                    "Cannot delete the last admin user".to_string(),
+                ));
+            }
+        }
+
+        // Delete the user
+        self.repo.delete_user(target_user_id).await
+    }
 }
 
 // ============================================================================

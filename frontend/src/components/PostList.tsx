@@ -3,8 +3,8 @@ import { postsApi } from '../api';
 import type { Post, PostListParams } from '../types';
 
 interface PostListProps {
-  userId?: string; // 可选的用户 ID，用于过滤特定用户的文章
-  onPostClick?: (post: Post) => void; // 点击文章时的回调
+  userId?: string;
+  onPostClick?: (post: Post) => void;
 }
 
 const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
@@ -15,7 +15,6 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
   const [pageSize] = useState<number>(10);
   const [totalPosts, setTotalPosts] = useState<number>(0);
 
-  // 获取文章列表
   const fetchPosts = async (page: number = 1) => {
     setLoading(true);
     setError('');
@@ -23,19 +22,17 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
     try {
       const params: PostListParams = {
         page,
-        page_size: pageSize,
+        per_page: pageSize,
       };
 
       if (userId) {
-        params.user_id = userId;
+        params.author = userId;
       }
 
       const response = await postsApi.getPosts(params);
-      // 后端返回的是纯数组格式，适配为前端需要的格式
-      const postsData = Array.isArray(response) ? response : (response.data || []);
-      setPosts(postsData);
-      setTotalPosts(Array.isArray(response) ? postsData.length : (response.total || postsData.length));
-      setCurrentPage(Array.isArray(response) ? 1 : (response.page || 1));
+      setPosts(response.data);
+      setTotalPosts(response.pagination?.total || 0);
+      setCurrentPage(response.pagination?.page || 1);
     } catch (err: any) {
       const errorMessage = err.message || '获取文章列表失败';
       setError(errorMessage);
@@ -45,26 +42,22 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
     }
   };
 
-  // 组件挂载时获取文章列表
   useEffect(() => {
     fetchPosts(currentPage);
   }, [currentPage, userId]);
 
-  // 处理分页点击
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= Math.ceil(totalPosts / pageSize)) {
       setCurrentPage(newPage);
     }
   };
 
-  // 处理文章点击
   const handlePostClick = (post: Post) => {
     if (onPostClick) {
       onPostClick(post);
     }
   };
 
-  // 格式化日期
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('zh-CN', {
@@ -76,7 +69,6 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
     });
   };
 
-  // 计算总页数
   const totalPages = Math.ceil(totalPosts / pageSize);
 
   return (
@@ -156,7 +148,6 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
             ))}
           </div>
 
-          {/* 分页控件 */}
           {totalPages > 1 && (
             <div className="pagination">
               <button

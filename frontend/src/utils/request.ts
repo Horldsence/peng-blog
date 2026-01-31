@@ -1,10 +1,12 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiError } from '../types';
+import type { ApiErrorV2 } from '../types';
 
-// 创建 axios 实例
+/**
+ * 创建 axios 实例
+ */
 const createAxiosInstance = (): AxiosInstance => {
   const instance = axios.create({
-    baseURL: '/api', // 使用代理，开发环境指向 http://localhost:3000/api
+    baseURL: '/api',
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
@@ -25,55 +27,56 @@ const createAxiosInstance = (): AxiosInstance => {
     }
   );
 
-  // 响应拦截器 - 统一处理错误
+  // 响应拦截器 - 处理 API v2 统一响应格式
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
+      // API v2 响应格式: { code, message, data, pagination? }
+      // 直接返回 data，让调用方处理 code 和 data 字段
       return response.data;
     },
-    (error: AxiosError<ApiError>) => {
+    (error: AxiosError<ApiErrorV2>) => {
       if (error.response) {
         const { status, data } = error.response;
-        
+
         // 处理 401 未授权 - 清除 token 并跳转到登录页
         if (status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          // 可以在这里跳转到登录页
           window.location.href = '/login';
         }
-        
+
         // 处理 403 禁止访问
         if (status === 403) {
-          console.error('没有权限访问该资源');
+          console.error('权限不足');
         }
-        
+
         // 处理 404 未找到
         if (status === 404) {
           console.error('请求的资源不存在');
         }
-        
+
         // 处理 500 服务器错误
         if (status >= 500) {
           console.error('服务器错误，请稍后重试');
         }
-        
-        // 返回后端提供的错误信息
-        const apiError: ApiError = data || {
-          error: 'Unknown Error',
+
+        // 返回后端提供的错误信息（API v2 格式）
+        const apiError: ApiErrorV2 = data || {
+          code: status,
           message: '未知错误',
         };
         return Promise.reject(apiError);
       } else if (error.request) {
         // 请求已发出但没有收到响应
-        const apiError: ApiError = {
-          error: 'Network Error',
+        const apiError: ApiErrorV2 = {
+          code: 0,
           message: '网络错误，请检查您的连接',
         };
         return Promise.reject(apiError);
       } else {
         // 请求配置出错
-        const apiError: ApiError = {
-          error: 'Request Error',
+        const apiError: ApiErrorV2 = {
+          code: -1,
           message: '请求配置错误',
         };
         return Promise.reject(apiError);
