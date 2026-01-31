@@ -8,7 +8,7 @@
 //! - No special cases - all files follow the same rules
 //! - File system operations are abstracted through repository
 
-use crate::repository::FileRepository;
+use domain::FileRepository;
 use domain::{Error, File, FileResponse, Result, UploadFile};
 use std::sync::Arc;
 
@@ -227,7 +227,7 @@ impl FileService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repository::FileRepository;
+    use domain::FileRepository;
     use async_trait::async_trait;
     use domain::{File, Result};
     use std::collections::HashMap;

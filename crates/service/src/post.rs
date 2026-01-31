@@ -3,7 +3,7 @@
 //! This service implements business logic for post operations.
 //! It coordinates repository calls and enforces business rules.
 
-use crate::repository::PostRepository;
+use domain::PostRepository;
 use domain::{Error, Post, Result, POST_DELETE, POST_PUBLISH, POST_UPDATE};
 use std::sync::Arc;
 use uuid::Uuid;

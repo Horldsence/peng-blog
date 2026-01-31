@@ -44,7 +44,7 @@ impl FileRepositoryImpl {
 }
 
 #[async_trait]
-impl service::FileRepository for FileRepositoryImpl {
+impl domain::FileRepository for FileRepositoryImpl {
     /// Create a new file record
     async fn create_file(&self, file: File) -> Result<File> {
         let active_model = file::ActiveModel {

@@ -59,6 +59,24 @@ export const postsApi = {
   deletePost: (id: string) => {
     return http.delete<ApiResponse<{ message: string }>>(`/posts/${id}`);
   },
+
+  /**
+   * 发布文章
+   * @param id 文章 ID
+   * @returns 发布后的文章
+   */
+  publishPost: (id: string) => {
+    return http.post<Post>(`/posts/${id}/publish`);
+  },
+
+  /**
+   * 取消发布文章
+   * @param id 文章 ID
+   * @returns 取消发布后的文章
+   */
+  unpublishPost: (id: string) => {
+    return http.post<Post>(`/posts/${id}/unpublish`);
+  },
 };
 
 // 默认导出

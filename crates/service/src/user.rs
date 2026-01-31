@@ -3,7 +3,7 @@
 //! This service implements business logic for user operations.
 //! It coordinates repository calls and enforces business rules.
 
-use crate::repository::UserRepository;
+use domain::UserRepository;
 use domain::{Error, Result, User, DEFAULT_USER_PERMISSIONS, USER_MANAGE};
 use std::sync::Arc;
 use uuid::Uuid;

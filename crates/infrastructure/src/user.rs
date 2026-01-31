@@ -3,12 +3,11 @@ use argon2::{
     Argon2,
 };
 use async_trait::async_trait;
-use domain::{Error, Result, User};
+use domain::{Error, Result, User, UserRepository};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
     QuerySelect, Set,
 };
-use service::repository::UserRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 

@@ -16,8 +16,8 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", axum::routing::get(list_tags))
         .route("/", axum::routing::post(create_tag))
-        .route("/:id", axum::routing::get(get_tag))
-        .route("/:id", axum::routing::delete(delete_tag))
+        .route("/{id}", axum::routing::get(get_tag))
+        .route("/{id}", axum::routing::delete(delete_tag))
 }
 
 async fn list_tags(State(state): State<AppState>) -> ApiResult<impl IntoResponse> {

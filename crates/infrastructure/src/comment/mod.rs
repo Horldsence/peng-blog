@@ -44,7 +44,7 @@ impl CommentRepositoryImpl {
 }
 
 #[async_trait]
-impl service::CommentRepository for CommentRepositoryImpl {
+impl domain::CommentRepository for CommentRepositoryImpl {
     /// Create a new comment
     async fn create_comment(&self, comment: Comment) -> Result<Comment> {
         let active_model = comment::ActiveModel {

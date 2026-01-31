@@ -1,10 +1,9 @@
 use async_trait::async_trait;
-use domain::{Error, Post, Result};
+use domain::{Error, Post, PostRepository, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
     QuerySelect, Set,
 };
-use service::repository::PostRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 

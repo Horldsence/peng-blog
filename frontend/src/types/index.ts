@@ -57,10 +57,10 @@ export interface Post {
   user_id: UUID;
   title: string;
   content: string;
-  published: boolean;
+  category_id?: UUID;
   views: number;
   created_at: Timestamp;
-  updated_at: Timestamp;
+  updated_at?: Timestamp;
   published_at?: Timestamp;
 }
 

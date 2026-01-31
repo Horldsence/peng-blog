@@ -10,3 +10,4 @@ serde = { workspace = true, features = ["derive"] }
 uuid = { workspace = true, features = ["serde"] }
 chrono = { workspace = true, features = ["serde"] }
 thiserror = { workspace = true }
+async-trait = { workspace = true }

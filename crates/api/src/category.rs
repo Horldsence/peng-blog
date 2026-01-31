@@ -16,10 +16,10 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", axum::routing::get(list_categories))
         .route("/", axum::routing::post(create_category))
-        .route("/:id", axum::routing::get(get_category))
-        .route("/:id", axum::routing::put(update_category))
-        .route("/:id", axum::routing::delete(delete_category))
-        .route("/:id/children", axum::routing::get(get_children))
+        .route("/{id}", axum::routing::get(get_category))
+        .route("/{id}", axum::routing::put(update_category))
+        .route("/{id}", axum::routing::delete(delete_category))
+        .route("/{id}/children", axum::routing::get(get_children))
 }
 
 async fn list_categories(State(state): State<AppState>) -> ApiResult<impl IntoResponse> {

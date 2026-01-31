@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use domain::{Category, Result};
+use domain::{Category, CategoryRepository, Result};
 use sea_orm::*;
-use service::CategoryRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 

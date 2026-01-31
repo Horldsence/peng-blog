@@ -11,6 +11,7 @@ pub mod comment;
 pub mod error;
 pub mod file;
 pub mod post;
+pub mod repository;
 pub mod session;
 pub mod stats;
 pub mod tag;
@@ -24,6 +25,10 @@ pub use comment::{
 pub use error::{Error, Result};
 pub use file::{File, FileResponse, UploadFile};
 pub use post::{CreatePost, Post, UpdatePost};
+pub use repository::{
+    CategoryRepository, CommentRepository, FileRepository, PostRepository, SessionRepository,
+    StatsRepository, TagRepository, UserRepository,
+};
 pub use session::{CreateSession, Session};
 pub use stats::{DailyStats, PostStats, RecordViewRequest, StatsResponse, VisitStats};
 pub use tag::{CreateTag, Tag};

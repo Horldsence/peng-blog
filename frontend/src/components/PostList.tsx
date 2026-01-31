@@ -31,9 +31,11 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
       }
 
       const response = await postsApi.getPosts(params);
-      setPosts(response.data);
-      setTotalPosts(response.total);
-      setCurrentPage(response.page);
+      // 后端返回的是纯数组格式，适配为前端需要的格式
+      const postsData = Array.isArray(response) ? response : (response.data || []);
+      setPosts(postsData);
+      setTotalPosts(Array.isArray(response) ? postsData.length : (response.total || postsData.length));
+      setCurrentPage(Array.isArray(response) ? 1 : (response.page || 1));
     } catch (err: any) {
       const errorMessage = err.message || '获取文章列表失败';
       setError(errorMessage);
@@ -108,13 +110,13 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
             {posts.map((post) => (
               <div
                 key={post.id}
-                className={`post-item ${!post.published ? 'unpublished' : ''}`}
+                className={`post-item ${!post.published_at ? 'unpublished' : ''}`}
                 onClick={() => handlePostClick(post)}
               >
                 <div className="post-header">
                   <h3 className="post-title">{post.title}</h3>
                   <div className="post-status">
-                    {post.published ? (
+                    {post.published_at ? (
                       <span className="status-badge published">已发布</span>
                     ) : (
                       <span className="status-badge unpublished">未发布</span>
@@ -143,10 +145,12 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
                       发布于 {formatDate(post.published_at)}
                     </span>
                   )}
-                  <span className="meta-item">
-                    <i className="icon-updated">🔄</i>
-                    更新于 {formatDate(post.updated_at)}
-                  </span>
+                  {post.updated_at && (
+                    <span className="meta-item">
+                      <i className="icon-updated">🔄</i>
+                      更新于 {formatDate(post.updated_at)}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

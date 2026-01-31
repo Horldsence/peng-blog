@@ -28,7 +28,7 @@ const createAxiosInstance = (): AxiosInstance => {
   // 响应拦截器 - 统一处理错误
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
-      return response;
+      return response.data;
     },
     (error: AxiosError<ApiError>) => {
       if (error.response) {

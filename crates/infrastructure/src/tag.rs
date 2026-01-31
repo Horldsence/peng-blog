@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use domain::{Result, Tag};
+use domain::{Result, Tag, TagRepository};
 use sea_orm::*;
-use service::TagRepository;
 use std::sync::Arc;
 use uuid::Uuid;
 

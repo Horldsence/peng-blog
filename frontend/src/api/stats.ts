@@ -17,7 +17,7 @@ export const statsApi = {
    * @returns 全局访问统计信息
    */
   getGlobalStats: () => {
-    return http.get<GlobalStats>('/stats');
+    return http.get<GlobalStats>('/stats/visits');
   },
 
   /**
@@ -27,7 +27,7 @@ export const statsApi = {
    * @returns 操作成功消息
    */
   recordVisit: (data?: RecordVisitRequest) => {
-    return http.post<ApiResponse<{ message: string }>>('/stats', data);
+    return http.post<ApiResponse<{ message: string }>>('/stats/visits', data || {});
   },
 
   /**
@@ -36,7 +36,7 @@ export const statsApi = {
    * @returns 文章阅读量信息
    */
   getPostViews: (postId: string) => {
-    return http.get<PostViews>(`/stats/posts/${postId}`);
+    return http.get<PostViews>(`/stats/posts/${postId}/views`);
   },
 
   /**
@@ -46,7 +46,7 @@ export const statsApi = {
    * @returns 操作成功消息
    */
   recordPostView: (postId: string) => {
-    return http.post<ApiResponse<{ message: string }>>(`/stats/posts/${postId}`);
+    return http.post<ApiResponse<{ message: string }>>(`/stats/posts/${postId}/views`);
   },
 
   /**
@@ -55,7 +55,7 @@ export const statsApi = {
    * @returns 管理员统计信息
    */
   getAdminStats: () => {
-    return http.get<AdminStats>('/stats/admin');
+    return http.get<AdminStats>('/stats/total');
   },
 };
 

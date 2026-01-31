@@ -11,10 +11,9 @@
 use crate::entity::prelude::*;
 use crate::entity::{post_stats, stats};
 use async_trait::async_trait;
-use domain::{Error, PostStats, Result, StatsResponse, VisitStats};
+use domain::{Error, PostStats, Result, StatsResponse, StatsRepository, VisitStats};
 use sea_orm::prelude::Expr;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
-use service::StatsRepository;
 use std::sync::Arc;
 
 /// Concrete implementation of StatsRepository

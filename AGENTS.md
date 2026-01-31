@@ -31,7 +31,7 @@ peng-blog/
 ├── Cargo.toml           # Workspace 配置
 ├── crates/              # Rust 后端代码
 │   ├── app/             # 应用入口层 - 服务组装和启动
-│   ├── api/             # API 层 - HTTP 路由和处理器
+│   ├── api/             # API 层 - HTTP 路由和处理器 (51个端点)
 │   ├── service/         # 业务逻辑层 - Repository Traits 和业务规则
 │   ├── domain/          # 领域层 - 核心类型和错误定义
 │   ├── infrastructure/  # 基础设施层 - SeaORM 实现和数据库操作
@@ -45,6 +45,17 @@ peng-blog/
 │   │   └── utils/       # 工具函数
 │   └── package.json
 ├── docs/                # 项目文档
+│   └── api/             # API 文档 (完整)
+│       ├── INDEX.md     # API 总览和快速参考
+│       ├── AUTH.md      # 认证 API 详细文档
+│       ├── POSTS.md     # 文章 API 详细文档
+│       ├── CATEGORIES.md # 分类 API 详细文档
+│       ├── TAGS.md      # 标签 API 详细文档
+│       ├── USERS.md     # 用户 API 详细文档
+│       ├── COMMENTS.md  # 评论 API 详细文档
+│       ├── FILES.md     # 文件 API 详细文档
+│       ├── STATS.md     # 统计 API 详细文档
+│       └── SESSIONS.md  # 会话 API 详细文档
 ├── test/                # Python 测试工具
 ├── uploads/             # 文件上传目录
 ├── blog.db              # SQLite 数据库文件
@@ -563,7 +574,50 @@ npm run build  # in frontend/
 - `docs/ARCHITECTURE.md` - 详细架构设计文档
 - `docs/DEVELOPMENT.md` - 开发指南和最佳实践
 - `docs/CLI_USAGE.md` - CLI 工具使用指南
-- `docs/api/` - API 文档
+
+### API 文档 (完整)
+
+Peng Blog 提供 **51 个 RESTful API 端点**，完整文档位于 `docs/api/`：
+
+**核心文档:**
+- `docs/api/INDEX.md` - API 总览、快速开始、所有端点索引
+- `docs/api/AUTH.md` - 认证系统详解（JWT、权限）
+- `docs/api/POSTS.md` - 文章管理完整指南（CRUD、发布、分类、标签）
+- `docs/api/CATEGORIES.md` - 分层分类系统详解
+- `docs/api/TAGS.md` - 标签系统详解
+
+**其他文档:**
+- `docs/api/USERS.md` - 用户管理 API
+- `docs/api/COMMENTS.md` - 评论系统 API（含 GitHub OAuth）
+- `docs/api/FILES.md` - 文件上传下载 API
+- `docs/api/STATS.md` - 统计分析 API
+- `docs/api/SESSIONS.md` - 会话管理 API
+
+**快速参考:**
+
+| 模块 | 端点数 | 公开 | 需认证 | 说明 |
+|------|--------|------|--------|------|
+| Auth | 3 | 2 | 1 | 注册、登录、用户信息 |
+| Posts | 11 | 3 | 8 | CRUD、发布、分类、标签 |
+| Users | 4 | 1 | 3 | 用户管理、权限控制 |
+| Categories | 6 | 3 | 0 | 分层分类（管理员创建） |
+| Tags | 4 | 2 | 0 | 标签管理（管理员创建） |
+| Comments | 7 | 4 | 3 | 评论、GitHub OAuth |
+| Files | 5 | 2 | 3 | 文件上传下载 |
+| Stats | 5 | 5 | 0 | 访问统计 |
+| Sessions | 4 | 3 | 1 | Cookie 会话 |
+
+**权限位标志:**
+```rust
+POST_CREATE = 1    // 创建文章
+POST_UPDATE = 2    // 更新文章
+POST_DELETE = 4    // 删除文章
+POST_PUBLISH = 8   // 发布文章
+USER_MANAGE = 16   // 管理用户/分类/标签
+
+// 普通用户: 11 (0x0B)
+// 管理员: 31 (0x1F)
+```
 
 ---
 

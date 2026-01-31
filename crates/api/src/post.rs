@@ -44,8 +44,8 @@ pub fn routes() -> Router<AppState> {
         .route("/{id}/publish", axum::routing::post(publish_post))
         .route("/{id}/unpublish", axum::routing::post(unpublish_post))
         .route("/{id}/category", axum::routing::put(set_post_category))
-        .route("/{id}/tags/:tag_id", axum::routing::post(add_post_tag))
-        .route("/{id}/tags/:tag_id", axum::routing::delete(remove_post_tag))
+        .route("/{id}/tags/{tag_id}", axum::routing::post(add_post_tag))
+        .route("/{id}/tags/{tag_id}", axum::routing::delete(remove_post_tag))
 }
 
 async fn list_posts(

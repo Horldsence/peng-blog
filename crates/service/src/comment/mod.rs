@@ -8,7 +8,7 @@
 //! - GitHub OAuth follows standard 3-step flow
 //! - No special cases - all comments follow the same rules
 
-use crate::repository::{CommentRepository, UserRepository};
+use domain::{CommentRepository, UserRepository};
 use domain::comment::{CreateCommentGitHub, GitHubTokenResponse, GitHubUser};
 use domain::{Comment, CommentResponse, CreateComment, Error, Result};
 use reqwest::Client;
@@ -296,7 +296,7 @@ impl CommentService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repository::{CommentRepository, UserRepository};
+    use domain::{CommentRepository, UserRepository};
     use async_trait::async_trait;
     use domain::{Comment, Result, User};
     use std::collections::HashMap;

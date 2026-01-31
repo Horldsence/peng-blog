@@ -59,14 +59,20 @@ const Home: React.FC = () => {
   };
 
   // 处理文章点击
-  const handlePostClick = (post: Post) => {
+  const handlePostClick = async (post: Post) => {
     setSelectedPost(post);
     setShowPostDetail(true);
     
-    // 记录文章阅读
-    statsApi.recordPostView(post.id).catch(error => {
+    try {
+      // 记录文章阅读
+      await statsApi.recordPostView(post.id);
+      // 获取更新后的阅读量
+      const postViews = await statsApi.getPostViews(post.id);
+      // 更新文章阅读量显示
+      setSelectedPost(prev => prev ? { ...prev, views: postViews.views } : null);
+    } catch (error) {
       console.error('记录文章阅读失败:', error);
-    });
+    }
   };
 
   // 返回文章列表

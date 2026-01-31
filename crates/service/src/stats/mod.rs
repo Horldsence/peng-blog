@@ -8,7 +8,7 @@
 //! - No special cases - all stats follow the same rules
 //! - Periodic cleanup for daily resets
 
-use crate::repository::StatsRepository;
+use domain::StatsRepository;
 use chrono::Utc;
 use domain::stats::{RecordViewRequest, StatsResponse};
 use domain::{Result, VisitStats};
@@ -130,7 +130,7 @@ impl StatsService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repository::StatsRepository;
+    use domain::StatsRepository;
     use async_trait::async_trait;
     use domain::{PostStats, Result, StatsResponse, VisitStats};
     use std::sync::Arc;

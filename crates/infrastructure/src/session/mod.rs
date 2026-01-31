@@ -43,7 +43,7 @@ impl SessionRepositoryImpl {
 }
 
 #[async_trait]
-impl service::SessionRepository for SessionRepositoryImpl {
+impl domain::SessionRepository for SessionRepositoryImpl {
     /// Create a new session
     async fn create_session(&self, user_id: uuid::Uuid, remember_me: bool) -> Result<Session> {
         let session = if remember_me {

@@ -11,7 +11,8 @@
 //! - No concrete database types in traits
 
 use async_trait::async_trait;
-use domain::{Category, Post, Result, Tag, User};
+use crate::{Category, Comment, File, Post, Result, Session, Tag, User, VisitStats, PostStats};
+use crate::stats::StatsResponse;
 use uuid::Uuid;
 
 // ============================================================================
@@ -118,10 +119,10 @@ pub trait UserRepository: Send + Sync {
 #[async_trait]
 pub trait SessionRepository: Send + Sync {
     /// Create a new session
-    async fn create_session(&self, user_id: Uuid, remember_me: bool) -> Result<domain::Session>;
+    async fn create_session(&self, user_id: Uuid, remember_me: bool) -> Result<Session>;
 
     /// Get a session by token
-    async fn get_session(&self, token: &str) -> Result<Option<domain::Session>>;
+    async fn get_session(&self, token: &str) -> Result<Option<Session>>;
 
     /// Delete a session by token
     async fn delete_session(&self, token: &str) -> Result<()>;
@@ -144,13 +145,13 @@ pub trait SessionRepository: Send + Sync {
 #[async_trait]
 pub trait FileRepository: Send + Sync {
     /// Create a new file record
-    async fn create_file(&self, file: domain::File) -> Result<domain::File>;
+    async fn create_file(&self, file: File) -> Result<File>;
 
     /// Get a file by ID
-    async fn get_file(&self, id: Uuid) -> Result<Option<domain::File>>;
+    async fn get_file(&self, id: Uuid) -> Result<Option<File>>;
 
     /// List files by user ID
-    async fn list_files_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<domain::File>>;
+    async fn list_files_by_user(&self, user_id: Uuid, limit: u64) -> Result<Vec<File>>;
 
     /// Delete a file by ID
     async fn delete_file(&self, id: Uuid, user_id: Uuid) -> Result<()>;
@@ -167,16 +168,16 @@ pub trait FileRepository: Send + Sync {
 #[async_trait]
 pub trait CommentRepository: Send + Sync {
     /// Create a new comment
-    async fn create_comment(&self, comment: domain::Comment) -> Result<domain::Comment>;
+    async fn create_comment(&self, comment: Comment) -> Result<Comment>;
 
     /// Get a comment by ID
-    async fn get_comment(&self, id: Uuid) -> Result<Option<domain::Comment>>;
+    async fn get_comment(&self, id: Uuid) -> Result<Option<Comment>>;
 
     /// List comments for a post
-    async fn list_post_comments(&self, post_id: Uuid, limit: u64) -> Result<Vec<domain::Comment>>;
+    async fn list_post_comments(&self, post_id: Uuid, limit: u64) -> Result<Vec<Comment>>;
 
     /// Update a comment
-    async fn update_comment(&self, comment: domain::Comment) -> Result<domain::Comment>;
+    async fn update_comment(&self, comment: Comment) -> Result<Comment>;
 
     /// Delete a comment by ID
     async fn delete_comment(
@@ -201,7 +202,7 @@ pub trait CommentRepository: Send + Sync {
 #[async_trait]
 pub trait StatsRepository: Send + Sync {
     /// Get global visitor statistics
-    async fn get_visit_stats(&self) -> Result<domain::VisitStats>;
+    async fn get_visit_stats(&self) -> Result<VisitStats>;
 
     /// Increment visitor count
     async fn increment_visit(&self, is_today: bool) -> Result<()>;
@@ -210,15 +211,16 @@ pub trait StatsRepository: Send + Sync {
     async fn reset_today_visits(&self) -> Result<()>;
 
     /// Get or create post statistics
-    async fn get_or_create_post_stats(&self, post_id: Uuid) -> Result<domain::PostStats>;
+    async fn get_or_create_post_stats(&self, post_id: Uuid) -> Result<PostStats>;
 
     /// Increment post view count
     async fn increment_post_view(&self, post_id: Uuid) -> Result<()>;
 
     /// Get total statistics (admin only)
-    async fn get_total_stats(&self) -> Result<domain::stats::StatsResponse>;
+    async fn get_total_stats(&self) -> Result<StatsResponse>;
 }
 
+/// Repository interface for Category operations
 #[async_trait]
 pub trait CategoryRepository: Send + Sync {
     async fn create_category(
@@ -246,6 +248,7 @@ pub trait CategoryRepository: Send + Sync {
     async fn get_children(&self, parent_id: Option<Uuid>) -> Result<Vec<Category>>;
 }
 
+/// Repository interface for Tag operations
 #[async_trait]
 pub trait TagRepository: Send + Sync {
     async fn create_tag(&self, name: String, slug: String) -> Result<Tag>;

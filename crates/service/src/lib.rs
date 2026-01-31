@@ -20,7 +20,6 @@ pub mod category;
 pub mod comment;
 pub mod file;
 pub mod post;
-pub mod repository;
 pub mod session;
 pub mod stats;
 pub mod tag;
@@ -30,13 +29,12 @@ pub use category::CategoryService;
 pub use comment::CommentService;
 pub use file::FileService;
 pub use post::PostService;
-pub use repository::{
-    CategoryRepository, CommentRepository, FileRepository, PostRepository, SessionRepository,
-    StatsRepository, TagRepository, UserRepository,
-};
 pub use session::SessionService;
 pub use stats::StatsService;
 pub use tag::TagService;
 pub use user::UserService;
 
-pub use domain::{Error, Result};
+pub use domain::{
+    CategoryRepository, CommentRepository, Error, FileRepository, PostRepository, Result,
+    SessionRepository, StatsRepository, TagRepository, UserRepository,
+};

@@ -8,7 +8,7 @@
 //! - Automatic expiration handling
 //! - No special cases - all sessions follow the same rules
 
-use crate::repository::SessionRepository;
+use domain::SessionRepository;
 use domain::{Result, Session};
 use std::sync::Arc;
 
@@ -114,7 +114,7 @@ impl SessionService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repository::SessionRepository;
+    use domain::SessionRepository;
     use async_trait::async_trait;
     use domain::{Result, Session};
     use std::collections::HashMap;
