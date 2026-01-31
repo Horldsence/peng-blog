@@ -11,6 +11,7 @@ pub mod error;
 pub mod file;
 pub mod middleware;
 pub mod post;
+pub mod response;
 pub mod session;
 pub mod state;
 pub mod stats;
@@ -19,6 +20,7 @@ pub mod user;
 
 // Re-export commonly used types for convenience
 pub use error::ApiResult;
+pub use response::{helpers as resp, ApiResponse, ErrorResponse, Pagination, SuccessResponse};
 pub use state::AppState;
 
 // Re-export middleware types

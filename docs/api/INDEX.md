@@ -1,16 +1,9 @@
 # Peng Blog API Documentation Index
 
-Welcome to the Peng Blog API documentation. This index provides a comprehensive overview of all available API endpoints and their detailed documentation.
+Welcome to the Peng Blog API documentation. This index provides a comprehensive overview of all available API endpoints.
 
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Authentication](#authentication)
-- [API Endpoints Summary](#api-endpoints-summary)
-- [Common Patterns](#common-patterns)
-- [Error Handling](#error-handling)
-- [Rate Limiting](#rate-limiting)
-- [SDK Examples](#sdk-examples)
+**API Version:** v2.0  
+**Last Updated:** 2026-01-31
 
 ---
 
@@ -21,6 +14,41 @@ Welcome to the Peng Blog API documentation. This index provides a comprehensive 
 ```
 Development: http://localhost:3000/api
 Production: https://yourdomain.com/api
+```
+
+### Response Format
+
+All API responses follow a unified format:
+
+```json
+// Success Response (Single Resource)
+{
+  "code": 200,
+  "message": "success",
+  "data": { ... }
+}
+
+// Success Response (List)
+{
+  "code": 200,
+  "message": "success",
+  "data": [ ... ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total": 100,
+    "total_pages": 5
+  }
+}
+
+// Error Response
+{
+  "code": 400,
+  "message": "Validation failed",
+  "errors": {
+    "field": ["error message"]
+  }
+}
 ```
 
 ### Make Your First Request
@@ -46,185 +74,115 @@ curl -X POST http://localhost:3000/api/posts \
     "content": "My first blog post!"
   }'
 
-# 3. Get all posts
+# 3. Get all published posts
 curl http://localhost:3000/api/posts
 
-# 4. Publish the post
-curl -X POST http://localhost:3000/api/posts/{post_id}/publish \
-  -H "Authorization: Bearer $TOKEN"
+# 4. Publish the post (using PATCH)
+curl -X PATCH http://localhost:3000/api/posts/{post_id} \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "published"
+  }'
 ```
-
----
-
-## Authentication
-
-Peng Blog supports two authentication methods:
-
-### JWT Token (Recommended for API Clients)
-
-```bash
-# Include token in Authorization header
-Authorization: Bearer <your_jwt_token>
-```
-
-### Cookie Sessions (For Web Applications)
-
-```bash
-# Cookies are automatically handled by the browser
-# Sessions support "Remember Me" (30 days vs 24 hours)
-```
-
-**Detailed Documentation:**
-- [Authentication API](./AUTH.md) - JWT-based authentication
-- [Sessions API](./SESSIONS.md) - Cookie-based sessions
 
 ---
 
 ## API Endpoints Summary
 
-### Quick Reference Table
+### Authentication
 
-| Resource | Endpoints | Public | Auth Required | Admin Only |
-|----------|-----------|--------|---------------|------------|
-| **Auth** | 3 | 2 | 1 | 0 |
-| **Sessions** | 4 | 3 | 1 | 0 |
-| **Users** | 4 | 1 | 3 | 2 |
-| **Posts** | 11 | 3 | 8 | 0 |
-| **Categories** | 6 | 3 | 0 | 3 |
-| **Tags** | 4 | 2 | 0 | 2 |
-| **Comments** | 7 | 4 | 3 | 0 |
-| **Files** | 5 | 2 | 3 | 0 |
-| **Stats** | 5 | 5 | 0 | 0 |
-| **Total** | **51** | **25** | **21** | **7** |
-
----
-
-### Authentication & Sessions
-
-| Endpoint | Method | Auth Required | Description |
-|----------|--------|---------------|-------------|
-| `POST /auth/register` | Register new user | No | Create account |
-| `POST /auth/login` | Login | No | Get JWT token |
-| `GET /auth/me` | Get current user | Yes | User info |
-| `POST /sessions` | Create session | No | Cookie-based login |
-| `DELETE /sessions` | Delete session | No | Cookie logout |
-| `GET /sessions/info` | Get session info | Yes | Session details |
-| `POST /sessions/github` | GitHub OAuth | No | OAuth callback |
-
-**Documentation:** [Auth API](./AUTH.md) | [Sessions API](./SESSIONS.md)
-
----
-
-### Posts
-
-| Endpoint | Method | Auth Required | Permission | Description |
-|----------|--------|---------------|------------|-------------|
-| `GET /posts` | List posts | No* | - | With filters (user, category, tag) |
-| `GET /posts/{id}` | Get post | No* | - | Post details |
-| `POST /posts` | Create post | Yes | POST_CREATE | New draft post |
-| `PUT /posts/{id}` | Update post | Yes | Owner | Edit title/content |
-| `DELETE /posts/{id}` | Delete post | Yes | Owner | Remove post |
-| `POST /posts/{id}/publish` | Publish | Yes | Owner | Make public |
-| `POST /posts/{id}/unpublish` | Unpublish | Yes | Owner | Revert to draft |
-| `PUT /posts/{id}/category` | Set category | Yes | Owner | Assign category |
-| `GET /posts/{id}/tags` | Get tags | No | - | Post tags |
-| `POST /posts/{id}/tags/{tag_id}` | Add tag | Yes | Owner | Associate tag |
-| `DELETE /posts/{id}/tags/{tag_id}` | Remove tag | Yes | Owner | Remove tag |
-
-**\*** *Behavior differs for authenticated users (admins see all, owners see their drafts)*
-
-**Documentation:** [Posts API](./POSTS.md)
-
----
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| POST | `/auth/register` | No | Register new user |
+| POST | `/auth/login` | No | Login with credentials |
+| POST | `/auth/logout` | No | Logout (client-side) |
+| GET | `/auth/me` | Yes | Get current user info |
 
 ### Users
 
-| Endpoint | Method | Auth Required | Permission | Description |
-|----------|--------|---------------|------------|-------------|
-| `GET /users` | List users | Yes | USER_MANAGE | All users |
-| `GET /users/{id}` | Get user | Yes | Self/Admin | User info |
-| `GET /users/{id}/posts` | Get user posts | No | - | Public posts |
-| `PATCH /users/{id}/permissions` | Update permissions | Yes | USER_MANAGE | Change perms |
+| Method | Endpoint | Auth Required | Permission | Description |
+|--------|----------|---------------|------------|-------------|
+| GET | `/users` | Yes | USER_MANAGE | List all users |
+| GET | `/users/{id}` | Yes | Self/Admin | Get user info |
+| PATCH | `/users/{id}` | Yes | Self/Admin | Update user |
+| DELETE | `/users/{id}` | Yes | Self/Admin | Delete user |
+| GET | `/users/{id}/posts` | No | - | Get user's posts |
 
-**Documentation:** [Users API](./USERS.md)
+### Posts
 
----
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/posts` | No | List posts with filters |
+| GET | `/posts/search` | No | Search posts |
+| POST | `/posts` | Yes | Create new post |
+| GET | `/posts/{id}` | No | Get post details |
+| PUT | `/posts/{id}` | Yes | Full update post |
+| PATCH | `/posts/{id}` | Yes | Partial update (status, category, etc.) |
+| DELETE | `/posts/{id}` | Yes | Delete post |
+| GET | `/posts/{id}/comments` | No | Get post comments |
+| POST | `/posts/{id}/comments` | Yes | Add comment to post |
+| GET | `/posts/{id}/tags` | No | Get post tags |
+| POST | `/posts/{id}/tags` | Yes | Add tag to post |
+| DELETE | `/posts/{id}/tags/{tag_id}` | Yes | Remove tag from post |
 
 ### Categories
 
-| Endpoint | Method | Auth Required | Permission | Description |
-|----------|--------|---------------|------------|-------------|
-| `GET /categories` | List categories | No | - | All categories |
-| `POST /categories` | Create category | Yes | USER_MANAGE | New category |
-| `GET /categories/{id}` | Get category | No | - | Category details |
-| `PUT /categories/{id}` | Update category | Yes | USER_MANAGE | Edit category |
-| `DELETE /categories/{id}` | Delete category | Yes | USER_MANAGE | Remove category |
-| `GET /categories/{id}/children` | Get children | No | - | Subcategories |
-
-**Documentation:** [Categories API](./CATEGORIES.md)
-
----
+| Method | Endpoint | Auth Required | Permission | Description |
+|--------|----------|---------------|------------|-------------|
+| GET | `/categories` | No | - | List all categories |
+| POST | `/categories` | Yes | USER_MANAGE | Create category |
+| GET | `/categories/{id}` | No | - | Get category details |
+| GET | `/categories/{id}/posts` | No | - | Get posts in category |
+| PATCH | `/categories/{id}` | Yes | USER_MANAGE | Update category |
+| DELETE | `/categories/{id}` | Yes | USER_MANAGE | Delete category |
 
 ### Tags
 
-| Endpoint | Method | Auth Required | Permission | Description |
-|----------|--------|---------------|------------|-------------|
-| `GET /tags` | List tags | No | - | All tags |
-| `POST /tags` | Create tag | Yes | USER_MANAGE | New tag |
-| `GET /tags/{id}` | Get tag | No | - | Tag details |
-| `DELETE /tags/{id}` | Delete tag | Yes | USER_MANAGE | Remove tag |
-
-**Documentation:** [Tags API](./TAGS.md)
-
----
+| Method | Endpoint | Auth Required | Permission | Description |
+|--------|----------|---------------|------------|-------------|
+| GET | `/tags` | No | - | List all tags |
+| POST | `/tags` | Yes | USER_MANAGE | Create tag |
+| GET | `/tags/{id}` | No | - | Get tag details |
+| GET | `/tags/{id}/posts` | No | - | Get posts with tag |
+| DELETE | `/tags/{id}` | Yes | USER_MANAGE | Delete tag |
 
 ### Comments
 
-| Endpoint | Method | Auth Required | Permission | Description |
-|----------|--------|---------------|------------|-------------|
-| `GET /comments/github/auth` | GitHub OAuth URL | No | - | OAuth start |
-| `POST /comments/github` | Create comment (GitHub) | No | - | OAuth comment |
-| `GET /comments/posts/{id}` | List comments | No | - | Post comments |
-| `POST /comments` | Create comment | Yes | Owner | New comment |
-| `GET /comments/{id}` | Get comment | No | - | Comment details |
-| `PUT /comments/{id}` | Update comment | Yes | Owner | Edit comment |
-| `DELETE /comments/{id}` | Delete comment | Yes | Owner | Remove comment |
-
-**Documentation:** [Comments API](./COMMENTS.md)
-
----
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/comments/{id}` | No | Get comment details |
+| PATCH | `/comments/{id}` | Yes | Update comment (owner) |
+| DELETE | `/comments/{id}` | Yes | Delete comment (owner) |
 
 ### Files
 
-| Endpoint | Method | Auth Required | Description |
-|----------|--------|---------------|-------------|
-| `POST /files` | Upload file | Yes | Upload (multipart) |
-| `GET /files` | List files | Yes | User's files |
-| `GET /files/{id}` | Get file info | No | File metadata |
-| `GET /files/{id}/download` | Download file | No | File content |
-| `DELETE /files/{id}` | Delete file | Yes | Owner only |
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/files` | Yes | List user's files |
+| POST | `/files` | Yes | Upload file |
+| GET | `/files/{id}` | No | Get file info |
+| GET | `/files/{id}/download` | No | Download file |
+| DELETE | `/files/{id}` | Yes | Delete file |
 
-**File Limits:**
-- Max size: 10MB
-- Allowed types: JPEG, PNG, GIF, WebP, PDF, TXT, MD
+### Sessions (Cookie Auth)
 
-**Documentation:** [Files API](./FILES.md)
-
----
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| POST | `/sessions` | No | Create session (cookie login) |
+| DELETE | `/sessions` | Yes | Delete session (logout) |
+| GET | `/sessions/info` | Yes | Get session info |
+| POST | `/sessions/github` | No | GitHub OAuth callback |
 
 ### Statistics
 
-| Endpoint | Method | Auth Required | Description |
-|----------|--------|---------------|-------------|
-| `GET /stats/visits` | Get visit stats | No | Global stats |
-| `POST /stats/visits` | Record visit | No | Track visit |
-| `GET /stats/posts/{id}/views` | Get post views | No | View count |
-| `POST /stats/posts/{id}/views` | Record view | No | Increment count |
-| `GET /stats/total` | Total stats | No* | All stats |
-
-**\** *Should be admin-only in production*
-
-**Documentation:** [Stats API](./STATS.md)
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/stats` | No | Get overall statistics |
+| GET | `/stats/visits` | No | Get visit statistics |
+| POST | `/stats/visits` | No | Record a visit |
+| GET | `/stats/posts/{id}` | No | Get post statistics |
+| POST | `/stats/posts/{id}/views` | No | Record a post view |
 
 ---
 
@@ -232,147 +190,96 @@ Authorization: Bearer <your_jwt_token>
 
 ### Pagination
 
-Most list endpoints support pagination via query parameters:
+All list endpoints support pagination:
 
 ```bash
-# Get 20 posts (default)
+# Default pagination (page 1, 20 items per page)
 GET /api/posts
 
-# Get 50 posts
-GET /api/posts?limit=50
+# Custom page and page size
+GET /api/posts?page=2&per_page=50
 
-# Get 10 comments
-GET /api/comments/posts/{id}?limit=10
-```
-
-**Default limits:**
-- Posts: 20
-- Users: 50
-- Comments: 50
-- Files: 50
-
-### Filtering
-
-Posts support multiple filter types:
-
-```bash
-# By user
-GET /api/posts?user_id={uuid}
-
-# By category
-GET /api/posts?category_id={uuid}
-
-# By tag
-GET /api/posts?tag_id={uuid}
-
-# Combined (AND logic)
-GET /api/posts?category_id={uuid}&tag_id={uuid}
-```
-
-### Authentication Headers
-
-```bash
-# For JWT authentication
-Authorization: Bearer <jwt_token>
-
-# Cookie authentication is automatic (handled by browser)
-```
-
-### Request Body Format
-
-```json
+# Response includes pagination info
 {
-  "field1": "value1",
-  "field2": "value2"
-}
-```
-
-### Response Format
-
-**Success Response:**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "title": "Post Title",
-  ...
-}
-```
-
-**Error Response:**
-```json
-{
-  "error": "Error message describing what went wrong"
-}
-```
-
----
-
-## Error Handling
-
-All API errors follow a consistent format:
-
-### HTTP Status Codes
-
-| Status | Code | Meaning |
-|--------|------|---------|
-| 200 | OK | Request successful |
-| 201 | Created | Resource created |
-| 204 | No Content | Deletion successful |
-| 400 | Bad Request | Invalid request data |
-| 401 | Unauthorized | Authentication required/failed |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource not found |
-| 500 | Internal Server Error | Server error |
-
-### Error Response Structure
-
-```json
-{
-  "error": "Error message here",
-  "details": {
-    "field": "Additional context"
+  "code": 200,
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "per_page": 50,
+    "total": 100,
+    "total_pages": 2
   }
 }
 ```
 
-### Common Errors
+### Filtering Posts
 
-**Authentication Errors:**
-```json
-// 401 - Missing token
-{
-  "error": "Missing or invalid authorization token"
-}
+```bash
+# Filter by author
+GET /api/posts?author={user_id}
 
-// 401 - Invalid credentials
-{
-  "error": "Invalid username or password"
-}
+# Filter by category
+GET /api/posts?category={category_id}
+
+# Filter by tag
+GET /api/posts?tag={tag_id}
+
+# Filter by status (admin/owner only)
+GET /api/posts?status=draft
+GET /api/posts?status=all
+
+# Combined filters
+GET /api/posts?author={user_id}&category={category_id}
 ```
 
-**Validation Errors:**
-```json
-// 400 - Invalid input
-{
-  "error": "Validation failed: Title cannot be empty"
-}
+### Partial Updates (PATCH)
+
+Use PATCH for partial updates:
+
+```bash
+# Publish a post
+curl -X PATCH /api/posts/{id} \
+  -d '{"status": "published"}'
+
+# Unpublish a post
+curl -X PATCH /api/posts/{id} \
+  -d '{"status": "draft"}'
+
+# Update category
+curl -X PATCH /api/posts/{id} \
+  -d '{"category_id": "..."}'
+
+# Remove category
+curl -X PATCH /api/posts/{id} \
+  -d '{"category_id": ""}'
+
+# Combined updates
+curl -X PATCH /api/posts/{id} \
+  -d '{"title": "New Title", "status": "published"}'
 ```
 
-**Permission Errors:**
-```json
-// 403 - Insufficient permissions
-{
-  "error": "Permission denied: requires permission flag 0x1"
-}
+### Authentication
+
+Include JWT token in Authorization header:
+
+```bash
+Authorization: Bearer <your_jwt_token>
 ```
 
-**Not Found Errors:**
-```json
-// 404 - Resource not found
-{
-  "error": "Post not found"
-}
-```
+---
+
+## HTTP Status Codes
+
+| Code | Meaning | Usage |
+|------|---------|-------|
+| 200 | OK | Successful GET, PUT, PATCH |
+| 201 | Created | Successful POST |
+| 204 | No Content | Successful DELETE |
+| 400 | Bad Request | Validation error |
+| 401 | Unauthorized | Missing or invalid token |
+| 403 | Forbidden | Insufficient permissions |
+| 404 | Not Found | Resource not found |
+| 500 | Internal Server Error | Server error |
 
 ---
 
@@ -380,39 +287,17 @@ All API errors follow a consistent format:
 
 Peng Blog uses bit flag-based permissions:
 
-| Permission | Value | Hex | Description |
-|------------|-------|-----|-------------|
-| `POST_CREATE` | 1 | 0x1 | Create posts |
-| `POST_UPDATE` | 2 | 0x2 | Update posts |
-| `POST_DELETE` | 4 | 0x4 | Delete posts |
-| `POST_PUBLISH` | 8 | 0x8 | Publish posts |
-| `USER_MANAGE` | 16 | 0x10 | Manage users, categories, tags |
+| Permission | Value | Description |
+|------------|-------|-------------|
+| `POST_CREATE` | 1 | Create posts |
+| `POST_UPDATE` | 2 | Update posts |
+| `POST_DELETE` | 4 | Delete posts |
+| `POST_PUBLISH` | 8 | Publish/unpublish posts |
+| `USER_MANAGE` | 16 | Manage users, categories, tags |
 
 **Default Permissions:**
-- Regular user: `POST_CREATE | POST_UPDATE | POST_PUBLISH` = 11 (0x0B)
-- Admin: All permissions = 31 (0x1F)
-
-**Checking Permissions:**
-```javascript
-// Check if user can create posts
-const canCreate = (user.permissions & 0x1) !== 0;
-
-// Check if user is admin
-const isAdmin = user.permissions === 0x1F;
-```
-
----
-
-## Rate Limiting
-
-**Status:** Not currently implemented.
-
-**Recommendation:** Configure rate limiting in production via reverse proxy (e.g., Nginx).
-
-**Suggested Limits:**
-- Public endpoints: 60 requests/minute
-- Auth endpoints: 10 requests/minute
-- Authenticated endpoints: 100 requests/minute
+- Regular user: `POST_CREATE | POST_UPDATE | POST_PUBLISH` (11)
+- Admin: All permissions (31)
 
 ---
 
@@ -447,15 +332,16 @@ class PengBlogAPI {
       headers,
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Request failed');
+      throw new Error(data.message || 'Request failed');
     }
 
-    return response.json();
+    return data;
   }
 
-  // Auth methods
+  // Auth
   async register(username: string, password: string) {
     return this.request('/auth/register', {
       method: 'POST',
@@ -464,16 +350,20 @@ class PengBlogAPI {
   }
 
   async login(username: string, password: string) {
-    return this.request('/auth/login', {
+    const data = await this.request<{ data: { token: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     });
+    this.token = data.data.token;
+    return data;
   }
 
-  // Post methods
-  async getPosts(limit = 20, userId?: string) {
-    const params = new URLSearchParams({ limit: limit.toString() });
-    if (userId) params.append('user_id', userId);
+  // Posts
+  async getPosts(filters?: { author?: string; category?: string; tag?: string }) {
+    const params = new URLSearchParams();
+    if (filters?.author) params.append('author', filters.author);
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.tag) params.append('tag', filters.tag);
     return this.request(`/posts?${params}`);
   }
 
@@ -484,117 +374,89 @@ class PengBlogAPI {
     });
   }
 
-  async publishPost(postId: string) {
-    return this.request(`/posts/${postId}/publish`, {
-      method: 'POST',
+  async updatePost(postId: string, updates: {
+    title?: string;
+    content?: string;
+    status?: 'published' | 'draft';
+    category_id?: string | null;
+  }) {
+    return this.request(`/posts/${postId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
     });
   }
 
-  // Set token after login
   setToken(token: string) {
     this.token = token;
   }
 }
-
-// Usage
-const api = new PengBlogAPI();
-const loginData = await api.login('testuser', 'SecurePass123!');
-api.setToken(loginData.token);
-
-const posts = await api.getPosts();
-const newPost = await api.createPost('Hello', 'Content here');
-await api.publishPost(newPost.id);
-```
-
-### Python
-
-```python
-import requests
-from typing import Optional, Dict, Any
-
-class PengBlogAPI:
-    def __init__(self, base_url: str = "http://localhost:3000/api"):
-        self.base_url = base_url
-        self.session = requests.Session()
-        self.token: Optional[str] = None
-
-    def _request(
-        self,
-        method: str,
-        endpoint: str,
-        data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        headers = {"Content-Type": "application/json"}
-        if self.token:
-            headers["Authorization"] = f"Bearer {self.token}"
-
-        response = self.session.request(
-            method,
-            f"{self.base_url}{endpoint}",
-            json=data,
-            headers=headers
-        )
-        response.raise_for_status()
-        return response.json()
-
-    # Auth methods
-    def register(self, username: str, password: str) -> Dict[str, Any]:
-        return self._request("POST", "/auth/register", {
-            "username": username,
-            "password": password
-        })
-
-    def login(self, username: str, password: str) -> Dict[str, Any]:
-        data = self._request("POST", "/auth/login", {
-            "username": username,
-            "password": password
-        })
-        self.token = data["token"]
-        return data
-
-    # Post methods
-    def get_posts(self, limit: int = 20, user_id: Optional[str] = None) -> Dict[str, Any]:
-        params = f"?limit={limit}"
-        if user_id:
-            params += f"&user_id={user_id}"
-        return self._request("GET", f"/posts{params}")
-
-    def create_post(self, title: str, content: str) -> Dict[str, Any]:
-        return self._request("POST", "/posts", {
-            "title": title,
-            "content": content
-        })
-
-    def publish_post(self, post_id: str) -> Dict[str, Any]:
-        return self._request("POST", f"/posts/{post_id}/publish")
-
-# Usage
-api = PengBlogAPI()
-api.login("testuser", "SecurePass123!")
-posts = api.get_posts()
-new_post = api.create_post("Hello", "Content here")
-api.publish_post(new_post["id"])
 ```
 
 ---
 
-## Reference
+## Migration from API v1
 
-### Related Documentation
+If you're migrating from API v1, here are the key changes:
 
-- [Main README](../README.md) - Project overview
-- [Architecture Guide](../ARCHITECTURE.md) - System architecture
-- [Development Guide](../DEVELOPMENT.md) - Development workflow
+### 1. Publish/Unpublish Changed
 
-### API Versioning
+**Old:**
+```bash
+POST /posts/{id}/publish
+POST /posts/{id}/unpublish
+```
 
-Current API version: **v1**
+**New:**
+```bash
+PATCH /posts/{id}
+{"status": "published"}
 
-The API follows semantic versioning. Backward-compatible changes will not increment the major version.
+PATCH /posts/{id}
+{"status": "draft"}
+```
 
-### Changelog
+### 2. Add Tag Changed
 
-See [CHANGELOG.md](../CHANGELOG.md) for API changes and updates.
+**Old:**
+```bash
+POST /posts/{id}/tags/{tag_id}
+```
+
+**New:**
+```bash
+POST /posts/{id}/tags
+{"tag_id": "..."}
+```
+
+### 3. Response Format Changed
+
+**Old:**
+```json
+{ "id": "...", "title": "..." }
+// or
+{ "success": true }
+```
+
+**New:**
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": { "id": "...", "title": "..." }
+}
+```
+
+### 4. Query Parameters Changed
+
+**Old:**
+```bash
+/posts?user_id=xxx&category_id=yyy
+```
+
+**New:**
+```bash
+/posts?author=xxx&category=yyy
+```
 
 ---
 
@@ -602,16 +464,3 @@ See [CHANGELOG.md](../CHANGELOG.md) for API changes and updates.
 
 - **GitHub Issues**: Report bugs and request features
 - **Documentation**: Check individual API docs for detailed examples
-- **Architecture**: Review [Architecture Guide](../ARCHITECTURE.md) for system design
-
----
-
-## License
-
-This API is part of the Peng Blog project, licensed under the MIT License.
-
----
-
-**Last Updated:** 2026-01-30  
-**API Version:** v1.0.0  
-**Total Endpoints:** 51

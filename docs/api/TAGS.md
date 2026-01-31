@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Tags API provides tag management for organizing and categorizing blog posts. Tags are hierarchical labels that can be associated with posts for better content discovery.
+The Tags API provides tag management for organizing and filtering blog posts.
 
 **Base URL:** `http://localhost:3000/api/tags`
 
@@ -10,260 +10,173 @@ The Tags API provides tag management for organizing and categorizing blog posts.
 
 ## Endpoints
 
-### List All Tags
+### List Tags
 
-Retrieve all available tags.
+Get all tags.
 
 **Endpoint:** `GET /api/tags`
 
-**Authentication:** Not required (public endpoint)
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | integer | No | 1 | Page number |
+| `per_page` | integer | No | 50 | Items per page |
 
 **Response (200 OK):**
 
 ```json
-[
-  {
-    "id": "880e8400-e29b-41d4-a716-446655440003",
-    "name": "rust",
-    "slug": "rust"
-  },
-  {
-    "id": "990e8400-e29b-41d4-a716-446655440004",
-    "name": "web-development",
-    "slug": "web-development"
-  },
-  {
-    "id": "a00e8400-e29b-41d4-a716-446655440005",
-    "name": "tutorial",
-    "slug": "tutorial"
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "rust",
+      "slug": "rust",
+      "created_at": "2026-01-30T10:00:00Z"
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "name": "web-development",
+      "slug": "web-development",
+      "created_at": "2026-01-30T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 50,
+    "total": 25,
+    "total_pages": 1
   }
-]
-```
-
-**Example:**
-
-```bash
-curl http://localhost:3000/api/tags
+}
 ```
 
 ---
 
 ### Create Tag
 
-Create a new tag (admin only).
+Create a new tag.
 
 **Endpoint:** `POST /api/tags`
 
-**Authentication:** Required (JWT)
+**Authentication:** Required
 
-**Permission:** `USER_MANAGE` (0x10)
+**Permission:** `USER_MANAGE` (admin only)
 
 **Request Body:**
 
 ```json
 {
-  "name": "rust-programming",
-  "slug": "rust-programming"
+  "name": "javascript",
+  "slug": "javascript"
 }
 ```
 
-**Request Parameters:**
-
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Display name of the tag |
-| `slug` | string | Yes | URL-friendly identifier (lowercase, hyphens) |
+| `name` | string | Yes | Tag name |
+| `slug` | string | Yes | URL-friendly identifier |
 
 **Response (201 Created):**
 
 ```json
 {
-  "id": "880e8400-e29b-41d4-a716-446655440003",
-  "name": "rust-programming",
-  "slug": "rust-programming"
+  "code": 201,
+  "message": "created",
+  "data": {
+    "id": "770e8400-e29b-41d4-a716-446655440002",
+    "name": "javascript",
+    "slug": "javascript",
+    "created_at": "2026-01-30T12:00:00Z"
+  }
 }
-```
-
-**Error Responses:**
-
-```json
-// 400 Bad Request - Validation error
-{
-  "error": "Validation failed: Tag name cannot be empty"
-}
-
-// 401 Unauthorized
-{
-  "error": "Missing or invalid authorization token"
-}
-
-// 403 Forbidden - Insufficient permissions
-{
-  "error": "Permission denied: requires permission flag 0x10"
-}
-```
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/api/tags \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "rust-programming",
-    "slug": "rust-programming"
-  }'
 ```
 
 ---
 
-### Get Tag by ID
+### Get Tag
 
-Retrieve a specific tag.
+Get a single tag by ID.
 
 **Endpoint:** `GET /api/tags/{id}`
 
 **Authentication:** Not required
 
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Tag ID |
-
 **Response (200 OK):**
 
 ```json
 {
-  "id": "880e8400-e29b-41d4-a716-446655440003",
-  "name": "rust",
-  "slug": "rust"
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "rust",
+    "slug": "rust",
+    "created_at": "2026-01-30T10:00:00Z"
+  }
 }
 ```
 
-**Error Responses:**
+---
 
-```json
-// 404 Not Found
-{
-  "error": "Tag not found"
-}
-```
+### Get Tag Posts
 
-**Example:**
+Get all posts with a specific tag.
 
-```bash
-curl http://localhost:3000/api/tags/880e8400-e29b-41d4-a716-446655440003
-```
+**Endpoint:** `GET /api/tags/{id}/posts`
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | integer | No | 1 | Page number |
+| `per_page` | integer | No | 20 | Items per page |
+
+**Response (200 OK):** Paginated list of posts
 
 ---
 
 ### Delete Tag
 
-Delete a tag (admin only).
+Delete a tag.
 
 **Endpoint:** `DELETE /api/tags/{id}`
 
-**Authentication:** Required (JWT)
+**Authentication:** Required
 
-**Permission:** `USER_MANAGE` (0x10)
+**Permission:** `USER_MANAGE` (admin only)
 
-**Path Parameters:**
+**Response (204 No Content):** Empty body
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Tag ID |
+---
 
-**Response (204 No Content):**
+## Managing Post Tags
 
-Empty response body.
-
-**Error Responses:**
-
-```json
-// 401 Unauthorized
-{
-  "error": "Missing or invalid authorization token"
-}
-
-// 403 Forbidden
-{
-  "error": "Permission denied: requires permission flag 0x10"
-}
-
-// 404 Not Found
-{
-  "error": "Tag not found"
-}
-```
-
-**Example:**
+To add or remove tags from posts, use the Posts API:
 
 ```bash
-curl -X DELETE http://localhost:3000/api/tags/880e8400-e29b-41d4-a716-446655440003 \
-  -H "Authorization: Bearer $TOKEN"
+# Add tag to post
+POST /api/posts/{post_id}/tags
+{
+  "tag_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+
+# Remove tag from post
+DELETE /api/posts/{post_id}/tags/{tag_id}
+
+# Get post tags
+GET /api/posts/{post_id}/tags
 ```
 
----
-
-## Tag Management with Posts
-
-Tags are associated with posts through the Posts API. See [Posts API](./POSTS.md) for details on:
-
-- **Get post tags:** `GET /api/posts/{id}/tags`
-- **Add tag to post:** `POST /api/posts/{id}/tags/{tag_id}`
-- **Remove tag from post:** `DELETE /api/posts/{id}/tags/{tag_id}`
-
----
-
-## Tag Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | UUID | Unique tag identifier |
-| `name` | string | Display name (e.g., "Rust Programming") |
-| `slug` | string | URL-friendly identifier (e.g., "rust-programming") |
-
----
-
-## Tag vs Category
-
-**Tags** and **Categories** serve different purposes:
-
-| Feature | Tags | Categories |
-|---------|------|------------|
-| **Purpose** | Flexible content labeling | Hierarchical organization |
-| **Structure** | Flat (no hierarchy) | Tree structure (parent/child) |
-| **Multiplicity** | Multiple tags per post | One category per post |
-| **Management** | Admin only | Admin only |
-| **Example** | "rust", "tutorial", "beginner" | "Programming", "Web Development" |
-
-**Use Cases:**
-- **Tags:** Cross-cutting topics, technologies, difficulty levels, themes
-- **Categories:** Broad subject areas, structural organization
-
----
-
-## Permission Requirements
-
-Tag management requires admin-level permissions:
-
-| Action | Permission Required | Value | Hex |
-|--------|-------------------|-------|-----|
-| List tags | None | - | - |
-| Get tag | None | - | - |
-| Create tag | `USER_MANAGE` | 16 | 0x10 |
-| Delete tag | `USER_MANAGE` | 16 | 0x10 |
+See [Posts API](./POSTS.md) for more details.
 
 ---
 
 ## Related Documentation
 
-- [Posts API](./POSTS.md) - Managing posts and their tags
-- [Categories API](./CATEGORIES.md) - Managing hierarchical categories
-- [Authentication API](./AUTH.md) - How to authenticate admin requests
-
----
-
-**Last Updated:** 2026-01-30  
-**API Version:** v1
+- [Posts API](./POSTS.md) - Managing post tags

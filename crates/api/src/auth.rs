@@ -1,34 +1,43 @@
 //! Authentication API Routes
 //!
 //! This module provides HTTP handlers for authentication operations.
-//! All auth routes are public (no authentication required).
+//! All auth routes are public except `/auth/me`.
+//!
+//! ## Endpoints
+//!
+//! | Method | Endpoint | Description |
+//! |--------|----------|-------------|
+//! | POST | /auth/register | Register new user |
+//! | POST | /auth/login | Login with credentials |
+//! | POST | /auth/logout | Logout (client-side token removal) |
+//! | GET | /auth/me | Get current user info |
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json, Router};
+use axum::{
+    extract::State,
+    response::IntoResponse,
+    Json, Router,
+};
 use domain::{LoginRequest, LoginResponse, RegisterRequest, UserInfo};
 
-use crate::{error::ApiError, middleware::auth::Claims, state::AppState};
+use crate::{
+    error::ApiError,
+    middleware::auth::Claims,
+    response::helpers as resp,
+    state::AppState,
+};
 
-// ============================================================================
-// Routes
-// ============================================================================
-
+/// Create auth routes
 pub fn routes() -> Router<AppState> {
     Router::new()
-        // POST /api/auth/register - Register a new user (public)
         .route("/register", axum::routing::post(register))
-        // POST /api/auth/login - Login with username/password (public)
         .route("/login", axum::routing::post(login))
-        // GET /api/auth/me - Get current user info (requires authentication)
+        .route("/logout", axum::routing::post(logout))
         .route("/me", axum::routing::get(me))
 }
 
-// ============================================================================
-// Handlers
-// ============================================================================
-
-/// POST /api/auth/register
-/// Register a new user (public endpoint)
-pub async fn register(
+/// POST /auth/register
+/// Register a new user
+async fn register(
     State(state): State<AppState>,
     Json(input): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
@@ -47,18 +56,17 @@ pub async fn register(
         user.permissions,
     )?;
 
-    Ok((
-        StatusCode::CREATED,
-        Json(LoginResponse {
-            token,
-            user: UserInfo::from(&user),
-        }),
-    ))
+    let response = LoginResponse {
+        token,
+        user: UserInfo::from(&user),
+    };
+
+    Ok(resp::created(response))
 }
 
-/// POST /api/auth/login
-/// Login with username/password (public endpoint)
-pub async fn login(
+/// POST /auth/login
+/// Login with username and password
+async fn login(
     State(state): State<AppState>,
     Json(input): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
@@ -83,18 +91,27 @@ pub async fn login(
         user.permissions,
     )?;
 
-    Ok((
-        StatusCode::OK,
-        Json(LoginResponse {
-            token,
-            user: UserInfo::from(&user),
-        }),
-    ))
+    let response = LoginResponse {
+        token,
+        user: UserInfo::from(&user),
+    };
+
+    Ok(resp::ok(response))
 }
 
-/// GET /api/auth/me
+/// POST /auth/logout
+/// Logout (informative endpoint - actual logout is client-side)
+async fn logout() -> impl IntoResponse {
+    // JWT tokens are stateless, so actual logout happens client-side
+    // by removing the token from storage
+    resp::ok(serde_json::json!({
+        "message": "Logout successful. Please remove the token from client storage."
+    }))
+}
+
+/// GET /auth/me
 /// Get current user info (requires authentication)
-pub async fn me(
+async fn me(
     user: Claims,
     State(_state): State<AppState>,
 ) -> Result<impl IntoResponse, ApiError> {
@@ -107,11 +124,11 @@ pub async fn me(
         permissions: user.permissions,
     };
 
-    Ok((StatusCode::OK, Json(user_info)))
+    Ok(resp::ok(user_info))
 }
 
 // ============================================================================
-// Private Validation Helpers
+// Validation Helpers
 // ============================================================================
 
 fn validate_username(username: &str) -> Result<(), ApiError> {

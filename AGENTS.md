@@ -45,17 +45,19 @@ peng-blog/
 │   │   └── utils/       # 工具函数
 │   └── package.json
 ├── docs/                # 项目文档
-│   └── api/             # API 文档 (完整)
-│       ├── INDEX.md     # API 总览和快速参考
-│       ├── AUTH.md      # 认证 API 详细文档
-│       ├── POSTS.md     # 文章 API 详细文档
-│       ├── CATEGORIES.md # 分类 API 详细文档
-│       ├── TAGS.md      # 标签 API 详细文档
-│       ├── USERS.md     # 用户 API 详细文档
-│       ├── COMMENTS.md  # 评论 API 详细文档
-│       ├── FILES.md     # 文件 API 详细文档
-│       ├── STATS.md     # 统计 API 详细文档
-│       └── SESSIONS.md  # 会话 API 详细文档
+│   └── api/                 # API 文档 (完整)
+│       ├── INDEX.md         # API 总览和快速参考
+│       ├── AUTH.md          # 认证 API 详细文档
+│       ├── POSTS.md         # 文章 API 详细文档
+│       ├── CATEGORIES.md    # 分类 API 详细文档
+│       ├── TAGS.md          # 标签 API 详细文档
+│       ├── USERS.md         # 用户 API 详细文档
+│       ├── COMMENTS.md      # 评论 API 详细文档
+│       ├── FILES.md         # 文件 API 详细文档
+│       ├── STATS.md         # 统计 API 详细文档
+│       ├── SESSIONS.md      # 会话 API 详细文档
+│       ├── API_IMPROVEMENTS.md  # API v2 改进方案
+│       └── CHANGES_v2.md    # API v2 变更记录
 ├── test/                # Python 测试工具
 ├── uploads/             # 文件上传目录
 ├── blog.db              # SQLite 数据库文件
@@ -577,7 +579,7 @@ npm run build  # in frontend/
 
 ### API 文档 (完整)
 
-Peng Blog 提供 **51 个 RESTful API 端点**，完整文档位于 `docs/api/`：
+Peng Blog API v2 提供 **RESTful API 端点**，完整文档位于 `docs/api/`：
 
 **核心文档:**
 - `docs/api/INDEX.md` - API 总览、快速开始、所有端点索引
@@ -585,6 +587,8 @@ Peng Blog 提供 **51 个 RESTful API 端点**，完整文档位于 `docs/api/`�
 - `docs/api/POSTS.md` - 文章管理完整指南（CRUD、发布、分类、标签）
 - `docs/api/CATEGORIES.md` - 分层分类系统详解
 - `docs/api/TAGS.md` - 标签系统详解
+- `docs/api/API_IMPROVEMENTS.md` - API v2 设计改进方案
+- `docs/api/CHANGES_v2.md` - API v1 到 v2 迁移指南
 
 **其他文档:**
 - `docs/api/USERS.md` - 用户管理 API
@@ -593,19 +597,30 @@ Peng Blog 提供 **51 个 RESTful API 端点**，完整文档位于 `docs/api/`�
 - `docs/api/STATS.md` - 统计分析 API
 - `docs/api/SESSIONS.md` - 会话管理 API
 
+**API v2 设计特点:**
+
+1. **统一响应格式** - 所有响应包含 `code`, `message`, `data` 和可选的 `pagination`
+2. **HTTP 方法语义化** - 使用 PATCH 进行部分更新，PUT 进行全量更新
+3. **RESTful 资源层级** - `/posts/{id}/comments`, `/categories/{id}/posts`
+4. **标准分页** - 使用 `page` 和 `per_page` 参数
+
 **快速参考:**
 
-| 模块 | 端点数 | 公开 | 需认证 | 说明 |
-|------|--------|------|--------|------|
-| Auth | 3 | 2 | 1 | 注册、登录、用户信息 |
-| Posts | 11 | 3 | 8 | CRUD、发布、分类、标签 |
-| Users | 4 | 1 | 3 | 用户管理、权限控制 |
-| Categories | 6 | 3 | 0 | 分层分类（管理员创建） |
-| Tags | 4 | 2 | 0 | 标签管理（管理员创建） |
-| Comments | 7 | 4 | 3 | 评论、GitHub OAuth |
-| Files | 5 | 2 | 3 | 文件上传下载 |
-| Stats | 5 | 5 | 0 | 访问统计 |
-| Sessions | 4 | 3 | 1 | Cookie 会话 |
+| 模块 | 公开 | 需认证 | 管理员 |
+|------|------|--------|--------|
+| Auth | 注册、登录 | 用户信息 | - |
+| Posts | 列表、详情、评论、标签 | 创建、更新、删除 | - |
+| Users | 用户文章列表 | 用户信息 | 用户列表、权限修改 |
+| Categories | 列表、详情、文章 | - | 创建、更新、删除 |
+| Tags | 列表、详情、文章 | - | 创建、删除 |
+| Comments | 详情 | 创建、更新、删除 | - |
+| Files | 下载 | 上传、列表 | - |
+| Stats | 全部 | - | - |
+
+**主要变更 (v1 → v2):**
+- `POST /posts/{id}/publish` → `PATCH /posts/{id}` + `{"status": "published"}`
+- `POST /posts/{id}/tags/{tag_id}` → `POST /posts/{id}/tags` + `{"tag_id": "..."}`
+- 响应格式统一包装: `{ "code": 200, "message": "success", "data": {...} }`
 
 **权限位标志:**
 ```rust
@@ -632,5 +647,5 @@ USER_MANAGE = 16   // 管理用户/分类/标签
 
 ---
 
-*Last updated: 2026-01-30*
+*Last updated: 2026-01-31*
 *Document language: 中文 / English*

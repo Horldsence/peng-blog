@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Posts API provides comprehensive blog post management including CRUD operations, publishing workflow, category assignment, and tag management. Posts support draft/published states with fine-grained access control.
+The Posts API provides comprehensive blog post management including CRUD operations, publishing workflow, category assignment, and tag management.
 
 **Base URL:** `http://localhost:3000/api/posts`
 
@@ -12,107 +12,94 @@ The Posts API provides comprehensive blog post management including CRUD operati
 
 ### List Posts
 
-Get all published posts with optional filtering. Admin users see all posts including unpublished drafts.
+Get posts with optional filtering. By default, returns only published posts.
 
 **Endpoint:** `GET /api/posts`
 
-**Authentication:** Optional (JWT via `Authorization` header)
+**Authentication:** Optional
 
 **Query Parameters:**
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `limit` | integer | No | 20 | Maximum number of posts to return |
-| `user_id` | UUID | No | - | Filter by specific user |
-| `category_id` | UUID | No | - | Filter by category |
-| `tag_id` | UUID | No | - | Filter by tag |
+| `page` | integer | No | 1 | Page number (1-based) |
+| `per_page` | integer | No | 20 | Items per page |
+| `author` | UUID | No | - | Filter by author ID |
+| `category` | UUID | No | - | Filter by category ID |
+| `tag` | UUID | No | - | Filter by tag ID |
+| `status` | string | No | `published` | `published`, `draft`, or `all` (admin/owner only) |
 
 **Response (200 OK):**
 
 ```json
-[
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "user_id": "660e8400-e29b-41d4-a716-446655440001",
-    "title": "My First Post",
-    "content": "Post content here...",
-    "category_id": "770e8400-e29b-41d4-a716-446655440002",
-    "published_at": "2026-01-30T10:00:00Z",
-    "created_at": "2026-01-30T09:00:00Z",
-    "views": 150
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": "660e8400-e29b-41d4-a716-446655440001",
+      "title": "My First Post",
+      "content": "Post content here...",
+      "category_id": "770e8400-e29b-41d4-a716-446655440002",
+      "published_at": "2026-01-30T10:00:00Z",
+      "created_at": "2026-01-30T09:00:00Z",
+      "views": 150
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total": 100,
+    "total_pages": 5
   }
-]
+}
 ```
-
-**Access Control:**
-- **Public:** See only published posts
-- **Authenticated (non-admin):** See only published posts
-- **Admin:** See all posts (published + unpublished)
 
 **Examples:**
 
 ```bash
-# Get latest 20 published posts
+# Get published posts (default)
 GET /api/posts
 
-# Get latest 50 posts
-GET /api/posts?limit=50
+# Get page 2 with 50 items per page
+GET /api/posts?page=2&per_page=50
 
-# Get posts by specific user
-GET /api/posts?user_id=660e8400-e29b-41d4-a716-446655440001
+# Get posts by specific author
+GET /api/posts?author=660e8400-e29b-41d4-a716-446655440001
 
 # Get posts in a category
-GET /api/posts?category_id=770e8400-e29b-41d4-a716-446655440002
+GET /api/posts?category=770e8400-e29b-41d4-a716-446655440002
 
 # Get posts with a specific tag
-GET /api/posts?tag_id=880e8400-e29b-41d4-a716-446655440003
+GET /api/posts?tag=880e8400-e29b-41d4-a716-446655440003
 
-# Get posts with both category AND tag (AND logic)
-GET /api/posts?category_id=770e8400-e29b-41d4-a716-446655440002&tag_id=880e8400-e29b-41d4-a716-446655440003
+# Get draft posts (requires authentication as author or admin)
+GET /api/posts?status=draft
 ```
 
 ---
 
-### Get Post by ID
+### Search Posts
 
-Retrieve a single post by ID.
+Search posts by query string.
 
-**Endpoint:** `GET /api/posts/{id}`
+**Endpoint:** `GET /api/posts/search`
 
-**Authentication:** Optional
+**Query Parameters:**
 
-**Path Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `q` | string | Yes | - | Search query |
+| `page` | integer | No | 1 | Page number |
+| `per_page` | integer | No | 20 | Items per page |
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
+**Response:** Same format as List Posts
 
-**Response (200 OK):**
+**Example:**
 
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "660e8400-e29b-41d4-a716-446655440001",
-  "title": "My First Post",
-  "content": "Full post content...",
-  "category_id": "770e8400-e29b-41d4-a716-446655440002",
-  "published_at": "2026-01-30T10:00:00Z",
-  "created_at": "2026-01-30T09:00:00Z",
-  "views": 150
-}
-```
-
-**Access Control:**
-- **Published posts:** Visible to everyone
-- **Unpublished posts:** Only visible to post owner and admins
-
-**Error Responses:**
-
-```json
-// 404 Not Found
-{
-  "error": "Post not found"
-}
+```bash
+GET /api/posts/search?q=rust%20tutorial&page=1&per_page=10
 ```
 
 ---
@@ -123,7 +110,7 @@ Create a new blog post. Initially created as unpublished (draft).
 
 **Endpoint:** `POST /api/posts`
 
-**Authentication:** Required (JWT)
+**Authentication:** Required
 
 **Permission:** `POST_CREATE` (0x1)
 
@@ -136,8 +123,6 @@ Create a new blog post. Initially created as unpublished (draft).
 }
 ```
 
-**Request Parameters:**
-
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `title` | string | Yes | Post title |
@@ -147,65 +132,71 @@ Create a new blog post. Initially created as unpublished (draft).
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "660e8400-e29b-41d4-a716-446655440001",
-  "title": "My New Post",
-  "content": "Post content goes here...",
-  "category_id": null,
-  "published_at": null,
-  "created_at": "2026-01-30T12:00:00Z",
-  "views": 0
-}
-```
-
-**Error Responses:**
-
-```json
-// 400 Bad Request - Validation error
-{
-  "error": "Validation failed: Title cannot be empty"
-}
-
-// 401 Unauthorized
-{
-  "error": "Missing or invalid authorization token"
-}
-
-// 403 Forbidden - Insufficient permissions
-{
-  "error": "Permission denied: requires permission flag 0x1"
-}
-```
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/api/posts \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
+  "code": 201,
+  "message": "created",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "660e8400-e29b-41d4-a716-446655440001",
     "title": "My New Post",
-    "content": "This is my first blog post!"
-  }'
+    "content": "Post content goes here...",
+    "category_id": null,
+    "published_at": null,
+    "created_at": "2026-01-30T12:00:00Z",
+    "views": 0
+  }
+}
 ```
 
 ---
 
-### Update Post
+### Get Post
 
-Update an existing post's title and/or content.
+Retrieve a single post by ID.
 
-**Endpoint:** `PUT /api/posts/{id}`
+**Endpoint:** `GET /api/posts/{id}`
 
-**Authentication:** Required (JWT)
-
-**Permission:** Post owner OR admin
+**Authentication:** Optional (required for draft posts)
 
 **Path Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `id` | UUID | Yes | Post ID |
+
+**Response (200 OK):**
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "660e8400-e29b-41d4-a716-446655440001",
+    "title": "My First Post",
+    "content": "Full post content...",
+    "category_id": "770e8400-e29b-41d4-a716-446655440002",
+    "published_at": "2026-01-30T10:00:00Z",
+    "created_at": "2026-01-30T09:00:00Z",
+    "views": 150
+  }
+}
+```
+
+**Access Control:**
+- Published posts: Visible to everyone
+- Draft posts: Only visible to post owner and admins (returns 404 for others)
+
+---
+
+### Update Post (Full)
+
+Full update of an existing post.
+
+**Endpoint:** `PUT /api/posts/{id}`
+
+**Authentication:** Required
+
+**Permission:** Post owner or admin
 
 **Request Body:**
 
@@ -216,54 +207,71 @@ Update an existing post's title and/or content.
 }
 ```
 
-**Request Parameters:**
+**Response (200 OK):** Updated post object
+
+---
+
+### Update Post (Partial)
+
+Partial update of a post. Use this for:
+- Publishing/unpublishing posts
+- Changing category
+- Updating title or content
+
+**Endpoint:** `PATCH /api/posts/{id}`
+
+**Authentication:** Required
+
+**Permission:** Post owner or admin
+
+**Request Body:**
+
+```json
+{
+  "title": "Updated Title",
+  "content": "Updated content",
+  "category_id": "770e8400-e29b-41d4-a716-446655440002",
+  "status": "published"
+}
+```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `title` | string | No | New post title |
 | `content` | string | No | New post content |
+| `category_id` | string/null | No | Category ID (empty string to remove) |
+| `status` | string | No | `"published"` or `"draft"` |
 
-**Note:** At least one field must be provided.
-
-**Response (200 OK):**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "660e8400-e29b-41d4-a716-446655440001",
-  "title": "Updated Title",
-  "content": "Updated content...",
-  "category_id": "770e8400-e29b-41d4-a716-446655440002",
-  "published_at": "2026-01-30T10:00:00Z",
-  "created_at": "2026-01-30T09:00:00Z",
-  "views": 150
-}
-```
-
-**Error Responses:**
-
-```json
-// 403 Forbidden - Not owner
-{
-  "error": "Permission denied: you must be the resource owner or have admin privileges"
-}
-
-// 404 Not Found
-{
-  "error": "Post not found"
-}
-```
-
-**Example:**
+**Examples:**
 
 ```bash
-curl -X PUT http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000 \
+# Publish a post
+curl -X PATCH /api/posts/{id} \
   -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Updated Title"
-  }'
+  -d '{"status": "published"}'
+
+# Unpublish a post
+curl -X PATCH /api/posts/{id} \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"status": "draft"}'
+
+# Change category
+curl -X PATCH /api/posts/{id} \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"category_id": "new-category-id"}'
+
+# Remove category
+curl -X PATCH /api/posts/{id} \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"category_id": ""}'
+
+# Update title and publish
+curl -X PATCH /api/posts/{id} \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"title": "New Title", "status": "published"}'
 ```
+
+**Response (200 OK):** Updated post object
 
 ---
 
@@ -273,234 +281,88 @@ Permanently delete a post.
 
 **Endpoint:** `DELETE /api/posts/{id}`
 
-**Authentication:** Required (JWT)
+**Authentication:** Required
 
-**Permission:** Post owner OR admin
+**Permission:** Post owner or admin
 
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
-
-**Response (204 No Content):**
-
-Empty response body.
-
-**Error Responses:**
-
-```json
-// 403 Forbidden
-{
-  "error": "Permission denied: you must be the resource owner or have admin privileges"
-}
-
-// 404 Not Found
-{
-  "error": "Post not found"
-}
-```
-
-**Example:**
-
-```bash
-curl -X DELETE http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000 \
-  -H "Authorization: Bearer $TOKEN"
-```
+**Response (204 No Content):** Empty response body
 
 ---
 
-### Publish Post
+### Get Post Comments
 
-Publish a draft post, making it visible to the public.
+Get all comments for a post.
 
-**Endpoint:** `POST /api/posts/{id}/publish`
+**Endpoint:** `GET /api/posts/{id}/comments`
 
-**Authentication:** Required (JWT)
-
-**Permission:** Post owner OR admin
-
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
+**Authentication:** Not required
 
 **Response (200 OK):**
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "660e8400-e29b-41d4-a716-446655440001",
-  "title": "My Post",
-  "content": "Post content...",
-  "category_id": null,
-  "published_at": "2026-01-30T13:00:00Z",
-  "created_at": "2026-01-30T09:00:00Z",
-  "views": 0
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": "...",
+      "post_id": "...",
+      "content": "Great post!",
+      "created_at": "2026-01-30T10:00:00Z"
+    }
+  ]
 }
-```
-
-**Error Responses:**
-
-```json
-// 403 Forbidden
-{
-  "error": "Permission denied: you must be the resource owner or have admin privileges"
-}
-
-// 404 Not Found
-{
-  "error": "Post not found"
-}
-```
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/publish \
-  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
 
-### Unpublish Post
+### Create Comment
 
-Unpublish a post, reverting it to draft status.
+Add a comment to a post.
 
-**Endpoint:** `POST /api/posts/{id}/unpublish`
+**Endpoint:** `POST /api/posts/{id}/comments`
 
-**Authentication:** Required (JWT)
-
-**Permission:** Post owner OR admin
-
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
-
-**Response (200 OK):**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "660e8400-e29b-41d4-a716-446655440001",
-  "title": "My Post",
-  "content": "Post content...",
-  "category_id": null,
-  "published_at": null,
-  "created_at": "2026-01-30T09:00:00Z",
-  "views": 150
-}
-```
-
-**Note:** The `published_at` field becomes `null` when unpublished.
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/unpublish \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-### Set Post Category
-
-Assign or change a post's category.
-
-**Endpoint:** `PUT /api/posts/{id}/category`
-
-**Authentication:** Required (JWT)
-
-**Permission:** Post owner OR admin
-
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
+**Authentication:** Required
 
 **Request Body:**
 
 ```json
 {
-  "category_id": "770e8400-e29b-41d4-a716-446655440002"
+  "content": "Great post!"
 }
 ```
 
-**Request Parameters:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `category_id` | UUID or null | No | Category ID (null to remove category) |
-
-**Response (200 OK):**
-
-```json
-{
-  "success": true
-}
-```
-
-**Example:**
-
-```bash
-# Assign category
-curl -X PUT http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/category \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "category_id": "770e8400-e29b-41d4-a716-446655440002"
-  }'
-
-# Remove category
-curl -X PUT http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/category \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "category_id": null
-  }'
-```
+**Response (201 Created):** Created comment object
 
 ---
 
 ### Get Post Tags
 
-Retrieve all tags associated with a post.
+Get all tags associated with a post.
 
 **Endpoint:** `GET /api/posts/{id}/tags`
 
 **Authentication:** Not required
 
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
-
 **Response (200 OK):**
 
 ```json
-[
-  {
-    "id": "880e8400-e29b-41d4-a716-446655440003",
-    "name": "rust",
-    "slug": "rust"
-  },
-  {
-    "id": "990e8400-e29b-41d4-a716-446655440004",
-    "name": "web-development",
-    "slug": "web-development"
-  }
-]
-```
-
-**Example:**
-
-```bash
-curl http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/tags
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440003",
+      "name": "rust",
+      "slug": "rust"
+    },
+    {
+      "id": "990e8400-e29b-41d4-a716-446655440004",
+      "name": "web-development",
+      "slug": "web-development"
+    }
+  ]
+}
 ```
 
 ---
@@ -509,47 +371,21 @@ curl http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/tags
 
 Associate a tag with a post.
 
-**Endpoint:** `POST /api/posts/{id}/tags/{tag_id}`
+**Endpoint:** `POST /api/posts/{id}/tags`
 
-**Authentication:** Required (JWT)
+**Authentication:** Required
 
-**Permission:** Post owner OR admin
+**Permission:** Post owner or admin
 
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
-| `tag_id` | UUID | Yes | Tag ID |
-
-**Response (201 Created):**
+**Request Body:**
 
 ```json
 {
-  "success": true
+  "tag_id": "880e8400-e29b-41d4-a716-446655440003"
 }
 ```
 
-**Error Responses:**
-
-```json
-// 403 Forbidden
-{
-  "error": "Permission denied: you must be the resource owner or have admin privileges"
-}
-
-// 404 Not Found
-{
-  "error": "Post not found"
-}
-```
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/tags/880e8400-e29b-41d4-a716-446655440003 \
-  -H "Authorization: Bearer $TOKEN"
-```
+**Response (201 Created):** Updated tags list
 
 ---
 
@@ -559,59 +395,22 @@ Remove a tag association from a post.
 
 **Endpoint:** `DELETE /api/posts/{id}/tags/{tag_id}`
 
-**Authentication:** Required (JWT)
+**Authentication:** Required
 
-**Permission:** Post owner OR admin
+**Permission:** Post owner or admin
 
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
-| `tag_id` | UUID | Yes | Tag ID |
-
-**Response (200 OK):**
-
-```json
-{
-  "success": true
-}
-```
-
-**Example:**
-
-```bash
-curl -X DELETE http://localhost:3000/api/posts/550e8400-e29b-41d4-a716-446655440000/tags/880e8400-e29b-41d4-a716-446655440003 \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-## Permission System
-
-Posts use the following permission flags:
-
-| Permission | Value | Hex | Description |
-|-----------|-------|-----|-------------|
-| `POST_CREATE` | 1 | 0x1 | Create new posts |
-| `POST_UPDATE` | 2 | 0x2 | Update posts |
-| `POST_DELETE` | 4 | 0x4 | Delete posts |
-| `POST_PUBLISH` | 8 | 0x8 | Publish/unpublish posts |
-
-**Default User Permissions:** `POST_CREATE | POST_UPDATE | POST_PUBLISH` (11)
-
-**Admin Permissions:** All permissions (31)
+**Response (200 OK):** Updated tags list
 
 ---
 
 ## Publishing Workflow
 
-Posts follow a simple publish/unpublish workflow:
+Posts follow a simple workflow:
 
 1. **Create** → Post starts as draft (`published_at: null`)
-2. **Publish** → Post becomes public (`published_at` set to current time)
-3. **Unpublish** → Post reverts to draft (`published_at: null`)
-4. **Update** → Can update regardless of published state
+2. **Publish** → Use `PATCH /posts/{id}` with `{"status": "published"}`
+3. **Unpublish** → Use `PATCH /posts/{id}` with `{"status": "draft"}`
+4. **Update** → Can update at any state using `PUT` or `PATCH`
 5. **Delete** → Permanently removes post
 
 **Visibility Rules:**
@@ -620,14 +419,73 @@ Posts follow a simple publish/unpublish workflow:
 
 ---
 
+## Permission System
+
+| Permission | Value | Description |
+|-----------|-------|-------------|
+| `POST_CREATE` | 1 | Create new posts |
+| `POST_UPDATE` | 2 | Update posts |
+| `POST_DELETE` | 4 | Delete posts |
+| `POST_PUBLISH` | 8 | Publish/unpublish posts |
+
+**Default User Permissions:** `POST_CREATE | POST_UPDATE | POST_PUBLISH` (11)
+
+**Admin Permissions:** All permissions (31)
+
+---
+
+## Error Responses
+
+### 400 Bad Request
+
+```json
+{
+  "code": 400,
+  "message": "Validation failed",
+  "errors": {
+    "title": ["Title cannot be empty"]
+  }
+}
+```
+
+### 401 Unauthorized
+
+```json
+{
+  "code": 401,
+  "message": "Authentication required"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "code": 403,
+  "message": "You don't have permission to update this post"
+}
+```
+
+### 404 Not Found
+
+```json
+{
+  "code": 404,
+  "message": "Post not found"
+}
+```
+
+---
+
 ## Related Documentation
 
 - [Authentication API](./AUTH.md) - How to authenticate requests
 - [Categories API](./CATEGORIES.md) - Managing post categories
 - [Tags API](./TAGS.md) - Managing post tags
+- [Comments API](./COMMENTS.md) - Managing comments
 - [Stats API](./STATS.md) - Post view statistics
 
 ---
 
-**Last Updated:** 2026-01-30  
-**API Version:** v1
+**Last Updated:** 2026-01-31  
+**API Version:** v2
