@@ -18,14 +18,17 @@ import {
   EyeRegular,
 } from '@fluentui/react-icons';
 import { postsApi } from '../api';
+import { useToast } from '../components/ui/Toast';
 import type { Post } from '../types';
 
 export function SearchPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Post[]>([]);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -44,14 +47,25 @@ export function SearchPage() {
     try {
       setSearching(true);
       setHasSearched(true);
+      setShowSuccessAnimation(false);
+
       const response = await postsApi.searchPosts({
         q: searchQuery,
         page: 1,
         per_page: 20,
       });
       setResults(response.data);
+
+      if (response.data.length > 0) {
+        setShowSuccessAnimation(true);
+        setTimeout(() => setShowSuccessAnimation(false), 2000);
+        toast.showSuccess(`找到 ${response.data.length} 篇相关文章`);
+      } else {
+        toast.showInfo('未找到相关文章，请尝试其他关键词');
+      }
     } catch (error) {
       console.error('Search failed:', error);
+      toast.showError('搜索失败，请稍后重试');
       setResults([]);
     } finally {
       setSearching(false);
@@ -116,9 +130,34 @@ export function SearchPage() {
 
       {/* 搜索状态 */}
       {searching && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '48px',
+          animation: 'fadeIn 0.3s ease-in'
+        }}>
           <Spinner size="large" />
           <Body1 style={{ marginLeft: '16px' }}>搜索中...</Body1>
+        </div>
+      )}
+
+      {/* 搜索成功提示 */}
+      {showSuccessAnimation && !searching && hasSearched && results.length > 0 && (
+        <div style={{
+          padding: '16px',
+          marginBottom: '24px',
+          backgroundColor: 'var(--colorSuccessBackground1)',
+          border: '1px solid var(--colorSuccessStroke1)',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          animation: 'slideDown 0.4s ease-out'
+        }}>
+          <span style={{ fontSize: '20px' }}>✨</span>
+          <Body1 style={{ color: 'var(--colorSuccessForeground1)', fontWeight: '500' }}>
+            找到 <strong>{results.length}</strong> 篇相关文章
+          </Body1>
         </div>
       )}
 

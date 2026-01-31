@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api';
 import type { UserCreateRequest } from '../types';
 
-const Register: React.FC = () => {
+export function RegisterPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserCreateRequest>({
     username: '',
@@ -135,4 +135,4 @@ const Register: React.FC = () => {
   );
 };
 
-export default Register;
+

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { postsApi } from '../api';
-import type { Post, PostListParams } from '../types';
+import { useState, useEffect } from 'react';
+import { postsApi } from '../../api';
+import type { Post, PostListParams } from '../../types';
 
 interface PostListProps {
   userId?: string;
   onPostClick?: (post: Post) => void;
 }
 
-const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
+export function PostList({ userId, onPostClick }: PostListProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -181,4 +181,4 @@ const PostList: React.FC<PostListProps> = ({ userId, onPostClick }) => {
   );
 };
 
-export default PostList;
+

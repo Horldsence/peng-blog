@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { authApi } from '../api';
-import type { UserLoginRequest } from '../types';
+import { useState } from 'react';
+import { authApi } from '../../api';
+import type { UserLoginRequest } from '../../types';
 
 interface LoginFormProps {
   onLoginSuccess?: () => void;
   onLoginError?: (error: any) => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onLoginError }) => {
+export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
   const [formData, setFormData] = useState<UserLoginRequest>({
     username: '',
     password: '',
@@ -17,7 +17,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onLoginError }) =
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev: UserLoginRequest) => ({
       ...prev,
       [name]: value,
     }));
@@ -108,4 +108,3 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onLoginError }) =
   );
 };
 
-export default LoginForm;

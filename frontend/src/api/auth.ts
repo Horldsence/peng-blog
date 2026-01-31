@@ -22,8 +22,9 @@ export const authApi = {
    * @param data 用户登录信息
    * @returns 登录响应，包含 token 和用户信息
    */
-  login: (data: UserLoginRequest) => {
-    return http.post<UserLoginResponse>('/auth/login', data);
+  login: async (data: UserLoginRequest) => {
+    const response = await http.post<{ code: number; message: string; data: UserLoginResponse }>('/auth/login', data);
+    return response.data;
   },
 
   /**
@@ -60,7 +61,12 @@ export const authApi = {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
-        return JSON.parse(userStr);
+        const user = JSON.parse(userStr);
+        // 确保 permissions 是数字类型
+        if (user && typeof user.permissions === 'string') {
+          user.permissions = parseInt(user.permissions, 10);
+        }
+        return user;
       } catch (error) {
         console.error('解析用户信息失败:', error);
         return null;

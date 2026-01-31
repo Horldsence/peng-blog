@@ -1,19 +1,20 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { MainLayout } from './components/layouts/MainLayout';
+import { ToastProvider } from './components/ui/Toast';
+import { MainLayout } from './components/layout/MainLayout';
 import { HomePage } from './pages/HomePage';
+import { PostsPage } from './pages/PostsPage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { TagsPage } from './pages/TagsPage';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { SearchPage } from './pages/SearchPage';
-import LoginForm from './components/LoginForm';
-import Register from './pages/Register';
-import PostEditor from './pages/PostEditor';
-import Admin from './pages/Admin';
+import { LoginForm } from './components/ui/LoginForm';
+import { RegisterPage } from './pages/RegisterPage';
+import { PostEditorPage } from './pages/PostEditorPage';
+import { AdminPage } from './pages/AdminPage';
 import './App.css';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = localStorage.getItem('token') !== null;
 
   if (!isAuthenticated) {
@@ -23,14 +24,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const App: React.FC = () => {
+function App() {
   return (
     <ThemeProvider>
       <Router>
+        <ToastProvider>
         <Routes>
           {/* 主应用路由（带布局） */}
           <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
-          <Route path="/posts" element={<MainLayout><HomePage /></MainLayout>} />
+          <Route path="/posts" element={<MainLayout><PostsPage /></MainLayout>} />
           <Route path="/post/:id" element={<MainLayout><PostDetailPage /></MainLayout>} />
           <Route path="/tags" element={<MainLayout><TagsPage /></MainLayout>} />
           <Route path="/categories" element={<MainLayout><CategoriesPage /></MainLayout>} />
@@ -47,7 +49,7 @@ const App: React.FC = () => {
               </div>
             }
           />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* 管理员路由 */}
           <Route
@@ -55,7 +57,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <MainLayout>
-                  <PostEditor />
+                  <PostEditorPage />
                 </MainLayout>
               </ProtectedRoute>
             }
@@ -65,7 +67,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <MainLayout>
-                  <PostEditor />
+                  <PostEditorPage />
                 </MainLayout>
               </ProtectedRoute>
             }
@@ -75,7 +77,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <MainLayout>
-                  <Admin />
+                  <AdminPage />
                 </MainLayout>
               </ProtectedRoute>
             }
@@ -97,6 +99,7 @@ const App: React.FC = () => {
           {/* 404 重定向 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ToastProvider>
       </Router>
     </ThemeProvider>
   );

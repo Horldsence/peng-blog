@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi, postsApi, usersApi, statsApi } from '../api';
+import { useToast } from '../components/ui/Toast';
 import type { Post, User, AdminStats } from '../types';
+import { Permission } from '../types';
 
-const Admin: React.FC = () => {
+export function AdminPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'posts' | 'users' | 'settings'>('dashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -12,6 +15,15 @@ const Admin: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+
+  const hasAdminPermission = (user: User | null) => {
+    if (!user) return false;
+    // 确保 permissions 是数字类型
+    const permissions = typeof user.permissions === 'string' 
+      ? parseInt(user.permissions, 10) 
+      : user.permissions;
+    return (permissions & Permission.USER_MANAGE) !== 0;
+  };
 
   useEffect(() => {
     const checkAuth = () => {
@@ -22,20 +34,31 @@ const Admin: React.FC = () => {
       }
 
       const user = authApi.getCurrentUser();
+      if (!user) {
+        toast.showError('无法获取用户信息，请重新登录');
+        navigate('/login');
+        return;
+      }
+
       setCurrentUser(user);
 
-      if (!user || user.permissions !== 31) {
-        alert('需要管理员权限才能访问此页面');
+      if (!hasAdminPermission(user)) {
+        console.error('Permission check failed:', {
+          user: user.username,
+          permissions: user.permissions,
+          hasAdmin: user.permissions & Permission.USER_MANAGE,
+        });
+        toast.showError('需要管理员权限才能访问此页面');
         navigate('/');
         return;
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   useEffect(() => {
-    if (currentUser && currentUser.permissions === 31) {
+    if (hasAdminPermission(currentUser)) {
       fetchData();
     }
   }, [currentUser, activeTab]);
@@ -70,9 +93,9 @@ const Admin: React.FC = () => {
     try {
       await postsApi.deletePost(postId);
       setPosts(posts.filter(p => p.id !== postId));
-      alert('删除成功');
+      toast.showSuccess('文章删除成功');
     } catch (err: any) {
-      alert(err.message || '删除失败');
+      toast.showError(err.message || '删除失败');
     }
   };
 
@@ -80,12 +103,14 @@ const Admin: React.FC = () => {
     try {
       if (post.published_at) {
         await postsApi.unpublishPost(post.id);
+        toast.showSuccess('文章已取消发布');
       } else {
         await postsApi.publishPost(post.id);
+        toast.showSuccess('文章发布成功');
       }
       fetchData();
     } catch (err: any) {
-      alert(err.message || '操作失败');
+      toast.showError(err.message || '操作失败');
     }
   };
 
@@ -95,9 +120,9 @@ const Admin: React.FC = () => {
     try {
       await usersApi.deleteUser(userId);
       setUsers(users.filter(u => u.id !== userId));
-      alert('删除成功');
+      toast.showSuccess('用户删除成功');
     } catch (err: any) {
-      alert(err.message || '删除失败');
+      toast.showError(err.message || '删除失败');
     }
   };
 
@@ -110,7 +135,7 @@ const Admin: React.FC = () => {
     });
   };
 
-  if (!currentUser || currentUser.permissions !== 31) {
+  if (!hasAdminPermission(currentUser)) {
     return (
       <div className="admin-page">
         <div className="loading-state">
@@ -303,8 +328,8 @@ const Admin: React.FC = () => {
                       <tr key={user.id}>
                         <td>{user.username}</td>
                         <td>
-                          <span className={`permission-badge ${user.permissions === 31 ? 'admin' : 'user'}`}>
-                            {user.permissions === 31 ? '管理员' : '普通用户'}
+                          <span className={`permission-badge ${(user.permissions & Permission.USER_MANAGE) !== 0 ? 'admin' : 'user'}`}>
+                            {(user.permissions & Permission.USER_MANAGE) !== 0 ? '管理员' : '普通用户'}
                           </span>
                         </td>
                         <td>{formatDate(user.created_at)}</td>
@@ -344,4 +369,4 @@ const Admin: React.FC = () => {
   );
 };
 
-export default Admin;
+

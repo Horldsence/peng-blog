@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { postsApi } from '../api';
 import type { PostCreateRequest, PostUpdateRequest } from '../types';
 
-const PostEditor: React.FC = () => {
+export function PostEditorPage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
@@ -194,4 +194,4 @@ const PostEditor: React.FC = () => {
   );
 };
 
-export default PostEditor;
+
