@@ -11,6 +11,7 @@ import {
   Body1,
   Title2,
   Spinner,
+  tokens,
 } from '@fluentui/react-components';
 import {
   SearchRegular,
@@ -148,7 +149,7 @@ export function SearchPage() {
           marginBottom: '24px',
           backgroundColor: 'var(--colorSuccessBackground1)',
           border: '1px solid var(--colorSuccessStroke1)',
-          borderRadius: '4px',
+          borderRadius: tokens.borderRadiusLarge,
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
@@ -165,7 +166,7 @@ export function SearchPage() {
       {!searching && hasSearched && (
         <>
           {results.length === 0 ? (
-            <Card style={{ padding: '48px', textAlign: 'center' }}>
+            <Card style={{ padding: '48px', textAlign: 'center', borderRadius: tokens.borderRadiusLarge }}>
               <Body1 style={{ fontSize: '16px', color: 'var(--colorNeutralForeground2)' }}>
                 未找到与 "{query}" 相关的文章
               </Body1>
@@ -188,6 +189,7 @@ export function SearchPage() {
                     style={{
                       cursor: 'pointer',
                       transition: 'transform 0.2s, box-shadow 0.2s',
+                      borderRadius: tokens.borderRadiusLarge,
                     }}
                     onClick={() => navigate(`/post/${post.id}`)}
                     onMouseEnter={(e) => {
@@ -277,7 +279,7 @@ export function SearchPage() {
 
       {/* 搜索提示 */}
       {!hasSearched && !query && (
-        <Card style={{ padding: '32px' }}>
+        <Card style={{ padding: '32px', borderRadius: tokens.borderRadiusLarge }}>
           <Body1 style={{ fontWeight: '600', marginBottom: '16px' }}>
             搜索提示
           </Body1>

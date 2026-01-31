@@ -11,6 +11,7 @@ import {
   Body1,
   Title2,
   Spinner,
+  tokens,
 } from '@fluentui/react-components';
 import { TagRegular } from '@fluentui/react-icons';
 import { tagsApi, postsApi } from '../api';
@@ -80,7 +81,7 @@ export function TagsPage() {
       </div>
 
       {/* 标签云 */}
-      <Card style={{ marginBottom: '32px', padding: '24px' }}>
+      <Card style={{ marginBottom: '32px', padding: '24px', borderRadius: tokens.borderRadiusLarge }}>
         <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <TagRegular />
           <Body1 style={{ fontWeight: '600' }}>标签云</Body1>
@@ -107,7 +108,7 @@ export function TagsPage() {
 
       {/* 该标签的文章 */}
       {selectedTag && (
-        <Card>
+        <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
           <CardHeader
             header={<Body1 style={{ fontWeight: '600' }}>该标签下的文章</Body1>}
             description={<Body1>{posts.length} 篇文章</Body1>}

@@ -1,5 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  Card,
+  Button,
+  Title2,
+  Title3,
+  Body1,
+  Caption1,
+  Spinner,
+  Badge,
+  tokens,
+  Tab,
+  TabList,
+  Divider,
+} from '@fluentui/react-components';
+import {
+  HomeRegular,
+  DocumentRegular,
+  PeopleRegular,
+  SettingsRegular,
+  ArrowLeftRegular,
+  EditRegular,
+  DeleteRegular,
+  EyeRegular,
+  EyeOffRegular,
+  AddRegular,
+} from '@fluentui/react-icons';
 import { authApi, postsApi, usersApi, statsApi } from '../api';
 import { useToast } from '../components/ui/Toast';
 import type { Post, User, AdminStats } from '../types';
@@ -18,9 +44,8 @@ export function AdminPage() {
 
   const hasAdminPermission = (user: User | null) => {
     if (!user) return false;
-    // 确保 permissions 是数字类型
-    const permissions = typeof user.permissions === 'string' 
-      ? parseInt(user.permissions, 10) 
+    const permissions = typeof user.permissions === 'string'
+      ? parseInt(user.permissions, 10)
       : user.permissions;
     return (permissions & Permission.USER_MANAGE) !== 0;
   };
@@ -43,11 +68,6 @@ export function AdminPage() {
       setCurrentUser(user);
 
       if (!hasAdminPermission(user)) {
-        console.error('Permission check failed:', {
-          user: user.username,
-          permissions: user.permissions,
-          hasAdmin: user.permissions & Permission.USER_MANAGE,
-        });
         toast.showError('需要管理员权限才能访问此页面');
         navigate('/');
         return;
@@ -137,236 +157,320 @@ export function AdminPage() {
 
   if (!hasAdminPermission(currentUser)) {
     return (
-      <div className="admin-page">
-        <div className="loading-state">
-          <p>验证权限中...</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+        <Spinner size="large" />
       </div>
     );
   }
 
+  const statCards = [
+    { icon: '📝', label: '文章总数', value: stats?.total_posts || 0, color: 'brand' },
+    { icon: '👥', label: '用户总数', value: stats?.total_users || 0, color: 'success' },
+    { icon: '💬', label: '评论总数', value: stats?.total_comments || 0, color: 'warning' },
+    { icon: '📁', label: '文件总数', value: stats?.total_files || 0, color: 'important' },
+    { icon: '👁', label: '总访问量', value: stats?.total_visits || 0, color: 'severe' },
+    { icon: '📅', label: '今日访问', value: stats?.today_visits || 0, color: 'success' },
+  ];
+
   return (
-    <div className="admin-page">
-      <div className="admin-container">
-        <aside className="admin-sidebar">
-          <h2 className="admin-logo">管理后台</h2>
-          <nav className="admin-nav">
-            <button
-              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
+    <div style={{ margin: '-32px' }}>
+      <Card style={{ borderRadius: 0, minHeight: 'calc(100vh - 64px)' }}>
+        <div style={{ display: 'flex' }}>
+          {/* 侧边栏 */}
+          <div
+            style={{
+              width: '260px',
+              backgroundColor: 'var(--colorNeutralBackground2)',
+              padding: '24px',
+              borderRight: '1px solid var(--colorNeutralStroke1)',
+              minHeight: 'calc(100vh - 64px)',
+            }}
+          >
+            <div style={{ marginBottom: '32px' }}>
+              <Title3>管理后台</Title3>
+            </div>
+
+            <TabList
+              vertical
+              selectedValue={activeTab}
+              onTabSelect={(_, data) => setActiveTab(data.value as any)}
+              style={{ gap: '8px' }}
             >
-              📊 仪表板
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'posts' ? 'active' : ''}`}
-              onClick={() => setActiveTab('posts')}
-            >
-              📝 文章管理
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
-              onClick={() => setActiveTab('users')}
-            >
-              👥 用户管理
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-              onClick={() => setActiveTab('settings')}
-            >
-              ⚙️ 设置
-            </button>
-          </nav>
-          <div className="admin-user-info">
-            <p>{currentUser.username}</p>
-            <Link to="/" className="back-site-link">返回网站</Link>
+              <Tab icon={<HomeRegular />} value="dashboard">
+                仪表板
+              </Tab>
+              <Tab icon={<DocumentRegular />} value="posts">
+                文章管理
+              </Tab>
+              <Tab icon={<PeopleRegular />} value="users">
+                用户管理
+              </Tab>
+              <Tab icon={<SettingsRegular />} value="settings">
+                设置
+              </Tab>
+            </TabList>
+
+            <Divider style={{ margin: '24px 0' }} />
+
+            <div>
+              <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+                {currentUser?.username}
+              </Body1>
+              <Button
+                appearance="transparent"
+                icon={<ArrowLeftRegular />}
+                onClick={() => navigate('/')}
+                size="small"
+              >
+                返回网站
+              </Button>
+            </div>
           </div>
-        </aside>
 
-        <main className="admin-content">
-          {error && (
-            <div className="error-message">
-              {error}
-              <button onClick={() => setError('')}>×</button>
-            </div>
-          )}
+          {/* 主内容区 */}
+          <div style={{ flex: 1, padding: '32px' }}>
+            {/* 错误提示 */}
+            {error && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  marginBottom: '24px',
+                  backgroundColor: 'var(--colorStatusDangerBackground1)',
+                  border: '1px solid var(--colorStatusDangerBorder1)',
+                  borderRadius: tokens.borderRadiusMedium,
+                  color: 'var(--colorStatusDangerForeground1)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Body1>{error}</Body1>
+                <Button
+                  appearance="transparent"
+                  size="small"
+                  onClick={() => setError('')}
+                >
+                  ×
+                </Button>
+              </div>
+            )}
 
-          {loading && (
-            <div className="loading-state">
-              <p>加载中...</p>
-            </div>
-          )}
+            {/* 加载状态 */}
+            {loading && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+                <Spinner size="large" />
+              </div>
+            )}
 
-          {!loading && activeTab === 'dashboard' && stats && (
-            <div className="dashboard-view">
-              <h1>仪表板</h1>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-icon">📝</div>
-                  <div className="stat-info">
-                    <div className="stat-number">{stats.total_posts}</div>
-                    <div className="stat-label">文章总数</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">👥</div>
-                  <div className="stat-info">
-                    <div className="stat-number">{stats.total_users}</div>
-                    <div className="stat-label">用户总数</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">💬</div>
-                  <div className="stat-info">
-                    <div className="stat-number">{stats.total_comments}</div>
-                    <div className="stat-label">评论总数</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📁</div>
-                  <div className="stat-info">
-                    <div className="stat-number">{stats.total_files}</div>
-                    <div className="stat-label">文件总数</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">👁</div>
-                  <div className="stat-info">
-                    <div className="stat-number">{stats.total_visits}</div>
-                    <div className="stat-label">总访问量</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📅</div>
-                  <div className="stat-info">
-                    <div className="stat-number">{stats.today_visits}</div>
-                    <div className="stat-label">今日访问</div>
-                  </div>
+            {/* 仪表板 */}
+            {!loading && activeTab === 'dashboard' && stats && (
+              <div>
+                <Title2 style={{ marginBottom: '24px' }}>仪表板</Title2>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                    gap: '16px',
+                  }}
+                >
+                  {statCards.map((stat, index) => (
+                    <Card
+                      key={index}
+                      style={{
+                        padding: '20px',
+                        borderRadius: tokens.borderRadiusLarge,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '32px' }}>{stat.icon}</span>
+                        <div>
+                          <Body1 style={{ fontSize: '24px', fontWeight: '700' }}>
+                            {stat.value}
+                          </Body1>
+                          <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                            {stat.label}
+                          </Caption1>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {!loading && activeTab === 'posts' && (
-            <div className="posts-view">
-              <div className="view-header">
-                <h1>文章管理</h1>
-                <Link to="/admin/posts/new" className="create-button">
-                  + 新建文章
-                </Link>
-              </div>
-              <div className="data-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>标题</th>
-                      <th>状态</th>
-                      <th>阅读量</th>
-                      <th>创建时间</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {posts.map(post => (
-                      <tr key={post.id}>
-                        <td>
-                          <Link to={`/post/${post.id}`} className="post-link">
-                            {post.title}
-                          </Link>
-                        </td>
-                        <td>
-                          <span className={`status-badge ${post.published_at ? 'published' : 'draft'}`}>
+            {/* 文章管理 */}
+            {!loading && activeTab === 'posts' && (
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <Title2>文章管理</Title2>
+                  <Button
+                    appearance="primary"
+                    icon={<AddRegular />}
+                    onClick={() => navigate('/admin/posts/new')}
+                  >
+                    新建文章
+                  </Button>
+                </div>
+
+                <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+                  {posts.length === 0 ? (
+                    <div style={{ padding: '48px', textAlign: 'center' }}>
+                      <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                        暂无文章
+                      </Body1>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {posts.map((post, index) => (
+                        <div
+                          key={post.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '16px 20px',
+                            borderBottom: index < posts.length - 1 ? '1px solid var(--colorNeutralStroke1)' : 'none',
+                            gap: '16px',
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <Link
+                              to={`/post/${post.id}`}
+                              style={{
+                                color: 'var(--colorNeutralForeground1)',
+                                textDecoration: 'none',
+                                fontWeight: '600',
+                              }}
+                            >
+                              {post.title}
+                            </Link>
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+                              <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                                {formatDate(post.created_at)}
+                              </Caption1>
+                              <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                                {post.views} 次阅读
+                              </Caption1>
+                            </div>
+                          </div>
+
+                          <Badge
+                            appearance={post.published_at ? 'filled' : 'outline'}
+                            color={post.published_at ? 'success' : 'warning'}
+                          >
                             {post.published_at ? '已发布' : '草稿'}
-                          </span>
-                        </td>
-                        <td>{post.views}</td>
-                        <td>{formatDate(post.created_at)}</td>
-                        <td className="actions">
-                          <Link to={`/admin/posts/edit/${post.id}`} className="action-button edit">
-                            编辑
-                          </Link>
-                          <button
-                            onClick={() => handleTogglePublish(post)}
-                            className="action-button"
-                          >
-                            {post.published_at ? '取消发布' : '发布'}
-                          </button>
-                          <button
-                            onClick={() => handleDeletePost(post.id)}
-                            className="action-button delete"
-                          >
-                            删除
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {posts.length === 0 && (
-                  <div className="empty-state">
-                    <p>暂无文章</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                          </Badge>
 
-          {!loading && activeTab === 'users' && (
-            <div className="users-view">
-              <h1>用户管理</h1>
-              <div className="data-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>用户名</th>
-                      <th>权限</th>
-                      <th>创建时间</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(user => (
-                      <tr key={user.id}>
-                        <td>{user.username}</td>
-                        <td>
-                          <span className={`permission-badge ${(user.permissions & Permission.USER_MANAGE) !== 0 ? 'admin' : 'user'}`}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <Button
+                              appearance="transparent"
+                              icon={<EditRegular />}
+                              size="small"
+                              onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
+                            >
+                              编辑
+                            </Button>
+                            <Button
+                              appearance="transparent"
+                              icon={post.published_at ? <EyeOffRegular /> : <EyeRegular />}
+                              size="small"
+                              onClick={() => handleTogglePublish(post)}
+                            >
+                              {post.published_at ? '取消发布' : '发布'}
+                            </Button>
+                            <Button
+                              appearance="transparent"
+                              icon={<DeleteRegular />}
+                              size="small"
+                              onClick={() => handleDeletePost(post.id)}
+                            >
+                              删除
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
+
+            {/* 用户管理 */}
+            {!loading && activeTab === 'users' && (
+              <div>
+                <Title2 style={{ marginBottom: '24px' }}>用户管理</Title2>
+
+                <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+                  {users.length === 0 ? (
+                    <div style={{ padding: '48px', textAlign: 'center' }}>
+                      <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                        暂无用户
+                      </Body1>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {users.map((user, index) => (
+                        <div
+                          key={user.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '16px 20px',
+                            borderBottom: index < users.length - 1 ? '1px solid var(--colorNeutralStroke1)' : 'none',
+                            gap: '16px',
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <Body1 style={{ fontWeight: '600' }}>{user.username}</Body1>
+                            <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                              {formatDate(user.created_at)}
+                            </Caption1>
+                          </div>
+
+                          <Badge
+                            appearance="filled"
+                            color={(user.permissions & Permission.USER_MANAGE) !== 0 ? 'brand' : 'success'}
+                          >
                             {(user.permissions & Permission.USER_MANAGE) !== 0 ? '管理员' : '普通用户'}
-                          </span>
-                        </td>
-                        <td>{formatDate(user.created_at)}</td>
-                        <td className="actions">
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="action-button delete"
+                          </Badge>
+
+                          <Button
+                            appearance="transparent"
+                            icon={<DeleteRegular />}
+                            size="small"
                             disabled={user.id === currentUser.id}
+                            onClick={() => handleDeleteUser(user.id)}
                           >
                             删除
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {users.length === 0 && (
-                  <div className="empty-state">
-                    <p>暂无用户</p>
-                  </div>
-                )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </div>
-            </div>
-          )}
+            )}
 
-          {!loading && activeTab === 'settings' && (
-            <div className="settings-view">
-              <h1>设置</h1>
-              <div className="settings-content">
-                <p>设置功能开发中...</p>
+            {/* 设置 */}
+            {!loading && activeTab === 'settings' && (
+              <div>
+                <Title2 style={{ marginBottom: '24px' }}>设置</Title2>
+                <Card style={{ borderRadius: tokens.borderRadiusLarge, padding: '32px' }}>
+                  <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                    设置功能开发中...
+                  </Body1>
+                </Card>
               </div>
-            </div>
-          )}
-        </main>
-      </div>
+            )}
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };
-
-

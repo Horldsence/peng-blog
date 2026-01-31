@@ -14,6 +14,7 @@ import {
   Body1,
   Title2,
   Spinner,
+  tokens,
 } from '@fluentui/react-components';
 import {
   FolderRegular,
@@ -148,7 +149,7 @@ export function CategoriesPage() {
           </Body1>
         </div>
 
-        <Card style={{ padding: '16px' }}>
+        <Card style={{ padding: '16px', borderRadius: tokens.borderRadiusLarge }}>
           {categoryTree.length === 0 ? (
             <Body1 style={{ color: 'var(--colorNeutralForeground3)' }}>暂无分类</Body1>
           ) : (
@@ -162,7 +163,7 @@ export function CategoriesPage() {
       {/* 右侧文章列表 */}
       {selectedCategory && (
         <div style={{ flex: 2 }}>
-          <Card>
+          <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
             <CardHeader
               header={
                 <Body1 style={{ fontWeight: '600', fontSize: '18px' }}>

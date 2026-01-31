@@ -1,5 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardHeader,
+  Button,
+  Input,
+  Textarea,
+  Title2,
+  Body1,
+  Caption1,
+  Spinner,
+  tokens,
+} from '@fluentui/react-components';
+import {
+  ArrowLeftRegular,
+  SaveRegular,
+  SendRegular,
+} from '@fluentui/react-icons';
 import { postsApi } from '../api';
 import type { PostCreateRequest, PostUpdateRequest } from '../types';
 
@@ -98,100 +115,157 @@ export function PostEditorPage() {
 
   if (fetchLoading) {
     return (
-      <div className="post-editor-page">
-        <div className="loading-state">
-          <p>加载中...</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+        <Spinner size="large" />
       </div>
     );
   }
 
   return (
-    <div className="post-editor-page">
-      <div className="editor-container">
-        <div className="editor-header">
-          <h1>{isEditing ? '编辑文章' : '新建文章'}</h1>
-          <div className="editor-actions">
-            <button
-              onClick={() => navigate(-1)}
-              className="cancel-button"
-              disabled={loading}
-            >
-              取消
-            </button>
-            <button
-              onClick={() => handleSubmit(false)}
-              className="save-button"
-              disabled={loading}
-            >
-              {loading ? '保存中...' : '保存草稿'}
-            </button>
-            <button
-              onClick={() => handleSubmit(true)}
-              className="publish-button"
-              disabled={loading}
-            >
-              {loading ? '发布中...' : isEditing && published ? '更新发布' : '发布'}
-            </button>
-          </div>
-        </div>
+    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      {/* 返回按钮 */}
+      <Button
+        appearance="transparent"
+        icon={<ArrowLeftRegular />}
+        onClick={() => navigate(-1)}
+        style={{ marginBottom: '16px' }}
+      >
+        返回
+      </Button>
 
+      {/* 编辑器卡片 */}
+      <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+        <CardHeader
+          header={
+            <Title2>{isEditing ? '编辑文章' : '新建文章'}</Title2>
+          }
+        />
+
+        {/* 错误提示 */}
         {error && (
-          <div className="error-message">
-            {error}
-            <button onClick={() => setError('')}>×</button>
+          <div
+            style={{
+              padding: '12px 16px',
+              marginBottom: '16px',
+              backgroundColor: 'var(--colorStatusDangerBackground1)',
+              border: '1px solid var(--colorStatusDangerBorder1)',
+              borderRadius: tokens.borderRadiusMedium,
+              color: 'var(--colorStatusDangerForeground1)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Body1>{error}</Body1>
+            <Button
+              appearance="transparent"
+              size="small"
+              onClick={() => setError('')}
+            >
+              ×
+            </Button>
           </div>
         )}
 
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(published); }} className="editor-form">
-          <div className="form-group">
-            <label htmlFor="post-title">文章标题</label>
-            <input
-              type="text"
-              id="post-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+        {/* 表单 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* 标题输入 */}
+          <div>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+              文章标题
+            </Body1>
+            <Input
               placeholder="输入文章标题..."
+              value={title}
+              onChange={(_, data) => setTitle(data.value)}
+              style={{ width: '100%' }}
+              size="large"
               disabled={loading}
-              className="title-input"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="post-content">文章内容</label>
-            <textarea
-              id="post-content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+          {/* 内容输入 */}
+          <div>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+              文章内容
+            </Body1>
+            <Textarea
               placeholder="在这里写下你的文章内容..."
+              value={content}
+              onChange={(_, data) => setContent(data.value)}
+              style={{ width: '100%', minHeight: '400px' }}
               disabled={loading}
-              className="content-textarea"
-              rows={20}
+              resize="vertical"
             />
           </div>
 
-          <div className="form-group checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={published}
-                onChange={(e) => setPublished(e.target.checked)}
-                disabled={loading}
-              />
-              <span>立即发布（取消勾选保存为草稿）</span>
+          {/* 发布选项 */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 16px',
+              backgroundColor: 'var(--colorNeutralBackground1)',
+              borderRadius: tokens.borderRadiusMedium,
+            }}
+          >
+            <input
+              type="checkbox"
+              id="publish-checkbox"
+              checked={published}
+              onChange={(e) => setPublished(e.target.checked)}
+              disabled={loading}
+              style={{ width: '18px', height: '18px' }}
+            />
+            <label htmlFor="publish-checkbox" style={{ cursor: 'pointer' }}>
+              <Body1>立即发布（取消勾选保存为草稿）</Body1>
             </label>
           </div>
-        </form>
 
-        <div className="editor-footer">
-          <div className="word-count">
-            <span>标题: {title.length} 字符</span>
-            <span>内容: {content.length} 字符</span>
+          {/* 操作按钮 */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <Button
+              appearance="secondary"
+              onClick={() => navigate(-1)}
+              disabled={loading}
+            >
+              取消
+            </Button>
+            <Button
+              appearance="secondary"
+              icon={<SaveRegular />}
+              onClick={() => handleSubmit(false)}
+              disabled={loading}
+            >
+              {loading ? '保存中...' : '保存草稿'}
+            </Button>
+            <Button
+              appearance="primary"
+              icon={<SendRegular />}
+              onClick={() => handleSubmit(true)}
+              disabled={loading}
+            >
+              {loading ? '发布中...' : isEditing && published ? '更新发布' : '发布'}
+            </Button>
+          </div>
+
+          {/* 字数统计 */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '24px',
+              padding: '12px 16px',
+              backgroundColor: 'var(--colorNeutralBackground2)',
+              borderRadius: tokens.borderRadiusMedium,
+              color: 'var(--colorNeutralForeground2)',
+            }}
+          >
+            <Caption1>标题: {title.length} 字符</Caption1>
+            <Caption1>内容: {content.length} 字符</Caption1>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
-
-

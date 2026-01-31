@@ -106,7 +106,7 @@ const styles = {
     opacity: 0,
     transform: 'translateY(40px)',
     transition: 'box-shadow 0.3s ease',
-    borderRadius: '16px',
+    borderRadius: tokens.borderRadiusLarge,
   } as React.CSSProperties,
 
   cardHeader: {

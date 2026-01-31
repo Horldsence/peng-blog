@@ -1,5 +1,19 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardHeader,
+  Button,
+  Input,
+  Title2,
+  Body1,
+  tokens,
+} from '@fluentui/react-components';
+import {
+  ArrowLeftRegular,
+  PersonRegular,
+  LockClosedRegular,
+} from '@fluentui/react-icons';
 import { authApi } from '../api';
 import type { UserCreateRequest } from '../types';
 
@@ -12,12 +26,6 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (error) setError('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,81 +66,161 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="register-page">
-      <div className="auth-form-container">
-        <h1>创建账户</h1>
-        <p className="auth-subtitle">加入 Peng Blog，开始你的写作之旅</p>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--colorNeutralBackground2)',
+        padding: '24px',
+      }}
+    >
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: '420px',
+          borderRadius: tokens.borderRadiusLarge,
+          padding: '32px',
+        }}
+      >
+        <CardHeader
+          header={
+            <div style={{ textAlign: 'center' }}>
+              <Title2>创建账户</Title2>
+              <Body1 style={{ color: 'var(--colorNeutralForeground2)', marginTop: '8px' }}>
+                加入 Peng Blog，开始你的写作之旅
+              </Body1>
+            </div>
+          }
+        />
 
+        {/* 错误提示 */}
         {error && (
-          <div className="error-message">
-            {error}
-            <button onClick={() => setError('')}>×</button>
+          <div
+            style={{
+              padding: '12px 16px',
+              marginBottom: '24px',
+              backgroundColor: 'var(--colorStatusDangerBackground1)',
+              border: '1px solid var(--colorStatusDangerBorder1)',
+              borderRadius: tokens.borderRadiusMedium,
+              color: 'var(--colorStatusDangerForeground1)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Body1>{error}</Body1>
+            <Button
+              appearance="transparent"
+              size="small"
+              onClick={() => setError('')}
+            >
+              ×
+            </Button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">用户名</label>
-            <input
-              type="text"
-              id="username"
+        {/* 注册表单 */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+              用户名
+            </Body1>
+            <Input
               name="username"
-              value={formData.username}
-              onChange={handleChange}
               placeholder="至少3个字符"
+              value={formData.username}
+              onChange={(_, data) => {
+                setFormData(prev => ({ ...prev, username: data.value }));
+                if (error) setError('');
+              }}
+              contentBefore={<PersonRegular />}
+              style={{ width: '100%' }}
+              size="large"
               disabled={loading}
               autoComplete="username"
-              minLength={3}
-              required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">密码</label>
-            <input
+          <div>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+              密码
+            </Body1>
+            <Input
               type="password"
-              id="password"
               name="password"
-              value={formData.password}
-              onChange={(e) => {
-                handleChange(e);
-              }}
               placeholder="至少8个字符"
+              value={formData.password}
+              onChange={(_, data) => {
+                setFormData(prev => ({ ...prev, password: data.value }));
+                if (error) setError('');
+              }}
+              contentBefore={<LockClosedRegular />}
+              style={{ width: '100%' }}
+              size="large"
               disabled={loading}
               autoComplete="new-password"
-              minLength={8}
-              required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword">确认密码</label>
-            <input
+          <div>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+              确认密码
+            </Body1>
+            <Input
               type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="再次输入密码"
+              value={confirmPassword}
+              onChange={(_, data) => setConfirmPassword(data.value)}
+              contentBefore={<LockClosedRegular />}
+              style={{ width: '100%' }}
+              size="large"
               disabled={loading}
               autoComplete="new-password"
-              required
             />
           </div>
 
-          <button type="submit" disabled={loading} className="submit-button">
+          <Button
+            type="submit"
+            appearance="primary"
+            size="large"
+            disabled={loading}
+            style={{ marginTop: '8px' }}
+          >
             {loading ? '注册中...' : '注册'}
-          </button>
+          </Button>
         </form>
 
-        <div className="auth-footer">
-          <p>
-            已有账户？ <Link to="/login">立即登录</Link>
-          </p>
+        {/* 登录链接 */}
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+            已有账户？{' '}
+            <Link
+              to="/login"
+              style={{
+                color: 'var(--colorBrandForeground1)',
+                textDecoration: 'none',
+                fontWeight: '600',
+              }}
+            >
+              立即登录
+            </Link>
+          </Body1>
         </div>
-      </div>
+
+        {/* 返回按钮 */}
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Button
+            appearance="transparent"
+            icon={<ArrowLeftRegular />}
+            onClick={() => navigate('/')}
+            size="small"
+          >
+            返回首页
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 };
-
-
