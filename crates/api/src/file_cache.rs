@@ -60,18 +60,22 @@ impl FileCache {
 
         // Check if cache file exists
         match fs::metadata(&cache_path).await {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) if e.kind() == io::ErrorKind::NotFound => {
                 tracing::debug!("Cache miss: key={}", key);
                 return Ok(None);
-            },
+            }
             Err(e) => {
-                return Err(ApiError::internal(format!("Failed to read cache metadata: {}", e)));
+                return Err(ApiError::internal(format!(
+                    "Failed to read cache metadata: {}",
+                    e
+                )));
             }
         }
 
         // Read cache file
-        let content = fs::read_to_string(&cache_path).await
+        let content = fs::read_to_string(&cache_path)
+            .await
             .map_err(|e| ApiError::internal(format!("Failed to read cache file: {}", e)))?;
 
         // Deserialize
@@ -96,7 +100,8 @@ impl FileCache {
             .map_err(|e| ApiError::internal(format!("Failed to serialize cache data: {}", e)))?;
 
         // Write to file
-        fs::write(&cache_path, json).await
+        fs::write(&cache_path, json)
+            .await
             .map_err(|e| ApiError::internal(format!("Failed to write cache file: {}", e)))?;
 
         tracing::info!("Cache updated: key={}, path={:?}", key, cache_path);
@@ -144,7 +149,8 @@ impl FileCache {
     pub async fn delete(&self, key: &str) -> Result<(), ApiError> {
         let cache_path = self.get_cache_path(key);
 
-        fs::remove_file(&cache_path).await
+        fs::remove_file(&cache_path)
+            .await
             .map_err(|e| ApiError::internal(format!("Failed to delete cache file: {}", e)))?;
 
         tracing::info!("Cache deleted: key={}", key);
@@ -155,17 +161,21 @@ impl FileCache {
     ///
     /// Use with caution - this removes all files in the cache directory.
     pub async fn clear(&self) -> Result<(), ApiError> {
-        let mut entries = fs::read_dir(&self.cache_dir).await
+        let mut entries = fs::read_dir(&self.cache_dir)
+            .await
             .map_err(|e| ApiError::internal(format!("Failed to read cache directory: {}", e)))?;
 
         let mut count = 0;
-        while let Some(entry) = entries.next_entry().await
+        while let Some(entry) = entries
+            .next_entry()
+            .await
             .map_err(|e| ApiError::internal(format!("Failed to read cache entry: {}", e)))?
         {
             let path = entry.path();
             if path.extension().map(|e| e == "json").unwrap_or(false) {
-                fs::remove_file(&path).await
-                    .map_err(|e| ApiError::internal(format!("Failed to delete cache file: {}", e)))?;
+                fs::remove_file(&path).await.map_err(|e| {
+                    ApiError::internal(format!("Failed to delete cache file: {}", e))
+                })?;
                 count += 1;
             }
         }

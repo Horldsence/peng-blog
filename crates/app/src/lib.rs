@@ -1,7 +1,4 @@
-use api::{
-    file_cache::FileCache,
-    middleware::auth::set_jwt_secret, routes, AuthState, AppState,
-};
+use api::{file_cache::FileCache, middleware::auth::set_jwt_secret, routes, AppState, AuthState};
 use infrastructure::MigratorTrait;
 use infrastructure::{
     establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, FileRepositoryImpl,

@@ -34,11 +34,12 @@ pub async fn get_bing_daily_image(
     if state.bing_cache.is_valid(cache_key, 12).await {
         tracing::debug!("Returning cached Bing image from file");
 
-        if let Ok(Some(cached)) = state.bing_cache.get::<BingDailyImageResponse>(cache_key).await {
-            return Ok((
-                StatusCode::OK,
-                Json(ApiResponse::success(cached)),
-            ).into_response());
+        if let Ok(Some(cached)) = state
+            .bing_cache
+            .get::<BingDailyImageResponse>(cache_key)
+            .await
+        {
+            return Ok((StatusCode::OK, Json(ApiResponse::success(cached))).into_response());
         }
     }
 
