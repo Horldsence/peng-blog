@@ -1,4 +1,7 @@
-use api::{middleware::auth::set_jwt_secret, routes, AuthState};
+use api::{
+    file_cache::FileCache,
+    middleware::auth::set_jwt_secret, routes, AuthState, AppState,
+};
 use infrastructure::MigratorTrait;
 use infrastructure::{
     establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, FileRepositoryImpl,
@@ -22,6 +25,7 @@ use tower_http::trace::TraceLayer;
 /// - JWT_SECRET: Secret key for JWT tokens (default: "change-this-secret-in-production")
 /// - UPLOAD_DIR: Directory for file uploads (default: "./uploads")
 /// - BASE_URL: Base URL for the application (default: "http://localhost:3000")
+/// - CACHE_DIR: Directory for file-based caching (default: "./cache")
 /// - GITHUB_CLIENT_ID: GitHub OAuth client ID (optional)
 /// - GITHUB_CLIENT_SECRET: GitHub OAuth client secret (optional)
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
@@ -56,8 +60,11 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     // Run database migrations
     Migrator::up(&*db, None).await?;
 
-    // Create upload directory if it doesn't exist
     tokio::fs::create_dir_all(&upload_dir).await?;
+
+    let cache_dir = std::env::var("CACHE_DIR").unwrap_or_else(|_| "./cache".to_string());
+    let bing_cache = FileCache::new(&cache_dir)?;
+    bing_cache.initialize().await?;
 
     // Create all repositories
     let db_clone = Arc::clone(&db);
@@ -86,7 +93,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let tag_service = TagService::new(tag_repo);
     let auth_state = AuthState::new(&jwt_secret);
 
-    let state = api::AppState::builder()
+    let state = AppState::builder()
         .post_service(post_service)
         .user_service(user_service)
         .session_service(session_service)
@@ -97,7 +104,10 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .tag_service(tag_service)
         .auth_state(auth_state)
         .upload_dir(upload_dir)
+        .bing_cache(bing_cache)
         .build();
+
+    api::bing::start_bing_cache_refresh_task(state.clone()).await;
 
     let app = axum::Router::new()
         .nest("/api", routes())

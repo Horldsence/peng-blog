@@ -10,6 +10,7 @@ use service::{
 };
 use std::sync::Arc;
 
+use crate::file_cache::FileCache;
 use crate::middleware::auth::AuthState;
 
 /// Shared application state
@@ -48,6 +49,9 @@ pub struct AppState {
 
     /// Upload directory for file storage
     pub upload_dir: String,
+
+    /// File-based cache manager
+    pub bing_cache: FileCache,
 }
 
 impl AppState {
@@ -117,6 +121,7 @@ pub struct AppStateBuilder {
     tag_service: Option<TagService>,
     auth_state: Option<AuthState>,
     upload_dir: Option<String>,
+    bing_cache: Option<FileCache>,
 }
 
 impl AppStateBuilder {
@@ -170,6 +175,11 @@ impl AppStateBuilder {
         self
     }
 
+    pub fn bing_cache(mut self, cache: FileCache) -> Self {
+        self.bing_cache = Some(cache);
+        self
+    }
+
     /// Build the AppState
     ///
     /// # Panics
@@ -189,6 +199,7 @@ impl AppStateBuilder {
             tag_service: Arc::new(self.tag_service.expect("tag_service must be set")),
             auth_state: self.auth_state.expect("auth_state must be set"),
             upload_dir: self.upload_dir.expect("upload_dir must be set"),
+            bing_cache: self.bing_cache.expect("bing_cache must be set"),
         }
     }
 }

@@ -43,13 +43,15 @@ const useStyles = makeStyles({
     display: 'flex',
     height: '100vh',
     overflow: 'hidden',
-    // Global background is handled by the body/root, this transparent allows seeing it
+    position: 'relative',
     backgroundColor: 'transparent',
   },
   contentArea: {
     flex: '1',
     overflow: 'auto',
     backgroundColor: 'transparent',
+    position: 'relative',
+    zIndex: 1,
   },
   navDrawer: {
     transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -66,11 +68,12 @@ const useStyles = makeStyles({
     left: 0,
     width: '100vw',
     height: '100vh',
-    zIndex: -1,
+    zIndex: 0,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     transition: 'background-image 0.5s ease-in-out',
+    pointerEvents: 'none',
   },
   navDrawerExpanded: {
     width: '260px',

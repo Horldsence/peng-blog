@@ -7,6 +7,7 @@
 pub mod auth;
 pub mod bing;
 pub mod category;
+pub mod file_cache;
 pub mod comment;
 pub mod error;
 pub mod file;
