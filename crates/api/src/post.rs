@@ -155,9 +155,9 @@ async fn list_posts(
             .map_err(|e| ApiError::Validation(format!("Invalid author ID: {}", e)))?;
 
         // Check if requesting own posts
-        let is_own_posts = user.as_ref().is_some_and(|u| {
-            Uuid::parse_str(&u.sub) == Ok(author_uuid)
-        });
+        let is_own_posts = user
+            .as_ref()
+            .is_some_and(|u| Uuid::parse_str(&u.sub) == Ok(author_uuid));
 
         if show_drafts && (is_own_posts || is_admin) {
             state
