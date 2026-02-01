@@ -417,7 +417,7 @@ async fn search_posts(
         .await
         .map_err(ApiError::Domain)?;
 
-    let pagination = Pagination::new(params.page, params.per_page, response.total as u64);
+    let pagination = Pagination::new(params.page, params.per_page, response.total);
     Ok(resp::list(response.posts, pagination))
 }
 
