@@ -24,19 +24,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-test-
 
       - name: Run tests
         run: cargo test --all-features --workspace
@@ -47,50 +41,31 @@ jobs:
       - name: Check formatting
         run: cargo fmt -- --check
 
-  build-linux:
-    name: Build ${{ matrix.target }}
+  build-linux-amd64:
+    name: Build x86_64-unknown-linux-gnu
     needs: test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - target: aarch64-unknown-linux-gnu
-            arch: arm64
-          - target: x86_64-unknown-linux-gnu
-            arch: amd64
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Install cross-compilation tools
-        run: |
-          cargo install cross --git https://github.com/cross-rs/cross
-
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-build-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-${{ matrix.target }}-
 
       - name: Build release binary
         run: |
-          cross build --release --target ${{ matrix.target }} -p cli
+          cargo build --release -p cli
 
       - name: Prepare release artifacts
         run: |
           mkdir -p release/peng-blog
-          cp target/${{ matrix.target }}/release/peng-blog release/peng-blog/
+          cp target/release/peng-blog release/peng-blog/
           cp README.md release/peng-blog/ || true
           cp LICENSE release/peng-blog/ || true
           
@@ -137,21 +112,104 @@ jobs:
           chmod +x release/peng-blog/start.sh
           
           cd release
-          tar -czf peng-blog-linux-${{ matrix.arch }}.tar.gz peng-blog
-          sha256sum peng-blog-linux-${{ matrix.arch }}.tar.gz > peng-blog-linux-${{ matrix.arch }}.tar.gz.sha256
+          tar -czf peng-blog-linux-amd64.tar.gz peng-blog
+          sha256sum peng-blog-linux-amd64.tar.gz > peng-blog-linux-amd64.tar.gz.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: peng-blog-linux-${{ matrix.arch }}
+          name: peng-blog-linux-amd64
           path: |
-            release/peng-blog-linux-${{ matrix.arch }}.tar.gz
-            release/peng-blog-linux-${{ matrix.arch }}.tar.gz.sha256
+            release/peng-blog-linux-amd64.tar.gz
+            release/peng-blog-linux-amd64.tar.gz.sha256
+          retention-days: 7
+
+  build-linux-arm64:
+    name: Build aarch64-unknown-linux-gnu
+    needs: test
+    runs-on: ubuntu-24.04-arm64
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: |
+          cargo build --release -p cli
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release/peng-blog
+          cp target/release/peng-blog release/peng-blog/
+          cp README.md release/peng-blog/ || true
+          cp LICENSE release/peng-blog/ || true
+          
+          # Create example config
+          cat > release/peng-blog/.env.example << 'EOF'
+          # Database
+          DATABASE_URL=sqlite://blog.db
+          
+          # Server
+          HOST=0.0.0.0
+          PORT=3000
+          
+          # JWT Secret (CHANGE THIS!)
+          JWT_SECRET=change-this-secret-in-production
+          
+          # Upload
+          UPLOAD_DIR=./uploads
+          BASE_URL=http://localhost:3000
+          
+          # GitHub OAuth (Optional)
+          GITHUB_CLIENT_ID=your-client-id
+          GITHUB_CLIENT_SECRET=your-client-secret
+          
+          # Log
+          RUST_LOG=info
+          EOF
+          
+          # Create start script
+          cat > release/peng-blog/start.sh << 'EOF'
+          #!/bin/bash
+          
+          # Create .env if not exists
+          if [ ! -f .env ]; then
+            cp .env.example .env
+            echo "Created .env file. Please edit it with your configuration."
+          fi
+          
+          # Create uploads directory
+          mkdir -p uploads
+          
+          # Start server
+          ./peng-blog
+          EOF
+          chmod +x release/peng-blog/start.sh
+          
+          cd release
+          tar -czf peng-blog-linux-arm64.tar.gz peng-blog
+          sha256sum peng-blog-linux-arm64.tar.gz > peng-blog-linux-arm64.tar.gz.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: peng-blog-linux-arm64
+          path: |
+            release/peng-blog-linux-arm64.tar.gz
+            release/peng-blog-linux-arm64.tar.gz.sha256
           retention-days: 7
 
   create-release:
     name: Create Pre-Release
-    needs: [build-linux]
+    needs: [build-linux-amd64, build-linux-arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -242,7 +300,7 @@ jobs:
 
   build-summary:
     name: Build Summary
-    needs: [create-release, build-linux, test]
+    needs: [create-release, build-linux-amd64, build-linux-arm64, test]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -251,10 +309,11 @@ jobs:
           echo "### Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Test: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Build Linux: ${{ needs.build-linux.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Linux AMD64: ${{ needs.build-linux-amd64.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Linux ARM64: ${{ needs.build-linux-arm64.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Create Release: ${{ needs.create-release.result }}" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ needs.build-linux.result }}" != "success" ]; then
+          if [ "${{ needs.build-linux-amd64.result }}" != "success" ] || [ "${{ needs.build-linux-arm64.result }}" != "success" ]; then
             echo "::error::Build failed"
             exit 1
           fi
