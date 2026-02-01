@@ -183,6 +183,7 @@ impl FileCache {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::Deserialize;
 
     #[tokio::test]
     async fn test_file_cache_set_get() {
