@@ -187,15 +187,13 @@ impl StatsRepository for StatsRepositoryImpl {
         let total_posts = PostEntity::find()
             .count(&*self.db)
             .await
-            .map_err(|e| Error::Internal(format!("Failed to count posts: {}", e)))?
-            as u64;
+            .map_err(|e| Error::Internal(format!("Failed to count posts: {}", e)))?;
 
         // Get total comments count
         let total_comments = CommentEntity::find()
             .count(&*self.db)
             .await
-            .map_err(|e| Error::Internal(format!("Failed to count comments: {}", e)))?
-            as u64;
+            .map_err(|e| Error::Internal(format!("Failed to count comments: {}", e)))?;
 
         Ok(StatsResponse {
             total_visits: visit_stats.total_visits,

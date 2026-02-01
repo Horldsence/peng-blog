@@ -157,7 +157,7 @@ impl domain::CommentRepository for CommentRepositoryImpl {
             .await
             .map_err(|e| Error::Internal(format!("Failed to count comments: {}", e)))?;
 
-        Ok(count as u64)
+        Ok(count)
     }
 }
 
