@@ -180,14 +180,14 @@ async fn handle_db_command(command: DbCommands, database_url: &str) -> anyhow::R
             Ok(())
         }
         DbCommands::Reset { force } => {
-            if !force {
-                if !confirm_action(
+            if !force
+                && !confirm_action(
                     "Are you sure you want to reset database? This will delete ALL data.",
                     false,
-                )? {
-                    println!("{}", style("Operation cancelled").yellow());
-                    return Ok(());
-                }
+                )?
+            {
+                println!("{}", style("Operation cancelled").yellow());
+                return Ok(());
             }
 
             let db = establish_connection(database_url).await?;
@@ -368,14 +368,14 @@ async fn delete_user(
         .await?
         .ok_or_else(|| anyhow::anyhow!("User not found"))?;
 
-    if !force {
-        if !confirm_action(
+    if !force
+        && !confirm_action(
             &format!("Are you sure you want to delete user '{}'?", user.username),
             false,
-        )? {
-            println!("{}", style("Operation cancelled").yellow());
-            return Ok(());
-        }
+        )?
+    {
+        println!("{}", style("Operation cancelled").yellow());
+        return Ok(());
     }
 
     user_repo.delete_user(user_id).await?;
@@ -430,17 +430,17 @@ async fn promote_user(
         return Ok(());
     }
 
-    if !force {
-        if !confirm_action(
+    if !force
+        && !confirm_action(
             &format!(
                 "Are you sure you want to promote '{}' to admin?",
                 user.username
             ),
             true,
-        )? {
-            println!("{}", style("Operation cancelled").yellow());
-            return Ok(());
-        }
+        )?
+    {
+        println!("{}", style("Operation cancelled").yellow());
+        return Ok(());
     }
 
     user_repo
@@ -464,17 +464,17 @@ async fn demote_user(
         return Ok(());
     }
 
-    if !force {
-        if !confirm_action(
+    if !force
+        && !confirm_action(
             &format!(
                 "Are you sure you want to demote '{}' from admin?",
                 user.username
             ),
             false,
-        )? {
-            println!("{}", style("Operation cancelled").yellow());
-            return Ok(());
-        }
+        )?
+    {
+        println!("{}", style("Operation cancelled").yellow());
+        return Ok(());
     }
 
     user_repo

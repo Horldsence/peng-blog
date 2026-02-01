@@ -144,7 +144,7 @@ async fn list_posts(
     // Check if user is admin
     let is_admin = user
         .as_ref()
-        .map_or(false, |u| (u.permissions & USER_MANAGE) != 0);
+        .is_some_and(|u| (u.permissions & USER_MANAGE) != 0);
 
     // Determine which posts to show based on status filter
     let show_drafts = params.status == "draft" || params.status == "all";
@@ -155,8 +155,8 @@ async fn list_posts(
             .map_err(|e| ApiError::Validation(format!("Invalid author ID: {}", e)))?;
 
         // Check if requesting own posts
-        let is_own_posts = user.as_ref().map_or(false, |u| {
-            Uuid::parse_str(&u.sub).map_or(false, |uid| uid == author_uuid)
+        let is_own_posts = user.as_ref().is_some_and(|u| {
+            Uuid::parse_str(&u.sub) == Ok(author_uuid)
         });
 
         if show_drafts && (is_own_posts || is_admin) {

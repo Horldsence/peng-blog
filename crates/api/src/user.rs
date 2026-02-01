@@ -178,7 +178,7 @@ async fn list_user_posts(
     Path(user_id): Path<Uuid>,
     Query(params): Query<ListPostsQuery>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let include_drafts = params.include.as_ref().map_or(false, |v| v == "drafts");
+    let include_drafts = params.include.as_ref().is_some_and(|v| v == "drafts");
 
     // Check permissions for viewing drafts
     let can_view_drafts = if include_drafts {
