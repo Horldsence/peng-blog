@@ -42,11 +42,9 @@ function App() {
           <Route
             path="/login"
             element={
-              <div className="login-page">
-                <LoginForm
-                  onLoginSuccess={() => window.location.href = '/'}
-                />
-              </div>
+              <LoginForm
+                onLoginSuccess={() => window.location.href = '/'}
+              />
             }
           />
           <Route path="/register" element={<RegisterPage />} />

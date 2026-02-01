@@ -8,6 +8,8 @@ import {
   Title2,
   Body1,
   tokens,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   ArrowLeftRegular,
@@ -17,12 +19,83 @@ import {
 import { authApi } from '../../api';
 import type { UserLoginRequest } from '../../types';
 
+const useStyles = makeStyles({
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colorNeutralBackground2,
+    padding: '24px',
+  },
+  card: {
+    width: '100%',
+    maxWidth: '420px',
+    borderRadius: tokens.borderRadiusLarge,
+    padding: '32px',
+  },
+  headerContent: {
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    color: tokens.colorNeutralForeground2,
+    marginTop: '8px',
+  },
+  errorBox: {
+    padding: '12px 16px',
+    marginBottom: '24px',
+    backgroundColor: tokens.colorStatusDangerBackground1,
+    border: `1px solid ${tokens.colorStatusDangerBorder1}`,
+    borderRadius: tokens.borderRadiusMedium,
+    color: tokens.colorStatusDangerForeground1,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  fieldLabel: {
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: '8px',
+    display: 'block',
+  },
+  input: {
+    width: '100%',
+  },
+  submitButton: {
+    marginTop: '8px',
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '24px',
+  },
+  footerText: {
+    color: tokens.colorNeutralForeground2,
+  },
+  link: {
+    color: tokens.colorBrandForeground1,
+    textDecoration: 'none',
+    fontWeight: tokens.fontWeightSemibold,
+    ':hover': {
+      textDecoration: 'underline',
+    },
+  },
+  backButtonContainer: {
+    textAlign: 'center',
+    marginTop: '16px',
+  },
+});
+
 interface LoginFormProps {
   onLoginSuccess?: () => void;
   onLoginError?: (error: any) => void;
 }
 
 export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
+  const styles = useStyles();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserLoginRequest>({
     username: '',
@@ -64,29 +137,13 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--colorNeutralBackground2)',
-        padding: '24px',
-      }}
-    >
-      <Card
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          borderRadius: tokens.borderRadiusLarge,
-          padding: '32px',
-        }}
-      >
+    <div className={styles.container}>
+      <Card className={styles.card}>
         <CardHeader
           header={
-            <div style={{ textAlign: 'center' }}>
+            <div className={styles.headerContent}>
               <Title2>登录</Title2>
-              <Body1 style={{ color: 'var(--colorNeutralForeground2)', marginTop: '8px' }}>
+              <Body1 className={styles.headerSubtitle}>
                 欢迎回到 Peng Blog
               </Body1>
             </div>
@@ -95,19 +152,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
 
         {/* 错误提示 */}
         {error && (
-          <div
-            style={{
-              padding: '12px 16px',
-              marginBottom: '24px',
-              backgroundColor: 'var(--colorStatusDangerBackground1)',
-              border: '1px solid var(--colorStatusDangerBorder1)',
-              borderRadius: tokens.borderRadiusMedium,
-              color: 'var(--colorStatusDangerForeground1)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
+          <div className={styles.errorBox}>
             <Body1>{error}</Body1>
             <Button
               appearance="transparent"
@@ -120,11 +165,11 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         )}
 
         {/* 登录表单 */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+            <label className={styles.fieldLabel}>
               用户名
-            </Body1>
+            </label>
             <Input
               name="username"
               placeholder="请输入用户名"
@@ -137,7 +182,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
                 if (error) setError('');
               }}
               contentBefore={<PersonRegular />}
-              style={{ width: '100%' }}
+              className={styles.input}
               size="large"
               disabled={loading}
               autoComplete="username"
@@ -145,9 +190,9 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
           </div>
 
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+            <label className={styles.fieldLabel}>
               密码
-            </Body1>
+            </label>
             <Input
               type="password"
               name="password"
@@ -161,7 +206,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
                 if (error) setError('');
               }}
               contentBefore={<LockClosedRegular />}
-              style={{ width: '100%' }}
+              className={styles.input}
               size="large"
               disabled={loading}
               autoComplete="current-password"
@@ -173,23 +218,19 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
             appearance="primary"
             size="large"
             disabled={loading}
-            style={{ marginTop: '8px' }}
+            className={styles.submitButton}
           >
             {loading ? '登录中...' : '登录'}
           </Button>
         </form>
 
         {/* 注册链接 */}
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+        <div className={styles.footer}>
+          <Body1 className={styles.footerText}>
             还没有账户？{' '}
             <Link
               to="/register"
-              style={{
-                color: 'var(--colorBrandForeground1)',
-                textDecoration: 'none',
-                fontWeight: '600',
-              }}
+              className={styles.link}
             >
               立即注册
             </Link>
@@ -197,7 +238,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         </div>
 
         {/* 返回按钮 */}
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+        <div className={styles.backButtonContainer}>
           <Button
             appearance="transparent"
             icon={<ArrowLeftRegular />}

@@ -12,12 +12,96 @@ import {
   Title2,
   Spinner,
   tokens,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import { TagRegular } from '@fluentui/react-icons';
 import { tagsApi, postsApi } from '../api';
 import type { Tag, Post } from '../types';
 
+const useStyles = makeStyles({
+  container: {
+    padding: '32px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+  },
+  header: {
+    marginBottom: '32px',
+  },
+  subtitle: {
+    color: tokens.colorNeutralForeground2,
+    marginTop: '8px',
+  },
+  tagCloudCard: {
+    marginBottom: '32px',
+    padding: '24px',
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  tagHeader: {
+    marginBottom: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  tagTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  tagsContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+  },
+  emptyText: {
+    color: tokens.colorNeutralForeground3,
+  },
+  tagBadge: {
+    cursor: 'pointer',
+    padding: '8px 16px',
+  },
+  postsCard: {
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  postsHeader: {
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  emptyPosts: {
+    color: tokens.colorNeutralForeground3,
+    padding: '24px',
+  },
+  postItem: {
+    padding: '16px',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    cursor: 'pointer',
+    ':hover': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+    ':last-child': {
+      borderBottom: 'none',
+    },
+  },
+  postTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: '8px',
+    display: 'block',
+  },
+  postExcerpt: {
+    color: tokens.colorNeutralForeground2,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    lineHeight: '1.5',
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '48px',
+  },
+});
+
 export function TagsPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,30 +149,30 @@ export function TagsPage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+      <div className={styles.loadingContainer}>
         <Spinner size="large" />
       </div>
     );
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: '32px' }}>
+    <div className={styles.container}>
+      <div className={styles.header}>
         <Title2>标签</Title2>
-        <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
-          按标签浏览文章
-        </Body1>
+        <div className={styles.subtitle}>
+          <Body1>按标签浏览文章</Body1>
+        </div>
       </div>
 
       {/* 标签云 */}
-      <Card style={{ marginBottom: '32px', padding: '24px', borderRadius: tokens.borderRadiusLarge }}>
-        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <Card className={styles.tagCloudCard}>
+        <div className={styles.tagHeader}>
           <TagRegular />
-          <Body1 style={{ fontWeight: '600' }}>标签云</Body1>
+          <Body1 className={styles.tagTitle}>标签云</Body1>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+        <div className={styles.tagsContainer}>
           {tags.length === 0 ? (
-            <Body1 style={{ color: 'var(--colorNeutralForeground3)' }}>暂无标签</Body1>
+            <Body1 className={styles.emptyText}>暂无标签</Body1>
           ) : (
             tags.map((tag) => (
               <Badge
@@ -96,7 +180,7 @@ export function TagsPage() {
                 size="large"
                 color={selectedTag === tag.id ? 'brand' : 'success'}
                 appearance={selectedTag === tag.id ? 'filled' : 'ghost'}
-                style={{ cursor: 'pointer', padding: '8px 16px' }}
+                className={styles.tagBadge}
                 onClick={() => handleTagClick(tag)}
               >
                 {tag.name}
@@ -108,40 +192,27 @@ export function TagsPage() {
 
       {/* 该标签的文章 */}
       {selectedTag && (
-        <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+        <Card className={styles.postsCard}>
           <CardHeader
-            header={<Body1 style={{ fontWeight: '600' }}>该标签下的文章</Body1>}
+            header={<Body1 className={styles.postsHeader}>该标签下的文章</Body1>}
             description={<Body1>{posts.length} 篇文章</Body1>}
           />
           <div>
             {posts.length === 0 ? (
-              <Body1 style={{ color: 'var(--colorNeutralForeground3)', padding: '24px' }}>
+              <Body1 className={styles.emptyPosts}>
                 该标签下暂无文章
               </Body1>
             ) : (
               posts.map((post) => (
                 <div
                   key={post.id}
-                  style={{
-                    padding: '16px',
-                    borderBottom: '1px solid var(--colorNeutralStroke1)',
-                    cursor: 'pointer',
-                  }}
+                  className={styles.postItem}
                   onClick={() => navigate(`/post/${post.id}`)}
                 >
-                  <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+                  <Body1 className={styles.postTitle}>
                     {post.title}
                   </Body1>
-                  <Body1
-                    style={{
-                      color: 'var(--colorNeutralForeground2)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}
-                  >
+                  <Body1 className={styles.postExcerpt}>
                     {post.content.substring(0, 100)}...
                   </Body1>
                 </div>

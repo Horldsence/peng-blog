@@ -13,6 +13,8 @@ import {
   Tab,
   TabList,
   Divider,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   HomeRegular,
@@ -31,7 +33,135 @@ import { useToast } from '../components/ui/Toast';
 import type { Post, User, AdminStats } from '../types';
 import { Permission } from '../types';
 
+const useStyles = makeStyles({
+  container: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  card: {
+    borderRadius: '0',
+    minHeight: '100%',
+    height: '100%',
+    border: 'none',
+    boxShadow: 'none',
+    backgroundColor: tokens.colorNeutralBackground3,
+  },
+  layout: {
+    display: 'flex',
+    height: '100%',
+    minHeight: 'calc(100vh - 48px)', 
+  },
+  sidebar: {
+    width: '260px',
+    backgroundColor: tokens.colorNeutralBackground2,
+    padding: '24px',
+    borderRight: `1px solid ${tokens.colorNeutralStroke1}`,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sidebarHeader: {
+    marginBottom: '32px',
+  },
+  sidebarFooter: {
+    marginTop: 'auto',
+  },
+  userInfo: {
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: '8px',
+  },
+  mainContent: {
+    flex: '1',
+    padding: '32px',
+    overflowY: 'auto',
+    backgroundColor: tokens.colorNeutralBackground3,
+  },
+  errorBox: {
+    padding: '12px 16px',
+    marginBottom: '24px',
+    backgroundColor: tokens.colorStatusDangerBackground1,
+    border: `1px solid ${tokens.colorStatusDangerBorder1}`,
+    borderRadius: tokens.borderRadiusMedium,
+    color: tokens.colorStatusDangerForeground1,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '48px',
+  },
+  dashboardGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '16px',
+  },
+  statCard: {
+    padding: '20px',
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  statIcon: {
+    fontSize: '32px',
+  },
+  statValue: {
+    fontSize: '24px',
+    fontWeight: tokens.fontWeightBold,
+  },
+  statLabel: {
+    color: tokens.colorNeutralForeground2,
+  },
+  headerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px',
+  },
+  listCard: {
+    borderRadius: tokens.borderRadiusLarge,
+    padding: '0',
+  },
+  listItem: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '16px 20px',
+    gap: '16px',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    ':last-child': {
+      borderBottom: 'none',
+    },
+  },
+  listItemContent: {
+    flex: '1',
+  },
+  listItemTitle: {
+    color: tokens.colorNeutralForeground1,
+    textDecoration: 'none',
+    fontWeight: tokens.fontWeightSemibold,
+    ':hover': {
+      textDecoration: 'underline',
+    },
+  },
+  listItemMeta: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '4px',
+  },
+  metaText: {
+    color: tokens.colorNeutralForeground2,
+  },
+  actions: {
+    display: 'flex',
+    gap: '8px',
+  },
+  emptyState: {
+    padding: '48px',
+    textAlign: 'center',
+  },
+});
+
 export function AdminPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
   const toast = useToast();
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -157,7 +287,7 @@ export function AdminPage() {
 
   if (!hasAdminPermission(currentUser)) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+      <div className={styles.loadingContainer}>
         <Spinner size="large" />
       </div>
     );
@@ -173,20 +303,12 @@ export function AdminPage() {
   ];
 
   return (
-    <div style={{ margin: '-32px' }}>
-      <Card style={{ borderRadius: 0, minHeight: 'calc(100vh - 64px)' }}>
-        <div style={{ display: 'flex' }}>
+    <div className={styles.container}>
+      <Card className={styles.card}>
+        <div className={styles.layout}>
           {/* 侧边栏 */}
-          <div
-            style={{
-              width: '260px',
-              backgroundColor: 'var(--colorNeutralBackground2)',
-              padding: '24px',
-              borderRight: '1px solid var(--colorNeutralStroke1)',
-              minHeight: 'calc(100vh - 64px)',
-            }}
-          >
-            <div style={{ marginBottom: '32px' }}>
+          <div className={styles.sidebar}>
+            <div className={styles.sidebarHeader}>
               <Title3>管理后台</Title3>
             </div>
 
@@ -194,7 +316,6 @@ export function AdminPage() {
               vertical
               selectedValue={activeTab}
               onTabSelect={(_, data) => setActiveTab(data.value as any)}
-              style={{ gap: '8px' }}
             >
               <Tab icon={<HomeRegular />} value="dashboard">
                 仪表板
@@ -210,12 +331,11 @@ export function AdminPage() {
               </Tab>
             </TabList>
 
-            <Divider style={{ margin: '24px 0' }} />
-
-            <div>
-              <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+            <div className={styles.sidebarFooter}>
+              <Divider style={{ margin: '24px 0' }} />
+              <div className={styles.userInfo}>
                 {currentUser?.username}
-              </Body1>
+              </div>
               <Button
                 appearance="transparent"
                 icon={<ArrowLeftRegular />}
@@ -228,22 +348,10 @@ export function AdminPage() {
           </div>
 
           {/* 主内容区 */}
-          <div style={{ flex: 1, padding: '32px' }}>
+          <div className={styles.mainContent}>
             {/* 错误提示 */}
             {error && (
-              <div
-                style={{
-                  padding: '12px 16px',
-                  marginBottom: '24px',
-                  backgroundColor: 'var(--colorStatusDangerBackground1)',
-                  border: '1px solid var(--colorStatusDangerBorder1)',
-                  borderRadius: tokens.borderRadiusMedium,
-                  color: 'var(--colorStatusDangerForeground1)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
+              <div className={styles.errorBox}>
                 <Body1>{error}</Body1>
                 <Button
                   appearance="transparent"
@@ -257,7 +365,7 @@ export function AdminPage() {
 
             {/* 加载状态 */}
             {loading && (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+              <div className={styles.loadingContainer}>
                 <Spinner size="large" />
               </div>
             )}
@@ -266,28 +374,19 @@ export function AdminPage() {
             {!loading && activeTab === 'dashboard' && stats && (
               <div>
                 <Title2 style={{ marginBottom: '24px' }}>仪表板</Title2>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                    gap: '16px',
-                  }}
-                >
+                <div className={styles.dashboardGrid}>
                   {statCards.map((stat, index) => (
                     <Card
                       key={index}
-                      style={{
-                        padding: '20px',
-                        borderRadius: tokens.borderRadiusLarge,
-                      }}
+                      className={styles.statCard}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '32px' }}>{stat.icon}</span>
+                        <span className={styles.statIcon}>{stat.icon}</span>
                         <div>
-                          <Body1 style={{ fontSize: '24px', fontWeight: '700' }}>
+                          <Body1 className={styles.statValue}>
                             {stat.value}
                           </Body1>
-                          <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                          <Caption1 className={styles.statLabel}>
                             {stat.label}
                           </Caption1>
                         </div>
@@ -301,14 +400,7 @@ export function AdminPage() {
             {/* 文章管理 */}
             {!loading && activeTab === 'posts' && (
               <div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '24px',
-                  }}
-                >
+                <div className={styles.headerRow}>
                   <Title2>文章管理</Title2>
                   <Button
                     appearance="primary"
@@ -319,42 +411,29 @@ export function AdminPage() {
                   </Button>
                 </div>
 
-                <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+                <Card className={styles.listCard}>
                   {posts.length === 0 ? (
-                    <div style={{ padding: '48px', textAlign: 'center' }}>
-                      <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                    <div className={styles.emptyState}>
+                      <Body1 className={styles.metaText}>
                         暂无文章
                       </Body1>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      {posts.map((post, index) => (
-                        <div
-                          key={post.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '16px 20px',
-                            borderBottom: index < posts.length - 1 ? '1px solid var(--colorNeutralStroke1)' : 'none',
-                            gap: '16px',
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
+                      {posts.map((post) => (
+                        <div key={post.id} className={styles.listItem}>
+                          <div className={styles.listItemContent}>
                             <Link
                               to={`/post/${post.id}`}
-                              style={{
-                                color: 'var(--colorNeutralForeground1)',
-                                textDecoration: 'none',
-                                fontWeight: '600',
-                              }}
+                              className={styles.listItemTitle}
                             >
                               {post.title}
                             </Link>
-                            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-                              <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                            <div className={styles.listItemMeta}>
+                              <Caption1 className={styles.metaText}>
                                 {formatDate(post.created_at)}
                               </Caption1>
-                              <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                              <Caption1 className={styles.metaText}>
                                 {post.views} 次阅读
                               </Caption1>
                             </div>
@@ -367,7 +446,7 @@ export function AdminPage() {
                             {post.published_at ? '已发布' : '草稿'}
                           </Badge>
 
-                          <div style={{ display: 'flex', gap: '8px' }}>
+                          <div className={styles.actions}>
                             <Button
                               appearance="transparent"
                               icon={<EditRegular />}
@@ -406,29 +485,20 @@ export function AdminPage() {
               <div>
                 <Title2 style={{ marginBottom: '24px' }}>用户管理</Title2>
 
-                <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+                <Card className={styles.listCard}>
                   {users.length === 0 ? (
-                    <div style={{ padding: '48px', textAlign: 'center' }}>
-                      <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                    <div className={styles.emptyState}>
+                      <Body1 className={styles.metaText}>
                         暂无用户
                       </Body1>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      {users.map((user, index) => (
-                        <div
-                          key={user.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '16px 20px',
-                            borderBottom: index < users.length - 1 ? '1px solid var(--colorNeutralStroke1)' : 'none',
-                            gap: '16px',
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
+                      {users.map((user) => (
+                        <div key={user.id} className={styles.listItem}>
+                          <div className={styles.listItemContent}>
                             <Body1 style={{ fontWeight: '600' }}>{user.username}</Body1>
-                            <Caption1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                            <Caption1 className={styles.metaText}>
                               {formatDate(user.created_at)}
                             </Caption1>
                           </div>
@@ -462,7 +532,7 @@ export function AdminPage() {
               <div>
                 <Title2 style={{ marginBottom: '24px' }}>设置</Title2>
                 <Card style={{ borderRadius: tokens.borderRadiusLarge, padding: '32px' }}>
-                  <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                  <Body1 className={styles.metaText}>
                     设置功能开发中...
                   </Body1>
                 </Card>

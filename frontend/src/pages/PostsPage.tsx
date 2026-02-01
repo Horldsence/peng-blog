@@ -12,6 +12,8 @@ import {
   Button,
   Input,
   tokens,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   ArrowRightRegular,
@@ -28,91 +30,78 @@ import { getPostExcerpt } from '../utils/markdown';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const styles = {
+const useStyles = makeStyles({
   pageContainer: {
-    margin: '-32px',
-  } as React.CSSProperties,
-
+    // Removed negative margin as discussed
+  },
   contentSection: {
     position: 'relative',
     zIndex: 2,
     backgroundColor: tokens.colorNeutralBackground3,
     minHeight: 'calc(100vh - 64px)',
     padding: '48px 0',
-  } as React.CSSProperties,
-
+  },
   contentInner: {
     maxWidth: '1200px',
     margin: '0 auto',
     padding: '0 56px',
-  } as React.CSSProperties,
-
+  },
   sectionHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     marginBottom: '40px',
-  } as React.CSSProperties,
-
+  },
   sectionTitleGroup: {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
-  } as React.CSSProperties,
-
+  },
   sectionTitle: {
     fontSize: tokens.fontSizeBase600,
     fontWeight: tokens.fontWeightBold,
     color: tokens.colorNeutralForeground1,
-    margin: 0,
+    margin: '0',
     letterSpacing: '-0.01em',
-  } as React.CSSProperties,
-
+  },
   sectionSubtitle: {
     fontSize: tokens.fontSizeBase400,
     color: tokens.colorNeutralForeground2,
-    margin: 0,
-  } as React.CSSProperties,
-
-  // 搜索区域
+    margin: '0',
+  },
   searchContainer: {
     display: 'flex',
     gap: '12px',
     alignItems: 'center',
     marginBottom: '32px',
-  } as React.CSSProperties,
-
+  },
   searchInput: {
     width: '300px',
-  } as React.CSSProperties,
-
-  // 快速过滤
+  },
   filtersContainer: {
     display: 'flex',
     gap: '12px',
     flexWrap: 'wrap',
     marginBottom: '40px',
-  } as React.CSSProperties,
-
-  // 文章网格
+  },
+  filterBadge: {
+    cursor: 'pointer',
+  },
   postsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
     gap: '28px',
-  } as React.CSSProperties,
-
+  },
   postCard: {
     cursor: 'pointer',
     opacity: 0,
     transform: 'translateY(40px)',
     transition: 'box-shadow 0.3s ease',
     borderRadius: tokens.borderRadiusLarge,
-  } as React.CSSProperties,
-
+  },
   cardHeader: {
     padding: '24px',
-  } as React.CSSProperties,
-
+  },
   cardTitle: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -120,8 +109,7 @@ const styles = {
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
     marginBottom: '12px',
-  } as React.CSSProperties,
-
+  },
   cardDescription: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -130,47 +118,49 @@ const styles = {
     WebkitBoxOrient: 'vertical',
     color: tokens.colorNeutralForeground2,
     lineHeight: '1.6',
-  } as React.CSSProperties,
-
+  },
   cardFooter: {
     display: 'flex',
     alignItems: 'center',
     gap: '20px',
     padding: '16px 24px',
     borderTop: `1px solid ${tokens.colorNeutralStroke1}`,
-  } as React.CSSProperties,
-
+  },
   metaItem: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
     color: tokens.colorNeutralForeground2,
-  } as React.CSSProperties,
-
+  },
   loadingCard: {
     height: '300px',
     borderRadius: tokens.borderRadiusLarge,
     background: `linear-gradient(90deg, ${tokens.colorNeutralBackground2} 25%, ${tokens.colorNeutralBackground1} 50%, ${tokens.colorNeutralBackground2} 75%)`,
     backgroundSize: '1000px 100%',
-    animation: 'shimmer 1.5s infinite linear',
-  } as React.CSSProperties,
-
+    animationName: 'shimmer',
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'linear',
+  },
   emptyState: {
     textAlign: 'center',
     padding: '80px 48px',
     color: tokens.colorNeutralForeground2,
-  } as React.CSSProperties,
-
+  },
   pagination: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     gap: '16px',
     marginTop: '48px',
-  } as React.CSSProperties,
-};
+  },
+  viewButtonContainer: {
+    marginLeft: 'auto',
+  },
+});
 
 export function PostsPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,25 +241,25 @@ export function PostsPage() {
   };
 
   return (
-    <div ref={pageRef} style={styles.pageContainer}>
-      <section style={styles.contentSection}>
-        <div style={styles.contentInner}>
+    <div ref={pageRef} className={styles.pageContainer}>
+      <section className={styles.contentSection}>
+        <div className={styles.contentInner}>
           {/* 区块头部 */}
-          <div style={styles.sectionHeader}>
-            <div style={styles.sectionTitleGroup}>
-              <h1 style={styles.sectionTitle}>文章列表</h1>
-              <p style={styles.sectionSubtitle}>探索所有技术文章</p>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitleGroup}>
+              <h1 className={styles.sectionTitle}>文章列表</h1>
+              <p className={styles.sectionSubtitle}>探索所有技术文章</p>
             </div>
           </div>
 
           {/* 搜索框 */}
-          <div style={styles.searchContainer}>
+          <div className={styles.searchContainer}>
             <Input
               placeholder="搜索文章..."
               value={searchQuery}
               onChange={(_, data) => setSearchQuery(data.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              style={styles.searchInput}
+              className={styles.searchInput}
               contentBefore={<SearchRegular />}
               size="large"
             />
@@ -283,42 +273,42 @@ export function PostsPage() {
           </div>
 
           {/* 快速过滤 */}
-          <div style={styles.filtersContainer}>
-            <Badge size="extra-large" color="brand" appearance="filled">
+          <div className={styles.filtersContainer}>
+            <Badge size="extra-large" color="brand" appearance="filled" className={styles.filterBadge}>
               全部文章
             </Badge>
-            <Badge size="extra-large" appearance="ghost" style={{ cursor: 'pointer' }}>
+            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
               Rust
             </Badge>
-            <Badge size="extra-large" appearance="ghost" style={{ cursor: 'pointer' }}>
+            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
               React
             </Badge>
-            <Badge size="extra-large" appearance="ghost" style={{ cursor: 'pointer' }}>
+            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
               TypeScript
             </Badge>
-            <Badge size="extra-large" appearance="ghost" style={{ cursor: 'pointer' }}>
+            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
               Web 开发
             </Badge>
           </div>
 
           {/* 文章网格 */}
           {loading ? (
-            <div style={styles.postsGrid}>
+            <div className={styles.postsGrid}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} style={styles.loadingCard} />
+                <div key={i} className={styles.loadingCard} />
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <div style={styles.emptyState}>
+            <div className={styles.emptyState}>
               <Text size={500}>暂无文章</Text>
             </div>
           ) : (
-            <div style={styles.postsGrid}>
+            <div className={styles.postsGrid}>
               {posts.map((post, index) => (
                 <Card
                   key={post.id}
                   ref={(el) => { cardsRef.current[index] = el; }}
-                  style={styles.postCard}
+                  className={styles.postCard}
                   onClick={() => navigate(`/post/${post.id}`)}
                   onMouseEnter={(e) => {
                     gsap.to(e.currentTarget, {
@@ -338,33 +328,33 @@ export function PostsPage() {
                   }}
                 >
                   <CardHeader
-                    style={styles.cardHeader}
+                    className={styles.cardHeader}
                     header={
                       <Text
                         weight="semibold"
                         size={500}
-                        style={styles.cardTitle}
+                        className={styles.cardTitle}
                       >
                         {post.title}
                       </Text>
                     }
                     description={
-                      <Caption1 style={styles.cardDescription}>
+                      <Caption1 className={styles.cardDescription}>
                         {getPostExcerpt(post.content, 180)}
                       </Caption1>
                     }
                   />
 
-                  <div style={styles.cardFooter}>
-                    <div style={styles.metaItem}>
+                  <div className={styles.cardFooter}>
+                    <div className={styles.metaItem}>
                       <CalendarRegular fontSize={14} />
                       <Caption1>{formatDate(post.created_at)}</Caption1>
                     </div>
-                    <div style={styles.metaItem}>
+                    <div className={styles.metaItem}>
                       <EyeRegular fontSize={14} />
                       <Caption1>{post.views}</Caption1>
                     </div>
-                    <div style={{ marginLeft: 'auto' }}>
+                    <div className={styles.viewButtonContainer}>
                       <Button
                         appearance="transparent"
                         icon={<ArrowRightRegular />}

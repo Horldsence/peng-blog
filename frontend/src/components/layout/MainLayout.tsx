@@ -3,19 +3,21 @@
  * 左侧导航栏 + 右侧内容区
  */
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Button,
   Avatar,
   Divider,
   tokens,
   Tooltip,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   NavDrawer,
   NavDrawerHeader,
   NavDrawerBody,
+  NavDrawerFooter,
   NavItem,
   NavSectionHeader,
 } from '@fluentui/react-components';
@@ -30,29 +32,149 @@ import {
   WeatherSunnyFilled,
   SignOutRegular,
   ArrowEnterRegular,
-  PersonRegular,
   PanelLeftContractRegular,
   PanelLeftExpandRegular,
 } from '@fluentui/react-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { authApi } from '../../api';
 
-const styles = {
+const useStyles = makeStyles({
   root: {
     display: 'flex',
     height: '100vh',
     overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground3,
-  } as React.CSSProperties,
-
+    // Global background is handled by the body/root, this transparent allows seeing it
+    backgroundColor: 'transparent',
+  },
   contentArea: {
-    flex: 1,
+    flex: '1',
     overflow: 'auto',
-    backgroundColor: tokens.colorNeutralBackground3,
-  } as React.CSSProperties,
-};
+    backgroundColor: 'transparent',
+  },
+  navDrawer: {
+    transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)', // Acrylic base
+    backdropFilter: 'blur(20px)',
+    borderRight: '1px solid rgba(0, 0, 0, 0.05)',
+    zIndex: 100,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  globalBackground: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    zIndex: -1,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    transition: 'background-image 0.5s ease-in-out',
+  },
+  navDrawerExpanded: {
+    width: '260px',
+  },
+  navDrawerCollapsed: {
+    width: '80px',
+  },
+  // Custom styles for NavItem
+  navItem: {
+    cursor: 'pointer',
+    backgroundColor: 'transparent',
+    height: '48px', // Even taller for better touch
+    fontSize: tokens.fontSizeBase300,
+    position: 'relative', // For absolute positioning of indicator
+    '&:hover': {
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    },
+    '&[aria-selected="true"]': {
+      backgroundColor: 'rgba(0, 0, 0, 0.06)',
+      fontWeight: tokens.fontWeightSemibold,
+    },
+    // Hide default indicator mechanisms from Fluent UI just in case
+    '&::after': { display: 'none' },
+    '&::before': { display: 'none' },
+    marginBottom: '2px',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    left: '0', // Stick to the very edge
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: '4px',
+    height: '24px', // Pill height
+    borderRadius: '0 4px 4px 0',
+    backgroundColor: tokens.colorBrandForeground1,
+    zIndex: 1,
+  },
+  navItemIcon: {
+    fontSize: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '24px', // Tighten min-width to avoid claiming too much space
+    height: '24px',
+    zIndex: 2, // Ensure icon is above indicator
+  },
+  navItemContent: {
+    marginLeft: '12px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    transition: 'opacity 0.2s ease',
+    opacity: 1,
+    fontSize: tokens.fontSizeBase300,
+  },
+  navItemContentCollapsed: {
+    opacity: 0,
+    width: 0,
+    display: 'none',
+  },
+  logo: {
+    padding: '16px 0',
+    fontSize: tokens.fontSizeBase600,
+    fontWeight: tokens.fontWeightBold,
+    color: tokens.colorNeutralForeground1,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    minHeight: '48px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoExpanded: {
+    justifyContent: 'flex-start',
+    paddingLeft: '20px',
+  },
+  footer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px', // Tighter gap like nav items
+    padding: '16px 8px',
+  },
+  // Unified style for footer items to match NavItem
+  footerItem: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    height: '48px', // Match navItem height
+    border: 'none',
+    background: 'transparent',
+    borderRadius: tokens.borderRadiusMedium,
+    color: tokens.colorNeutralForeground1,
+    cursor: 'pointer',
+    position: 'relative', // For indicator
+    marginBottom: '2px', // Match navItem margin
+    // Remove static padding to allow precise control via inline styles
+    padding: 0,
+    '&:hover': {
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    },
+  },
+});
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleTheme } = useTheme();
@@ -60,6 +182,34 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const currentUser = authApi.getCurrentUser();
 
   const [isExpanded, setIsExpanded] = useState(true);
+  const [bingImage, setBingImage] = useState<string>('');
+
+  useEffect(() => {
+    const fetchBingImage = async () => {
+      try {
+        // Use a CORS-friendly proxy for Bing Daily Image
+        // This service provides the daily Bing image info with CORS headers
+        const response = await fetch('https://bing.biturl.top/?resolution=1920&format=json&index=0&mkt=zh-CN');
+        const data = await response.json();
+        if (data && data.url) {
+          setBingImage(data.url);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Bing image:', error);
+        // Fallback to a reliable source or previous default
+        setBingImage('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');
+      }
+    };
+    fetchBingImage();
+  }, []);
+
+  // Helper to determine active value, handling sub-routes
+  const getSelectedValue = (pathname: string) => {
+    if (pathname.startsWith('/posts') || pathname.startsWith('/post/')) return '/posts';
+    return pathname;
+  };
+
+  const selectedValue = getSelectedValue(location.pathname);
 
   const permissions = currentUser
     ? typeof currentUser.permissions === 'string'
@@ -68,8 +218,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     : 0;
   const hasAdminPermission = (permissions & 16) !== 0;
 
-  const handleNavClick = (e: any) => {
-    navigate(e.currentTarget.value);
+  const handleNavClick = (e: any, value: any) => {
+    // Value might be the event if not passed correctly, but we set 'value' on NavItem
+    // To ensure clickability, we'll use the 'value' prop directly if passed,
+    // otherwise rely on the second arg which NavDrawer provides
+    if (typeof value === 'string') {
+      navigate(value);
+    } else if (e && e.currentTarget && e.currentTarget.getAttribute('value')) {
+        navigate(e.currentTarget.getAttribute('value'));
+    }
   };
 
   const handleLogout = () => {
@@ -77,275 +234,176 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     window.location.href = '/';
   };
 
-  return (
-    <div style={styles.root}>
-      <NavDrawer
-        defaultSelectedValue={location.pathname}
-        open={true}
-        type="inline"
-        density="medium"
+  const renderNavItem = (label: string, icon: JSX.Element, path: string) => {
+    const isSelected = selectedValue === path;
+    return (
+      <NavItem
+        key={path}
+        value={path}
+        onClick={() => navigate(path)}
+        className={styles.navItem}
+        aria-selected={isSelected}
         style={{
-          width: isExpanded ? '260px' : '68px',
-          transition: 'width 0.3s ease',
-          minWidth: isExpanded ? '260px' : '68px',
+          justifyContent: isExpanded ? 'flex-start' : 'center',
+          paddingLeft: isExpanded ? '16px' : '0',
         }}
       >
-        <NavDrawerHeader>
-          <Tooltip content={isExpanded ? '折叠导航' : '展开导航'} relationship="label">
-            <Button
-              appearance="subtle"
-              icon={isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
-              onClick={() => setIsExpanded(!isExpanded)}
-              style={{
-                width: '100%',
-                justifyContent: isExpanded ? 'flex-start' : 'center',
-              }}
-            >
-              <span style={{
-                opacity: isExpanded ? 1 : 0,
-                maxWidth: isExpanded ? '200px' : '0px',
-                overflow: 'hidden',
-                transition: 'opacity 0.3s ease, max-width 0.3s ease',
-                display: 'inline-block',
-                whiteSpace: 'nowrap',
-              }}>折叠</span>
-            </Button>
-          </Tooltip>
-        </NavDrawerHeader>
+        {isSelected && <div className={styles.activeIndicator} />}
+        <div className={styles.navItemIcon}>{icon}</div>
+        <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
+          {label}
+        </span>
+      </NavItem>
+    );
+  };
 
-        <NavDrawerBody>
-          {/* Logo */}
+  return (
+    <div className={styles.root}>
+      {/* Global Background */}
+      <div
+        className={styles.globalBackground}
+        style={{ backgroundImage: bingImage ? `url(${bingImage})` : undefined }}
+      />
+
+      <NavDrawer
+        selectedValue={selectedValue}
+        onNavItemSelect={handleNavClick}
+        open={true}
+        type="inline"
+        className={mergeClasses(
+          styles.navDrawer,
+          isExpanded ? styles.navDrawerExpanded : styles.navDrawerCollapsed
+        )}
+      >
+        <NavDrawerHeader>
           <div
-            style={{
-              padding: '16px 12px 20px 12px',
-              fontSize: tokens.fontSizeBase600,
-              fontWeight: tokens.fontWeightBold,
-              color: tokens.colorNeutralForeground1,
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textAlign: isExpanded ? 'left' : 'center',
-              minHeight: '48px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: isExpanded ? 'flex-start' : 'center',
-            }}
+            className={mergeClasses(
+              styles.logo,
+              isExpanded ? styles.logoExpanded : undefined
+            )}
           >
             {isExpanded ? 'Peng Blog' : 'PB'}
           </div>
+        </NavDrawerHeader>
 
-          {/* 主导航 */}
-          <NavItem value="/" onClick={handleNavClick}>
-            <HomeRegular />
-            <span style={{
-              opacity: isExpanded ? 1 : 0,
-              maxWidth: isExpanded ? '200px' : '0px',
-              overflow: 'hidden',
-              transition: 'opacity 0.3s ease, max-width 0.3s ease',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-            }}>主页</span>
-          </NavItem>
-          <NavItem value="/posts" onClick={handleNavClick}>
-            <DocumentRegular />
-            <span style={{
-              opacity: isExpanded ? 1 : 0,
-              maxWidth: isExpanded ? '200px' : '0px',
-              overflow: 'hidden',
-              transition: 'opacity 0.3s ease, max-width 0.3s ease',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-            }}>文章</span>
-          </NavItem>
-          <NavItem value="/categories" onClick={handleNavClick}>
-            <FolderRegular />
-            <span style={{
-              opacity: isExpanded ? 1 : 0,
-              maxWidth: isExpanded ? '200px' : '0px',
-              overflow: 'hidden',
-              transition: 'opacity 0.3s ease, max-width 0.3s ease',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-            }}>分类</span>
-          </NavItem>
-          <NavItem value="/tags" onClick={handleNavClick}>
-            <TagRegular />
-            <span style={{
-              opacity: isExpanded ? 1 : 0,
-              maxWidth: isExpanded ? '200px' : '0px',
-              overflow: 'hidden',
-              transition: 'opacity 0.3s ease, max-width 0.3s ease',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-            }}>标签</span>
-          </NavItem>
-          <NavItem value="/search" onClick={handleNavClick}>
-            <SearchRegular />
-            <span style={{
-              opacity: isExpanded ? 1 : 0,
-              maxWidth: isExpanded ? '200px' : '0px',
-              overflow: 'hidden',
-              transition: 'opacity 0.3s ease, max-width 0.3s ease',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-            }}>搜索</span>
-          </NavItem>
+        <NavDrawerBody>
+          {renderNavItem('主页', <HomeRegular />, '/')}
+          {renderNavItem('文章', <DocumentRegular />, '/posts')}
+          {renderNavItem('分类', <FolderRegular />, '/categories')}
+          {renderNavItem('标签', <TagRegular />, '/tags')}
+          {renderNavItem('搜索', <SearchRegular />, '/search')}
 
-          {/* 管理后台（仅管理员） */}
           {hasAdminPermission && (
             <>
-              <NavSectionHeader style={{
-                opacity: isExpanded ? 1 : 0,
-                maxHeight: isExpanded ? '100px' : '0px',
-                overflow: 'hidden',
-                transition: 'opacity 0.3s ease, max-height 0.3s ease',
-              }}>管理</NavSectionHeader>
-              <NavItem value="/admin" onClick={handleNavClick}>
-                <SettingsRegular />
-                <span style={{
-                  opacity: isExpanded ? 1 : 0,
-                  maxWidth: isExpanded ? '200px' : '0px',
-                  overflow: 'hidden',
-                  transition: 'opacity 0.3s ease, max-width 0.3s ease',
-                  display: 'inline-block',
-                  whiteSpace: 'nowrap',
-                }}>管理后台</span>
-              </NavItem>
+              <Divider style={{ margin: '8px 0', opacity: isExpanded ? 1 : 0 }} />
+               {isExpanded && <NavSectionHeader>管理</NavSectionHeader>}
+               {renderNavItem('管理后台', <SettingsRegular />, '/admin')}
             </>
           )}
+        </NavDrawerBody>
 
-          <Divider style={{ margin: '16px 0' }} />
+        <NavDrawerFooter className={styles.footer}>
+          <Divider />
 
-          {/* 用户信息 */}
+           {/* Theme Toggle */}
+           <Tooltip content={mode === 'light' ? '深色模式' : '浅色模式'} relationship="label" positioning="after">
+            <button
+              className={styles.footerItem}
+              onClick={toggleTheme}
+              style={{
+                justifyContent: isExpanded ? 'flex-start' : 'center',
+                paddingLeft: isExpanded ? '16px' : '0',
+                paddingRight: isExpanded ? '10px' : '0', // Ensure symmetry in collapsed state
+              }}
+            >
+              <div className={styles.navItemIcon}>
+                {mode === 'light' ? <WeatherMoonRegular /> : <WeatherSunnyFilled />}
+              </div>
+              <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
+                {mode === 'light' ? '深色模式' : '浅色模式'}
+              </span>
+            </button>
+          </Tooltip>
+
+          {/* User Profile / Login */}
           {isAuthenticated && currentUser ? (
             <>
               <div
+                className={styles.footerItem}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: isExpanded ? '12px' : '8px',
-                  backgroundColor: tokens.colorNeutralBackground2,
-                  borderRadius: tokens.borderRadiusMedium,
-                  marginBottom: '12px',
                   justifyContent: isExpanded ? 'flex-start' : 'center',
-                  minHeight: '48px',
+                  paddingLeft: isExpanded ? '16px' : '0',
+                  paddingRight: isExpanded ? '10px' : '0',
+                  cursor: 'default', // Profile info usually static, but keeps hover style for consistency
                 }}
               >
-                <Avatar 
-                  name={currentUser.username} 
-                  size={32} 
-                  icon={<PersonRegular />} 
-                  color="brand" 
-                  style={{ 
-                    minWidth: '32px',
-                    minHeight: '32px'
-                  }}
-                />
-                <div style={{ 
-                  flex: 1, 
-                  opacity: isExpanded ? 1 : 0,
-                  width: isExpanded ? 'auto' : 0,
-                  overflow: 'hidden',
-                  transition: 'opacity 0.3s ease, width 0.3s ease',
-                  display: 'inline-block',
-                }}>
-                  <div
-                    style={{
-                      fontSize: tokens.fontSizeBase300,
-                      fontWeight: tokens.fontWeightSemibold,
-                      color: tokens.colorNeutralForeground1,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {currentUser.username}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: tokens.fontSizeBase200,
-                      color: tokens.colorNeutralForeground3,
-                    }}
-                  >
+                <div className={styles.navItemIcon}>
+                  <Avatar name={currentUser.username} size={32} color="brand" />
+                </div>
+                <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
+                  <div style={{ lineHeight: '1.2', fontWeight: tokens.fontWeightSemibold }}>{currentUser.username}</div>
+                  <div style={{ lineHeight: '1.2', fontSize: tokens.fontSizeBase200, color: tokens.colorNeutralForeground3 }}>
                     {hasAdminPermission ? '管理员' : '用户'}
                   </div>
-                </div>
+                </span>
               </div>
 
-              <Tooltip content="登出" relationship="label" visible={!isExpanded ? undefined : false}>
-                <Button
-                  appearance="subtle"
-                  icon={<SignOutRegular />}
+              <Tooltip content="登出" relationship="label" positioning="after">
+                <button
+                  className={styles.footerItem}
                   onClick={handleLogout}
                   style={{
-                    width: '100%',
                     justifyContent: isExpanded ? 'flex-start' : 'center',
+                    paddingLeft: isExpanded ? '16px' : '0',
+                    paddingRight: isExpanded ? '10px' : '0',
                   }}
                 >
-                  <span style={{
-                    opacity: isExpanded ? 1 : 0,
-                    maxWidth: isExpanded ? '200px' : '0px',
-                    overflow: 'hidden',
-                    transition: 'opacity 0.3s ease, max-width 0.3s ease',
-                    display: 'inline-block',
-                    whiteSpace: 'nowrap',
-                  }}>登出</span>
-                </Button>
+                  <div className={styles.navItemIcon}><SignOutRegular /></div>
+                  <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>登出</span>
+                </button>
               </Tooltip>
             </>
           ) : (
-            <Tooltip content="登录" relationship="label" visible={!isExpanded ? undefined : false}>
-              <Button
-                appearance="primary"
-                icon={<ArrowEnterRegular />}
+             <Tooltip content="登录" relationship="label" positioning="after">
+              <button
+                className={styles.footerItem}
                 onClick={() => navigate('/login')}
                 style={{
-                  width: '100%',
                   justifyContent: isExpanded ? 'flex-start' : 'center',
+                  paddingLeft: isExpanded ? '16px' : '0',
+                  paddingRight: isExpanded ? '10px' : '0',
                 }}
               >
-                <span style={{
-                  opacity: isExpanded ? 1 : 0,
-                  maxWidth: isExpanded ? '200px' : '0px',
-                  overflow: 'hidden',
-                  transition: 'opacity 0.3s ease, max-width 0.3s ease',
-                  display: 'inline-block',
-                  whiteSpace: 'nowrap',
-                }}>登录</span>
-              </Button>
+                <div className={styles.navItemIcon}><ArrowEnterRegular /></div>
+                <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>登录</span>
+              </button>
             </Tooltip>
           )}
 
-          {/* 主题切换 */}
-          <Tooltip
-            content={mode === 'light' ? '深色模式' : '浅色模式'}
-            relationship="label"
-            visible={!isExpanded ? undefined : false}
-          >
-            <Button
-              appearance="subtle"
-              icon={mode === 'light' ? <WeatherMoonRegular /> : <WeatherSunnyFilled />}
-              onClick={toggleTheme}
-              style={{
-                width: '100%',
-                justifyContent: isExpanded ? 'flex-start' : 'center',
-              }}
-            >
-              <span style={{
-                opacity: isExpanded ? 1 : 0,
-                maxWidth: isExpanded ? '200px' : '0px',
-                overflow: 'hidden',
-                transition: 'opacity 0.3s ease, max-width 0.3s ease',
-                display: 'inline-block',
-                whiteSpace: 'nowrap',
-              }}>{mode === 'light' ? '深色模式' : '浅色模式'}</span>
-            </Button>
-          </Tooltip>
-        </NavDrawerBody>
+           {/* Collapse Toggle */}
+           <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+            <Tooltip content={isExpanded ? '折叠' : '展开'} relationship="label" positioning="after">
+              <button
+                className={styles.footerItem}
+                onClick={() => setIsExpanded(!isExpanded)}
+                style={{
+                  justifyContent: isExpanded ? 'flex-start' : 'center',
+                  paddingLeft: isExpanded ? '16px' : '0',
+                  paddingRight: isExpanded ? '10px' : '0',
+                }}
+              >
+                <div className={styles.navItemIcon}>
+                   {isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
+                </div>
+                 <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>折叠导航</span>
+              </button>
+            </Tooltip>
+          </div>
+        </NavDrawerFooter>
       </NavDrawer>
 
       {/* 内容区域 */}
-      <main style={styles.contentArea}>{children}</main>
+      <main className={styles.contentArea}>{children}</main>
     </div>
   );
 }

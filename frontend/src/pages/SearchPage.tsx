@@ -12,6 +12,8 @@ import {
   Title2,
   Spinner,
   tokens,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   SearchRegular,
@@ -22,7 +24,145 @@ import { postsApi } from '../api';
 import { useToast } from '../components/ui/Toast';
 import type { Post } from '../types';
 
+const useStyles = makeStyles({
+  container: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '32px',
+  },
+  header: {
+    marginBottom: '32px',
+  },
+  subtitle: {
+    color: tokens.colorNeutralForeground2,
+    marginTop: '8px',
+  },
+  searchBoxContainer: {
+    marginBottom: '32px',
+  },
+  searchInput: {
+    width: '100%',
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '48px',
+    animationName: 'fadeIn',
+    animationDuration: '0.3s',
+    animationTimingFunction: 'ease-in',
+  },
+  loadingText: {
+    marginLeft: '16px',
+  },
+  successContainer: {
+    padding: '16px',
+    marginBottom: '24px',
+    backgroundColor: tokens.colorPaletteGreenBackground1,
+    border: `1px solid ${tokens.colorPaletteGreenBorder1}`,
+    borderRadius: tokens.borderRadiusLarge,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    animationName: 'slideDown',
+    animationDuration: '0.4s',
+    animationTimingFunction: 'ease-out',
+  },
+  successIcon: {
+    fontSize: '20px',
+  },
+  successText: {
+    color: tokens.colorPaletteGreenForeground1,
+    fontWeight: tokens.fontWeightMedium,
+  },
+  emptyCard: {
+    padding: '48px',
+    textAlign: 'center',
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  emptyText: {
+    fontSize: '16px',
+    color: tokens.colorNeutralForeground2,
+  },
+  emptySubtext: {
+    marginTop: '8px',
+    color: tokens.colorNeutralForeground3,
+  },
+  resultsHeader: {
+    marginBottom: '16px',
+  },
+  resultsCount: {
+    color: tokens.colorNeutralForeground2,
+  },
+  resultsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  resultCard: {
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    borderRadius: tokens.borderRadiusLarge,
+    ':hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: tokens.shadow8,
+    },
+  },
+  resultTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+    fontSize: '18px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+  },
+  resultDescription: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+    color: tokens.colorNeutralForeground2,
+    lineHeight: '1.6',
+  },
+  resultMeta: {
+    display: 'flex',
+    gap: '16px',
+    marginTop: '12px',
+    alignItems: 'center',
+  },
+  metaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    color: tokens.colorNeutralForeground3,
+  },
+  metaText: {
+    fontSize: '14px',
+  },
+  tipsCard: {
+    padding: '32px',
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  tipsTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: '16px',
+  },
+  tipsList: {
+    margin: '0',
+    paddingLeft: '20px',
+    color: tokens.colorNeutralForeground2,
+  },
+  highlight: {
+    backgroundColor: tokens.colorBrandBackground2,
+    color: tokens.colorBrandForeground1,
+    padding: '2px 4px',
+    borderRadius: '2px',
+  },
+});
+
 export function SearchPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
   const toast = useToast();
   const [query, setQuery] = useState('');
@@ -92,12 +232,7 @@ export function SearchPage() {
       regex.test(part) ? (
         <mark
           key={index}
-          style={{
-            backgroundColor: 'var(--colorBrandBackground1)',
-            color: 'var(--colorBrandForeground1)',
-            padding: '2px 4px',
-            borderRadius: '2px',
-          }}
+          className={styles.highlight}
         >
           {part}
         </mark>
@@ -108,16 +243,16 @@ export function SearchPage() {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '32px' }}>
+    <div className={styles.container}>
+      <div className={styles.header}>
         <Title2>搜索文章</Title2>
-        <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
-          输入关键词搜索相关内容
-        </Body1>
+        <div className={styles.subtitle}>
+          <Body1>输入关键词搜索相关内容</Body1>
+        </div>
       </div>
 
       {/* 搜索框 */}
-      <div style={{ marginBottom: '32px' }}>
+      <div className={styles.searchBoxContainer}>
         <Input
           size="large"
           placeholder="搜索文章标题、内容..."
@@ -125,38 +260,23 @@ export function SearchPage() {
           onChange={(_, data) => setQuery(data.value)}
           contentBefore={<SearchRegular />}
           autoFocus
-          style={{ width: '100%' }}
+          className={styles.searchInput}
         />
       </div>
 
       {/* 搜索状态 */}
       {searching && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          padding: '48px',
-          animation: 'fadeIn 0.3s ease-in'
-        }}>
+        <div className={styles.loadingContainer}>
           <Spinner size="large" />
-          <Body1 style={{ marginLeft: '16px' }}>搜索中...</Body1>
+          <Body1 className={styles.loadingText}>搜索中...</Body1>
         </div>
       )}
 
       {/* 搜索成功提示 */}
       {showSuccessAnimation && !searching && hasSearched && results.length > 0 && (
-        <div style={{
-          padding: '16px',
-          marginBottom: '24px',
-          backgroundColor: 'var(--colorSuccessBackground1)',
-          border: '1px solid var(--colorSuccessStroke1)',
-          borderRadius: tokens.borderRadiusLarge,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          animation: 'slideDown 0.4s ease-out'
-        }}>
-          <span style={{ fontSize: '20px' }}>✨</span>
-          <Body1 style={{ color: 'var(--colorSuccessForeground1)', fontWeight: '500' }}>
+        <div className={styles.successContainer}>
+          <span className={styles.successIcon}>✨</span>
+          <Body1 className={styles.successText}>
             找到 <strong>{results.length}</strong> 篇相关文章
           </Body1>
         </div>
@@ -166,104 +286,51 @@ export function SearchPage() {
       {!searching && hasSearched && (
         <>
           {results.length === 0 ? (
-            <Card style={{ padding: '48px', textAlign: 'center', borderRadius: tokens.borderRadiusLarge }}>
-              <Body1 style={{ fontSize: '16px', color: 'var(--colorNeutralForeground2)' }}>
+            <Card className={styles.emptyCard}>
+              <Body1 className={styles.emptyText}>
                 未找到与 "{query}" 相关的文章
               </Body1>
-              <Body1 style={{ marginTop: '8px', color: 'var(--colorNeutralForeground3)' }}>
+              <Body1 className={styles.emptySubtext}>
                 请尝试其他关键词
               </Body1>
             </Card>
           ) : (
             <>
-              <div style={{ marginBottom: '16px' }}>
-                <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+              <div className={styles.resultsHeader}>
+                <Body1 className={styles.resultsCount}>
                   找到 <strong>{results.length}</strong> 篇文章
                 </Body1>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className={styles.resultsList}>
                 {results.map((post) => (
                   <Card
                     key={post.id}
-                    style={{
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      borderRadius: tokens.borderRadiusLarge,
-                    }}
+                    className={styles.resultCard}
                     onClick={() => navigate(`/post/${post.id}`)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow8)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow4)';
-                    }}
                   >
                     <CardHeader
                       header={
-                        <Body1
-                          style={{
-                            fontWeight: '600',
-                            fontSize: '18px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                          }}
-                        >
+                        <Body1 className={styles.resultTitle}>
                           {highlightMatch(post.title, query)}
                         </Body1>
                       }
                       description={
                         <div>
-                          <Body1
-                            style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: 'vertical',
-                              color: 'var(--colorNeutralForeground2)',
-                              lineHeight: '1.6',
-                            }}
-                          >
+                          <Body1 className={styles.resultDescription}>
                             {highlightMatch(post.content.substring(0, 200), query)}
                           </Body1>
 
-                          <div
-                            style={{
-                              display: 'flex',
-                              gap: '16px',
-                              marginTop: '12px',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                color: 'var(--colorNeutralForeground3)',
-                              }}
-                            >
+                          <div className={styles.resultMeta}>
+                            <div className={styles.metaItem}>
                               <CalendarRegular fontSize={14} />
-                              <Body1 style={{ fontSize: '14px' }}>
+                              <Body1 className={styles.metaText}>
                                 {formatDate(post.created_at)}
                               </Body1>
                             </div>
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                color: 'var(--colorNeutralForeground3)',
-                              }}
-                            >
+                            <div className={styles.metaItem}>
                               <EyeRegular fontSize={14} />
-                              <Body1 style={{ fontSize: '14px' }}>{post.views}</Body1>
+                              <Body1 className={styles.metaText}>{post.views}</Body1>
                             </div>
                           </div>
                         </div>
@@ -279,11 +346,11 @@ export function SearchPage() {
 
       {/* 搜索提示 */}
       {!hasSearched && !query && (
-        <Card style={{ padding: '32px', borderRadius: tokens.borderRadiusLarge }}>
-          <Body1 style={{ fontWeight: '600', marginBottom: '16px' }}>
+        <Card className={styles.tipsCard}>
+          <Body1 className={styles.tipsTitle}>
             搜索提示
           </Body1>
-          <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--colorNeutralForeground2)' }}>
+          <ul className={styles.tipsList}>
             <li>搜索文章标题和内容</li>
             <li>支持关键词模糊匹配</li>
             <li>搜索结果会高亮匹配内容</li>

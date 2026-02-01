@@ -1,4 +1,4 @@
-/* App 组件样式 */
+/* Global styles and animations */
 
 .app {
   display: flex;
@@ -7,268 +7,44 @@
   background-color: #f8fafc;
 }
 
-/* 页面容器 */
-.login-page,
-.register-page {
-  min-height: calc(100vh - 120px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.admin-page,
-.about-page {
-  min-height: calc(100vh - 120px);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 2rem;
-}
-
-/* 登录页面样式 */
-.login-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1rem;
-}
-
-.login-page .login-form {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  padding: 2.5rem;
-  width: 100%;
-  max-width: 400px;
-}
-
-/* 注册页面样式 */
-.register-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.register-page > div {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  padding: 2.5rem;
-  width: 100%;
-  max-width: 500px;
-  text-align: center;
-}
-
-.register-page h2 {
-  margin-bottom: 1rem;
-  color: #1e293b;
-}
-
-.register-page p {
-  color: #64748b;
-  margin-bottom: 1.5rem;
-}
-
-.register-page a {
-  display: inline-block;
-  margin-top: 1rem;
-  color: #667eea;
-  font-weight: 500;
-}
-
-/* 管理页面样式 */
-.admin-page {
-  padding: 2rem 1rem;
-}
-
-.admin-page > div {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  width: 100%;
-  max-width: 900px;
-}
-
-.admin-page h2 {
-  margin-bottom: 1.5rem;
-  color: #1e293b;
-}
-
-.admin-page p {
-  color: #64748b;
-}
-
-/* 关于页面样式 */
-.about-page {
-  padding: 2rem 1rem;
-}
-
-.about-page > div {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  width: 100%;
-  max-width: 800px;
-}
-
-.about-page h2 {
-  margin-bottom: 1.5rem;
-  color: #1e293b;
-}
-
-.about-page p {
-  color: #64748b;
-  line-height: 1.8;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .login-page .login-form,
-  .register-page > div,
-  .admin-page > div,
-  .about-page > div {
-    padding: 1.5rem;
-  }
-
-  .login-page,
-  .register-page {
-    min-height: calc(100vh - 100px);
-  }
-}
-
-/* 动画关键帧 */
+/* Animations referenced by makeStyles */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
 }
 
 @keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-/* 按钮微交互增强 */
-button,
-a {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-button:hover,
-a:hover {
-  transform: translateY(-1px);
-}
-
-button:active,
-a:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* 卡片悬停效果增强 */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
-}
-
-/* 链接下划线动画 */
-.link-underline {
-  position: relative;
-}
-
-.link-underline::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  bottom: -2px;
-  left: 0;
-  background-color: currentColor;
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.3s ease-out;
-}
-
-.link-underline:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
-}
-
-/* 输入框聚焦动画 */
-input:focus,
-textarea:focus {
-  animation: inputFocus 0.3s ease-out;
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 @keyframes inputFocus {
-  0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  }
-  100% {
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+  100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
 }

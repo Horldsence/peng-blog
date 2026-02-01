@@ -8,6 +8,7 @@ import {
   Title2,
   Body1,
   tokens,
+  makeStyles,
 } from '@fluentui/react-components';
 import {
   ArrowLeftRegular,
@@ -17,7 +18,78 @@ import {
 import { authApi } from '../api';
 import type { UserCreateRequest } from '../types';
 
+const useStyles = makeStyles({
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colorNeutralBackground2,
+    padding: '24px',
+  },
+  card: {
+    width: '100%',
+    maxWidth: '420px',
+    borderRadius: tokens.borderRadiusLarge,
+    padding: '32px',
+  },
+  headerContent: {
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    color: tokens.colorNeutralForeground2,
+    marginTop: '8px',
+  },
+  errorBox: {
+    padding: '12px 16px',
+    marginBottom: '24px',
+    backgroundColor: tokens.colorStatusDangerBackground1,
+    border: `1px solid ${tokens.colorStatusDangerBorder1}`,
+    borderRadius: tokens.borderRadiusMedium,
+    color: tokens.colorStatusDangerForeground1,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  fieldLabel: {
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: '8px',
+    display: 'block',
+  },
+  input: {
+    width: '100%',
+  },
+  submitButton: {
+    marginTop: '8px',
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '24px',
+  },
+  footerText: {
+    color: tokens.colorNeutralForeground2,
+  },
+  link: {
+    color: tokens.colorBrandForeground1,
+    textDecoration: 'none',
+    fontWeight: tokens.fontWeightSemibold,
+    ':hover': {
+      textDecoration: 'underline',
+    },
+  },
+  backButtonContainer: {
+    textAlign: 'center',
+    marginTop: '16px',
+  },
+});
+
 export function RegisterPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserCreateRequest>({
     username: '',
@@ -66,29 +138,13 @@ export function RegisterPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--colorNeutralBackground2)',
-        padding: '24px',
-      }}
-    >
-      <Card
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          borderRadius: tokens.borderRadiusLarge,
-          padding: '32px',
-        }}
-      >
+    <div className={styles.container}>
+      <Card className={styles.card}>
         <CardHeader
           header={
-            <div style={{ textAlign: 'center' }}>
+            <div className={styles.headerContent}>
               <Title2>创建账户</Title2>
-              <Body1 style={{ color: 'var(--colorNeutralForeground2)', marginTop: '8px' }}>
+              <Body1 className={styles.headerSubtitle}>
                 加入 Peng Blog，开始你的写作之旅
               </Body1>
             </div>
@@ -97,19 +153,7 @@ export function RegisterPage() {
 
         {/* 错误提示 */}
         {error && (
-          <div
-            style={{
-              padding: '12px 16px',
-              marginBottom: '24px',
-              backgroundColor: 'var(--colorStatusDangerBackground1)',
-              border: '1px solid var(--colorStatusDangerBorder1)',
-              borderRadius: tokens.borderRadiusMedium,
-              color: 'var(--colorStatusDangerForeground1)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
+          <div className={styles.errorBox}>
             <Body1>{error}</Body1>
             <Button
               appearance="transparent"
@@ -122,11 +166,11 @@ export function RegisterPage() {
         )}
 
         {/* 注册表单 */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+            <label className={styles.fieldLabel}>
               用户名
-            </Body1>
+            </label>
             <Input
               name="username"
               placeholder="至少3个字符"
@@ -136,7 +180,7 @@ export function RegisterPage() {
                 if (error) setError('');
               }}
               contentBefore={<PersonRegular />}
-              style={{ width: '100%' }}
+              className={styles.input}
               size="large"
               disabled={loading}
               autoComplete="username"
@@ -144,9 +188,9 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+            <label className={styles.fieldLabel}>
               密码
-            </Body1>
+            </label>
             <Input
               type="password"
               name="password"
@@ -157,7 +201,7 @@ export function RegisterPage() {
                 if (error) setError('');
               }}
               contentBefore={<LockClosedRegular />}
-              style={{ width: '100%' }}
+              className={styles.input}
               size="large"
               disabled={loading}
               autoComplete="new-password"
@@ -165,16 +209,16 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+            <label className={styles.fieldLabel}>
               确认密码
-            </Body1>
+            </label>
             <Input
               type="password"
               placeholder="再次输入密码"
               value={confirmPassword}
               onChange={(_, data) => setConfirmPassword(data.value)}
               contentBefore={<LockClosedRegular />}
-              style={{ width: '100%' }}
+              className={styles.input}
               size="large"
               disabled={loading}
               autoComplete="new-password"
@@ -186,23 +230,19 @@ export function RegisterPage() {
             appearance="primary"
             size="large"
             disabled={loading}
-            style={{ marginTop: '8px' }}
+            className={styles.submitButton}
           >
             {loading ? '注册中...' : '注册'}
           </Button>
         </form>
 
         {/* 登录链接 */}
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+        <div className={styles.footer}>
+          <Body1 className={styles.footerText}>
             已有账户？{' '}
             <Link
               to="/login"
-              style={{
-                color: 'var(--colorBrandForeground1)',
-                textDecoration: 'none',
-                fontWeight: '600',
-              }}
+              className={styles.link}
             >
               立即登录
             </Link>
@@ -210,7 +250,7 @@ export function RegisterPage() {
         </div>
 
         {/* 返回按钮 */}
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+        <div className={styles.backButtonContainer}>
           <Button
             appearance="transparent"
             icon={<ArrowLeftRegular />}

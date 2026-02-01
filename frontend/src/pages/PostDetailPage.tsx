@@ -14,6 +14,9 @@ import {
   Spinner,
   Divider,
   Textarea,
+  makeStyles,
+  tokens,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   ArrowLeftRegular,
@@ -28,7 +31,140 @@ import { postsApi, authApi, statsApi } from '../api';
 import type { Post, Comment } from '../types';
 import 'highlight.js/styles/github-dark.css';
 
+const useStyles = makeStyles({
+  container: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '32px 0',
+  },
+  backButton: {
+    marginBottom: '16px',
+  },
+  postCard: {
+    marginBottom: '32px',
+    padding: '24px',
+  },
+  title: {
+    fontSize: '36px',
+    fontWeight: '600',
+  },
+  metaContainer: {
+    display: 'flex',
+    gap: '16px',
+    marginTop: '16px',
+  },
+  metaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  editContainer: {
+    marginLeft: 'auto',
+    display: 'flex',
+    gap: '8px',
+  },
+  content: {
+    padding: '24px 0',
+    lineHeight: '1.8',
+    fontSize: '16px',
+  },
+  commentInputContainer: {
+    marginBottom: '24px',
+  },
+  commentTextarea: {
+    marginBottom: '12px',
+    minHeight: '100px',
+    width: '100%',
+  },
+  loginPrompt: {
+    marginBottom: '24px',
+    padding: '16px',
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+  commentList: {
+    marginTop: '16px',
+  },
+  emptyComments: {
+    textAlign: 'center',
+    padding: '32px',
+    color: tokens.colorNeutralForeground3,
+  },
+  commentItem: {
+    padding: '16px 0',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  commentHeader: {
+    marginBottom: '8px',
+  },
+  commentUser: {
+    fontWeight: '600',
+  },
+  commentDate: {
+    marginLeft: '8px',
+    color: tokens.colorNeutralForeground3,
+  },
+  commentContent: {
+    lineHeight: '1.6',
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '48px',
+  },
+  errorContainer: {
+    textAlign: 'center',
+    padding: '48px',
+  },
+  // Markdown Styles
+  mdH1: { fontSize: '32px', fontWeight: '600', marginTop: '32px', marginBottom: '16px' },
+  mdH2: { fontSize: '28px', fontWeight: '600', marginTop: '28px', marginBottom: '14px' },
+  mdH3: { fontSize: '24px', fontWeight: '600', marginTop: '24px', marginBottom: '12px' },
+  mdP: { marginBottom: '16px' },
+  mdInlineCode: {
+    backgroundColor: tokens.colorNeutralBackground1Hover,
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '14px',
+    fontFamily: 'monospace',
+  },
+  mdBlockCode: {
+    display: 'block',
+    backgroundColor: '#0d1117',
+    color: '#c9d1d9',
+    padding: '16px',
+    borderRadius: '8px',
+    overflow: 'auto',
+    fontSize: '14px',
+    fontFamily: 'monospace',
+    marginBottom: '16px',
+  },
+  mdPre: {
+    backgroundColor: '#0d1117',
+    padding: '16px',
+    borderRadius: '8px',
+    overflow: 'auto',
+    marginBottom: '16px',
+  },
+  mdLink: {
+    color: tokens.colorBrandForeground1,
+    textDecoration: 'underline',
+  },
+  mdList: {
+    marginBottom: '16px',
+    paddingLeft: '24px',
+  },
+  mdBlockquote: {
+    borderLeft: `4px solid ${tokens.colorBrandStroke1}`,
+    paddingLeft: '16px',
+    marginLeft: '0',
+    fontStyle: 'italic',
+    color: tokens.colorNeutralForeground2,
+    marginBottom: '16px',
+  },
+});
+
 export function PostDetailPage() {
+  const styles = useStyles();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [post, setPost] = useState<Post | null>(null);
@@ -107,7 +243,7 @@ export function PostDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+      <div className={styles.loadingContainer}>
         <Spinner size="large" />
       </div>
     );
@@ -115,7 +251,7 @@ export function PostDetailPage() {
 
   if (!post) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px' }}>
+      <div className={styles.errorContainer}>
         <Body1>文章不存在</Body1>
         <Button appearance="primary" onClick={() => navigate('/')}>
           返回首页
@@ -125,37 +261,37 @@ export function PostDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className={styles.container}>
       {/* 返回按钮 */}
       <Button
         appearance="transparent"
         icon={<ArrowLeftRegular />}
         onClick={() => navigate(-1)}
-        style={{ marginBottom: '16px' }}
+        className={styles.backButton}
       >
         返回
       </Button>
 
       {/* 文章卡片 */}
-      <Card style={{ marginBottom: '32px' }}>
+      <Card className={styles.postCard}>
         <CardHeader
           header={
-            <Title1 style={{ fontSize: '36px', fontWeight: '600' }}>
+            <Title1 className={styles.title}>
               {post.title}
             </Title1>
           }
           description={
-            <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className={styles.metaContainer}>
+              <div className={styles.metaItem}>
                 <CalendarRegular fontSize={14} />
                 <Caption1>{formatDate(post.created_at)}</Caption1>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div className={styles.metaItem}>
                 <EyeRegular fontSize={14} />
                 <Caption1>{post.views} 次阅读</Caption1>
               </div>
               {isAuthenticated && (
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                <div className={styles.editContainer}>
                   <Button
                     size="small"
                     appearance="transparent"
@@ -173,96 +309,26 @@ export function PostDetailPage() {
         <Divider />
 
         {/* Markdown 内容 */}
-        <div
-          style={{
-            padding: '24px 0',
-            lineHeight: '1.8',
-            fontSize: '16px',
-          }}
-        >
+        <div className={styles.content}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
             components={{
-              h1: ({ node, ...props }) => (
-                <h1 style={{ fontSize: '32px', fontWeight: '600', marginTop: '32px', marginBottom: '16px' }} {...props} />
-              ),
-              h2: ({ node, ...props }) => (
-                <h2 style={{ fontSize: '28px', fontWeight: '600', marginTop: '28px', marginBottom: '14px' }} {...props} />
-              ),
-              h3: ({ node, ...props }) => (
-                <h3 style={{ fontSize: '24px', fontWeight: '600', marginTop: '24px', marginBottom: '12px' }} {...props} />
-              ),
-              p: ({ node, ...props }) => (
-                <p style={{ marginBottom: '16px' }} {...props} />
-              ),
+              h1: ({ node, ...props }) => <h1 className={styles.mdH1} {...props} />,
+              h2: ({ node, ...props }) => <h2 className={styles.mdH2} {...props} />,
+              h3: ({ node, ...props }) => <h3 className={styles.mdH3} {...props} />,
+              p: ({ node, ...props }) => <p className={styles.mdP} {...props} />,
               code: ({ node, inline, ...props }: any) =>
                 inline ? (
-                  <code
-                    style={{
-                      backgroundColor: 'var(--colorNeutralBackground1Hover)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      fontFamily: 'monospace',
-                    }}
-                    {...props}
-                  />
+                  <code className={styles.mdInlineCode} {...props} />
                 ) : (
-                  <code
-                    style={{
-                      display: 'block',
-                      backgroundColor: '#0d1117',
-                      color: '#c9d1d9',
-                      padding: '16px',
-                      borderRadius: '8px',
-                      overflow: 'auto',
-                      fontSize: '14px',
-                      fontFamily: 'monospace',
-                      marginBottom: '16px',
-                    }}
-                    {...props}
-                  />
+                  <code className={styles.mdBlockCode} {...props} />
                 ),
-              pre: ({ node, ...props }) => (
-                <pre
-                  style={{
-                    backgroundColor: '#0d1117',
-                    padding: '16px',
-                    borderRadius: '8px',
-                    overflow: 'auto',
-                    marginBottom: '16px',
-                  }}
-                  {...props}
-                />
-              ),
-              a: ({ node, ...props }) => (
-                <a
-                  style={{ color: 'var(--colorBrandForeground1)', textDecoration: 'underline' }}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  {...props}
-                />
-              ),
-              ul: ({ node, ...props }) => (
-                <ul style={{ marginBottom: '16px', paddingLeft: '24px' }} {...props} />
-              ),
-              ol: ({ node, ...props }) => (
-                <ol style={{ marginBottom: '16px', paddingLeft: '24px' }} {...props} />
-              ),
-              blockquote: ({ node, ...props }) => (
-                <blockquote
-                  style={{
-                    borderLeft: '4px solid var(--colorBrandStroke1)',
-                    paddingLeft: '16px',
-                    marginLeft: 0,
-                    fontStyle: 'italic',
-                    color: 'var(--colorNeutralForeground2)',
-                    marginBottom: '16px',
-                  }}
-                  {...props}
-                />
-              ),
+              pre: ({ node, ...props }) => <pre className={styles.mdPre} {...props} />,
+              a: ({ node, ...props }) => <a className={styles.mdLink} target="_blank" rel="noopener noreferrer" {...props} />,
+              ul: ({ node, ...props }) => <ul className={styles.mdList} {...props} />,
+              ol: ({ node, ...props }) => <ol className={styles.mdList} {...props} />,
+              blockquote: ({ node, ...props }) => <blockquote className={styles.mdBlockquote} {...props} />,
             }}
           >
             {post.content}
@@ -271,7 +337,7 @@ export function PostDetailPage() {
       </Card>
 
       {/* 评论区 */}
-      <Card>
+      <Card className={styles.postCard}>
         <CardHeader
           header={<Body1 style={{ fontSize: '20px', fontWeight: '600' }}>评论</Body1>}
           description={<Caption1>{comments.length} 条评论</Caption1>}
@@ -279,19 +345,19 @@ export function PostDetailPage() {
 
         {/* 评论输入 */}
         {isAuthenticated ? (
-          <div style={{ marginBottom: '24px' }}>
+          <div className={styles.commentInputContainer}>
             <Textarea
               placeholder="写下你的评论..."
               value={commentContent}
               onChange={(_, data) => setCommentContent(data.value)}
-              style={{ marginBottom: '12px', minHeight: '100px' }}
+              className={styles.commentTextarea}
             />
             <Button appearance="primary" onClick={handleCommentSubmit} disabled={!commentContent.trim()}>
               发表评论
             </Button>
           </div>
         ) : (
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--colorNeutralBackground1)' }}>
+          <div className={styles.loginPrompt}>
             <Body1 style={{ marginBottom: '8px' }}>登录后发表评论</Body1>
             <Button appearance="primary" onClick={() => navigate('/login')}>
               登录
@@ -305,29 +371,26 @@ export function PostDetailPage() {
         <Divider />
 
         {/* 评论列表 */}
-        <div style={{ marginTop: '16px' }}>
+        <div className={styles.commentList}>
           {comments.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px', color: 'var(--colorNeutralForeground3)' }}>
+            <div className={styles.emptyComments}>
               <Caption1>暂无评论，快来发表第一条评论吧！</Caption1>
             </div>
           ) : (
             comments.map((comment) => (
               <div
                 key={comment.id}
-                style={{
-                  padding: '16px 0',
-                  borderBottom: '1px solid var(--colorNeutralStroke1)',
-                }}
+                className={styles.commentItem}
               >
-                <div style={{ marginBottom: '8px' }}>
-                  <strong style={{ fontWeight: '600' }}>
+                <div className={styles.commentHeader}>
+                  <strong className={styles.commentUser}>
                     {comment.github_username || '用户'}
                   </strong>
-                  <Caption1 style={{ marginLeft: '8px', color: 'var(--colorNeutralForeground3)' }}>
+                  <Caption1 className={styles.commentDate}>
                     {formatDate(comment.created_at)}
                   </Caption1>
                 </div>
-                <Body1 style={{ lineHeight: '1.6' }}>{comment.content}</Body1>
+                <Body1 className={styles.commentContent}>{comment.content}</Body1>
               </div>
             ))
           )}

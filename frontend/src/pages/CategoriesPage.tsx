@@ -15,6 +15,8 @@ import {
   Title2,
   Spinner,
   tokens,
+  makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import {
   FolderRegular,
@@ -22,7 +24,99 @@ import {
 import { categoriesApi, postsApi } from '../api';
 import type { Category, Post } from '../types';
 
+const useStyles = makeStyles({
+  container: {
+    display: 'flex',
+    gap: '24px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '32px',
+    ['@media (max-width: 768px)']: {
+      flexDirection: 'column',
+    },
+  },
+  sidebar: {
+    flex: '1',
+  },
+  header: {
+    marginBottom: '24px',
+  },
+  subtitle: {
+    color: tokens.colorNeutralForeground2,
+    marginTop: '8px',
+  },
+  categoriesCard: {
+    padding: '16px',
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  accordionHeaderContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flex: '1',
+    cursor: 'pointer',
+  },
+  categoryName: {
+    fontWeight: tokens.fontWeightMedium,
+  },
+  categoryDesc: {
+    color: tokens.colorNeutralForeground3,
+    fontSize: '14px',
+  },
+  accordionPanelContent: {
+    marginLeft: '16px',
+  },
+  mainContent: {
+    flex: '2',
+  },
+  postsCard: {
+    borderRadius: tokens.borderRadiusLarge,
+  },
+  postsHeader: {
+    fontWeight: tokens.fontWeightSemibold,
+    fontSize: '18px',
+  },
+  postsHeaderDesc: {
+    color: tokens.colorNeutralForeground2,
+  },
+  emptyText: {
+    color: tokens.colorNeutralForeground3,
+    padding: '24px',
+  },
+  postItem: {
+    padding: '16px',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    cursor: 'pointer',
+    ':hover': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+    ':last-child': {
+      borderBottom: 'none',
+    },
+  },
+  postTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: '8px',
+    display: 'block',
+  },
+  postExcerpt: {
+    color: tokens.colorNeutralForeground2,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    lineHeight: '1.5',
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '48px',
+  },
+});
+
 export function CategoriesPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,22 +191,16 @@ export function CategoriesPage() {
         style={{ paddingLeft: `${level * 16}px` }}
       >
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            flex: 1,
-            cursor: 'pointer',
-          }}
+          className={styles.accordionHeaderContent}
           onClick={(e) => {
             e.stopPropagation();
             handleCategoryClick(category);
           }}
         >
           <FolderRegular />
-          <span style={{ fontWeight: '500' }}>{category.name}</span>
+          <span className={styles.categoryName}>{category.name}</span>
           {category.description && (
-            <span style={{ color: 'var(--colorNeutralForeground3)', fontSize: '14px' }}>
+            <span className={styles.categoryDesc}>
               {category.description}
             </span>
           )}
@@ -120,7 +208,7 @@ export function CategoriesPage() {
       </AccordionHeader>
       {category.children && category.children.length > 0 && (
         <AccordionPanel>
-          <div style={{ marginLeft: '16px' }}>
+          <div className={styles.accordionPanelContent}>
             {category.children.map((child: any) => renderCategory(child, level + 1))}
           </div>
         </AccordionPanel>
@@ -130,7 +218,7 @@ export function CategoriesPage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+      <div className={styles.loadingContainer}>
         <Spinner size="large" />
       </div>
     );
@@ -139,19 +227,19 @@ export function CategoriesPage() {
   const categoryTree = buildCategoryTree(categories);
 
   return (
-    <div style={{ display: 'flex', gap: '24px' }}>
+    <div className={styles.container}>
       {/* 左侧分类树 */}
-      <div style={{ flex: 1 }}>
-        <div style={{ marginBottom: '24px' }}>
+      <div className={styles.sidebar}>
+        <div className={styles.header}>
           <Title2>分类</Title2>
-          <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
-            浏览不同分类的文章
-          </Body1>
+          <div className={styles.subtitle}>
+            <Body1>浏览不同分类的文章</Body1>
+          </div>
         </div>
 
-        <Card style={{ padding: '16px', borderRadius: tokens.borderRadiusLarge }}>
+        <Card className={styles.categoriesCard}>
           {categoryTree.length === 0 ? (
-            <Body1 style={{ color: 'var(--colorNeutralForeground3)' }}>暂无分类</Body1>
+            <Body1 className={styles.emptyText}>暂无分类</Body1>
           ) : (
             <Accordion collapsible defaultOpenItems={[]}>
               {categoryTree.map(category => renderCategory(category))}
@@ -162,17 +250,17 @@ export function CategoriesPage() {
 
       {/* 右侧文章列表 */}
       {selectedCategory && (
-        <div style={{ flex: 2 }}>
-          <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
+        <div className={styles.mainContent}>
+          <Card className={styles.postsCard}>
             <CardHeader
               header={
-                <Body1 style={{ fontWeight: '600', fontSize: '18px' }}>
+                <Body1 className={styles.postsHeader}>
                   {selectedCategory.name}
                 </Body1>
               }
               description={
                 selectedCategory.description ? (
-                  <Body1 style={{ color: 'var(--colorNeutralForeground2)' }}>
+                  <Body1 className={styles.postsHeaderDesc}>
                     {selectedCategory.description}
                   </Body1>
                 ) : (
@@ -182,33 +270,20 @@ export function CategoriesPage() {
             />
             <div>
               {posts.length === 0 ? (
-                <Body1 style={{ color: 'var(--colorNeutralForeground3)', padding: '24px' }}>
+                <Body1 className={styles.emptyText}>
                   该分类下暂无文章
                 </Body1>
               ) : (
                 posts.map((post) => (
                   <div
                     key={post.id}
-                    style={{
-                      padding: '16px',
-                      borderBottom: '1px solid var(--colorNeutralStroke1)',
-                      cursor: 'pointer',
-                    }}
+                    className={styles.postItem}
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
-                    <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
+                    <Body1 className={styles.postTitle}>
                       {post.title}
                     </Body1>
-                    <Body1
-                      style={{
-                        color: 'var(--colorNeutralForeground2)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
+                    <Body1 className={styles.postExcerpt}>
                       {post.content.substring(0, 100)}...
                     </Body1>
                   </div>
