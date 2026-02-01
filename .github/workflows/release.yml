@@ -124,92 +124,11 @@ jobs:
             release/peng-blog-linux-amd64.tar.gz.sha256
           retention-days: 7
 
-  build-linux-arm64:
-    name: Build aarch64-unknown-linux-gnu
-    needs: test
-    runs-on: ubuntu-24.04-arm64
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build release binary
-        run: |
-          cargo build --release -p cli
-
-      - name: Prepare release artifacts
-        run: |
-          mkdir -p release/peng-blog
-          cp target/release/peng-blog release/peng-blog/
-          cp README.md release/peng-blog/ || true
-          cp LICENSE release/peng-blog/ || true
-          
-          # Create example config
-          cat > release/peng-blog/.env.example << 'EOF'
-          # Database
-          DATABASE_URL=sqlite://blog.db
-          
-          # Server
-          HOST=0.0.0.0
-          PORT=3000
-          
-          # JWT Secret (CHANGE THIS!)
-          JWT_SECRET=change-this-secret-in-production
-          
-          # Upload
-          UPLOAD_DIR=./uploads
-          BASE_URL=http://localhost:3000
-          
-          # GitHub OAuth (Optional)
-          GITHUB_CLIENT_ID=your-client-id
-          GITHUB_CLIENT_SECRET=your-client-secret
-          
-          # Log
-          RUST_LOG=info
-          EOF
-          
-          # Create start script
-          cat > release/peng-blog/start.sh << 'EOF'
-          #!/bin/bash
-          
-          # Create .env if not exists
-          if [ ! -f .env ]; then
-            cp .env.example .env
-            echo "Created .env file. Please edit it with your configuration."
-          fi
-          
-          # Create uploads directory
-          mkdir -p uploads
-          
-          # Start server
-          ./peng-blog
-          EOF
-          chmod +x release/peng-blog/start.sh
-          
-          cd release
-          tar -czf peng-blog-linux-arm64.tar.gz peng-blog
-          sha256sum peng-blog-linux-arm64.tar.gz > peng-blog-linux-arm64.tar.gz.sha256
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: peng-blog-linux-arm64
-          path: |
-            release/peng-blog-linux-arm64.tar.gz
-            release/peng-blog-linux-arm64.tar.gz.sha256
-          retention-days: 7
 
   create-release:
     name: Create Pre-Release
-    needs: [build-linux-amd64, build-linux-arm64]
+    needs: [build-linux-amd64]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -255,20 +174,18 @@ jobs:
             | Platform | Architecture | Download |
             |----------|-------------|----------|
             | Linux | x86_64 (amd64) | [peng-blog-linux-amd64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/peng-blog-linux-amd64.tar.gz) |
-            | Linux | aarch64 (arm64) | [peng-blog-linux-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/peng-blog-linux-arm64.tar.gz) |
             
             ### 🔐 SHA256 Checksums
             
             ```bash
             # Verify downloaded file
             sha256sum -c peng-blog-linux-amd64.tar.gz.sha256
-            sha256sum -c peng-blog-linux-arm64.tar.gz.sha256
             ```
             
             ### 🚀 Quick Start
             
             ```bash
-            # Download and extract (replace amd64 with arm64 for ARM)
+            # Download and extract
             wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/peng-blog-linux-amd64.tar.gz
             tar xzf peng-blog-linux-amd64.tar.gz
             cd peng-blog
@@ -289,7 +206,7 @@ jobs:
             
             **Built with:**
             - Rust: stable
-            - Target: Linux (x86_64, aarch64)
+            - Target: Linux (x86_64)
             - Features: Full async runtime, SQLite, JWT auth
           files: |
             release-assets/*
@@ -300,7 +217,7 @@ jobs:
 
   build-summary:
     name: Build Summary
-    needs: [create-release, build-linux-amd64, build-linux-arm64, test]
+    needs: [create-release, build-linux-amd64, test]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -310,10 +227,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Test: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Build Linux AMD64: ${{ needs.build-linux-amd64.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Build Linux ARM64: ${{ needs.build-linux-arm64.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Create Release: ${{ needs.create-release.result }}" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ needs.build-linux-amd64.result }}" != "success" ] || [ "${{ needs.build-linux-arm64.result }}" != "success" ]; then
+          if [ "${{ needs.build-linux-amd64.result }}" != "success" ]; then
             echo "::error::Build failed"
             exit 1
           fi
