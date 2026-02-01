@@ -37,7 +37,7 @@ const useStyles = makeStyles({
   contentSection: {
     position: 'relative',
     zIndex: 2,
-    backgroundColor: tokens.colorNeutralBackground3,
+    backgroundColor: 'transparent',
     minHeight: 'calc(100vh - 64px)',
     padding: '48px 0',
   },
@@ -96,8 +96,14 @@ const useStyles = makeStyles({
     cursor: 'pointer',
     opacity: 0,
     transform: 'translateY(40px)',
-    transition: 'box-shadow 0.3s ease',
+    transition: 'all 0.3s ease',
     borderRadius: tokens.borderRadiusLarge,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    ':hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
   },
   cardHeader: {
     padding: '24px',

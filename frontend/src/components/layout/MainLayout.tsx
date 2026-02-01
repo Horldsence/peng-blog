@@ -180,6 +180,22 @@ const useStyles = makeStyles({
       backgroundColor: 'rgba(0, 0, 0, 0.04)',
     },
   },
+  contentAcrylic: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    margin: '16px',
+    borderRadius: '20px',
+    border: '1px solid rgba(255, 255, 255, 0.8)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+  },
+  contentAcrylicDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(20px)',
+    margin: '16px',
+    borderRadius: '20px',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+  },
 });
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -449,7 +465,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       </NavDrawer>
 
       {/* 内容区域 */}
-      <main className={styles.contentArea}>{children}</main>
+      <main 
+        className={mergeClasses(
+          styles.contentArea,
+          location.pathname !== '/' && (mode === 'dark' ? styles.contentAcrylicDark : styles.contentAcrylic)
+        )}
+      >
+        {children}
+      </main>
     </div>
   );
 }

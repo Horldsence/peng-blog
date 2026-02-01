@@ -65,7 +65,7 @@ const useStyles = makeStyles({
     width: '300px',
     backgroundColor: 'rgba(255,255,255,0.8)', // Slightly more transparent
     borderRadius: tokens.borderRadiusCircular,
-    border: 'none',
+    border: '1px solid rgba(255,255,255,0.3)',
     backdropFilter: 'blur(10px)',
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     '& input': {
@@ -74,6 +74,7 @@ const useStyles = makeStyles({
   },
   searchButton: {
     borderRadius: tokens.borderRadiusCircular,
+    border: '1px solid rgba(255,255,255,0.3)',
     // Removed fixed backgroundColor to allow 'primary' appearance (theme color)
     boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
     zIndex: 2,
@@ -82,15 +83,19 @@ const useStyles = makeStyles({
     maxWidth: '550px',
     opacity: 0,
     transform: 'translateY(30px)',
+    padding: '32px 0',
   },
   welcomeTitle: {
-    fontSize: '56px',
+    fontSize: '64px',
     fontWeight: tokens.fontWeightBold,
-    color: '#ffffff',
-    margin: '0 0 20px 0',
-    textShadow: '0 4px 20px rgba(0,0,0,0.4)',
-    lineHeight: '1.15',
+    color: 'transparent',
+    margin: '0 0 24px 0',
+    lineHeight: '1.1',
     letterSpacing: '-0.02em',
+    backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 100%)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.3))',
   },
   welcomeSubtitle: {
     fontSize: tokens.fontSizeBase500,
