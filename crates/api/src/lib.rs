@@ -5,6 +5,7 @@
 //! request validation, and response formatting.
 
 pub mod auth;
+pub mod bing;
 pub mod category;
 pub mod comment;
 pub mod error;
@@ -19,7 +20,7 @@ pub mod tag;
 pub mod user;
 
 // Re-export commonly used types for convenience
-pub use error::ApiResult;
+pub use error::{ApiError, ApiResult};
 pub use response::{helpers as resp, ApiResponse, ErrorResponse, Pagination, SuccessResponse};
 pub use state::AppState;
 
@@ -55,4 +56,5 @@ pub fn routes() -> axum::Router<AppState> {
         .nest("/stats", stats::routes())
         .nest("/categories", category::routes())
         .nest("/tags", tag::routes())
+        .nest("/bing", bing::routes())
 }

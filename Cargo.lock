@@ -109,6 +109,7 @@ dependencies = [
  "domain",
  "infrastructure",
  "jsonwebtoken",
+ "reqwest",
  "serde",
  "serde_json",
  "service",

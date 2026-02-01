@@ -24,3 +24,6 @@ tokio-util = { workspace = true }
 # Authentication
 jsonwebtoken = "9.0"
 axum-extra = { version = "0.10", features = ["typed-header", "multipart"] }
+
+# HTTP client
+reqwest = { workspace = true }

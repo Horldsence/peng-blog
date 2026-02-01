@@ -80,11 +80,16 @@ const useStyles = makeStyles({
   },
   // Custom styles for NavItem
   navItem: {
+    display: 'flex',
+    alignItems: 'center',
     cursor: 'pointer',
     backgroundColor: 'transparent',
+    width: '100%', // Ensure full width
     height: '48px', // Even taller for better touch
+    padding: 0, // Reset default padding to ensure precise control
     fontSize: tokens.fontSizeBase300,
     position: 'relative', // For absolute positioning of indicator
+    boxSizing: 'border-box',
     '&:hover': {
       backgroundColor: 'rgba(0, 0, 0, 0.04)',
     },
@@ -116,6 +121,7 @@ const useStyles = makeStyles({
     minWidth: '24px', // Tighten min-width to avoid claiming too much space
     height: '24px',
     zIndex: 2, // Ensure icon is above indicator
+    transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
   navItemContent: {
     marginLeft: '12px',
@@ -187,16 +193,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchBingImage = async () => {
       try {
-        // Use a CORS-friendly proxy for Bing Daily Image
-        // This service provides the daily Bing image info with CORS headers
-        const response = await fetch('https://bing.biturl.top/?resolution=1920&format=json&index=0&mkt=zh-CN');
-        const data = await response.json();
-        if (data && data.url) {
-          setBingImage(data.url);
+        const response = await fetch('/api/bing/daily-image');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result && result.data && result.data.url) {
+          setBingImage(result.data.url);
+        } else {
+          throw new Error('Invalid API response format');
         }
       } catch (error) {
         console.error('Failed to fetch Bing image:', error);
-        // Fallback to a reliable source or previous default
         setBingImage('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');
       }
     };
@@ -244,12 +255,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         className={styles.navItem}
         aria-selected={isSelected}
         style={{
-          justifyContent: isExpanded ? 'flex-start' : 'center',
-          paddingLeft: isExpanded ? '16px' : '0',
+          justifyContent: 'flex-start',
         }}
       >
         {isSelected && <div className={styles.activeIndicator} />}
-        <div className={styles.navItemIcon}>{icon}</div>
+        <div 
+          className={styles.navItemIcon}
+          style={{ 
+            width: isExpanded ? '24px' : '80px',
+            marginLeft: isExpanded ? '16px' : '0'
+          }}
+        >
+          {icon}
+        </div>
         <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
           {label}
         </span>
@@ -311,12 +329,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               className={styles.footerItem}
               onClick={toggleTheme}
               style={{
-                justifyContent: isExpanded ? 'flex-start' : 'center',
-                paddingLeft: isExpanded ? '16px' : '0',
+                justifyContent: 'flex-start',
                 paddingRight: isExpanded ? '10px' : '0', // Ensure symmetry in collapsed state
               }}
             >
-              <div className={styles.navItemIcon}>
+              <div 
+                className={styles.navItemIcon}
+                style={{ 
+                  width: isExpanded ? '24px' : '80px',
+                  marginLeft: isExpanded ? '16px' : '0'
+                }}
+              >
                 {mode === 'light' ? <WeatherMoonRegular /> : <WeatherSunnyFilled />}
               </div>
               <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
@@ -331,13 +354,18 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <div
                 className={styles.footerItem}
                 style={{
-                  justifyContent: isExpanded ? 'flex-start' : 'center',
-                  paddingLeft: isExpanded ? '16px' : '0',
+                  justifyContent: 'flex-start',
                   paddingRight: isExpanded ? '10px' : '0',
                   cursor: 'default', // Profile info usually static, but keeps hover style for consistency
                 }}
               >
-                <div className={styles.navItemIcon}>
+                <div 
+                  className={styles.navItemIcon}
+                  style={{ 
+                    width: isExpanded ? '24px' : '80px',
+                    marginLeft: isExpanded ? '16px' : '0'
+                  }}
+                >
                   <Avatar name={currentUser.username} size={32} color="brand" />
                 </div>
                 <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
@@ -353,12 +381,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   className={styles.footerItem}
                   onClick={handleLogout}
                   style={{
-                    justifyContent: isExpanded ? 'flex-start' : 'center',
-                    paddingLeft: isExpanded ? '16px' : '0',
+                    justifyContent: 'flex-start',
                     paddingRight: isExpanded ? '10px' : '0',
                   }}
                 >
-                  <div className={styles.navItemIcon}><SignOutRegular /></div>
+                  <div 
+                    className={styles.navItemIcon}
+                    style={{ 
+                      width: isExpanded ? '24px' : '80px',
+                      marginLeft: isExpanded ? '16px' : '0'
+                    }}
+                  ><SignOutRegular /></div>
                   <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>登出</span>
                 </button>
               </Tooltip>
@@ -369,12 +402,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 className={styles.footerItem}
                 onClick={() => navigate('/login')}
                 style={{
-                  justifyContent: isExpanded ? 'flex-start' : 'center',
-                  paddingLeft: isExpanded ? '16px' : '0',
+                  justifyContent: 'flex-start',
                   paddingRight: isExpanded ? '10px' : '0',
                 }}
               >
-                <div className={styles.navItemIcon}><ArrowEnterRegular /></div>
+                <div 
+                  className={styles.navItemIcon}
+                  style={{ 
+                    width: isExpanded ? '24px' : '80px',
+                    marginLeft: isExpanded ? '16px' : '0'
+                  }}
+                ><ArrowEnterRegular /></div>
                 <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>登录</span>
               </button>
             </Tooltip>
@@ -387,12 +425,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 className={styles.footerItem}
                 onClick={() => setIsExpanded(!isExpanded)}
                 style={{
-                  justifyContent: isExpanded ? 'flex-start' : 'center',
-                  paddingLeft: isExpanded ? '16px' : '0',
+                  justifyContent: 'flex-start',
                   paddingRight: isExpanded ? '10px' : '0',
                 }}
               >
-                <div className={styles.navItemIcon}>
+                <div 
+                  className={styles.navItemIcon}
+                  style={{ 
+                    width: isExpanded ? '24px' : '80px',
+                    marginLeft: isExpanded ? '16px' : '0'
+                  }}
+                >
                    {isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
                 </div>
                  <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>折叠导航</span>
