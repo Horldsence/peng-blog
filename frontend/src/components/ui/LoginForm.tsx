@@ -9,13 +9,8 @@ import {
   Body1,
   tokens,
   makeStyles,
-  mergeClasses,
 } from '@fluentui/react-components';
-import {
-  ArrowLeftRegular,
-  PersonRegular,
-  LockClosedRegular,
-} from '@fluentui/react-icons';
+import { ArrowLeftRegular, PersonRegular, LockClosedRegular } from '@fluentui/react-icons';
 import { authApi } from '../../api';
 import type { UserLoginRequest } from '../../types';
 
@@ -143,9 +138,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
           header={
             <div className={styles.headerContent}>
               <Title2>登录</Title2>
-              <Body1 className={styles.headerSubtitle}>
-                欢迎回到 Peng Blog
-              </Body1>
+              <Body1 className={styles.headerSubtitle}>欢迎回到 Peng Blog</Body1>
             </div>
           }
         />
@@ -154,11 +147,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         {error && (
           <div className={styles.errorBox}>
             <Body1>{error}</Body1>
-            <Button
-              appearance="transparent"
-              size="small"
-              onClick={() => setError('')}
-            >
+            <Button appearance="transparent" size="small" onClick={() => setError('')}>
               ×
             </Button>
           </div>
@@ -167,9 +156,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         {/* 登录表单 */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <div>
-            <label className={styles.fieldLabel}>
-              用户名
-            </label>
+            <label className={styles.fieldLabel}>用户名</label>
             <Input
               name="username"
               placeholder="请输入用户名"
@@ -190,9 +177,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
           </div>
 
           <div>
-            <label className={styles.fieldLabel}>
-              密码
-            </label>
+            <label className={styles.fieldLabel}>密码</label>
             <Input
               type="password"
               name="password"
@@ -228,10 +213,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         <div className={styles.footer}>
           <Body1 className={styles.footerText}>
             还没有账户？{' '}
-            <Link
-              to="/register"
-              className={styles.link}
-            >
+            <Link to="/register" className={styles.link}>
               立即注册
             </Link>
           </Body1>
@@ -251,4 +233,4 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
       </Card>
     </div>
   );
-};
+}

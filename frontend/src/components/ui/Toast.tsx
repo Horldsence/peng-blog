@@ -40,34 +40,43 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return styles[type];
   }, []);
 
-  const showToast = useCallback(
-    (title: string, message?: string, type: ToastType = 'info') => {
-      const id = Math.random().toString(36).substring(7);
-      const newToast: ToastMessage = { id, title, message, type };
-      setToasts((prev) => [...prev, newToast]);
+  const showToast = useCallback((title: string, message?: string, type: ToastType = 'info') => {
+    const id = Math.random().toString(36).substring(7);
+    const newToast: ToastMessage = { id, title, message, type };
+    setToasts((prev) => [...prev, newToast]);
 
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  }, []);
+
+  const showSuccess = useCallback(
+    (message: string) => {
+      showToast('成功', message, 'success');
     },
-    []
+    [showToast]
   );
 
-  const showSuccess = useCallback((message: string) => {
-    showToast('成功', message, 'success');
-  }, [showToast]);
+  const showError = useCallback(
+    (message: string) => {
+      showToast('错误', message, 'error');
+    },
+    [showToast]
+  );
 
-  const showError = useCallback((message: string) => {
-    showToast('错误', message, 'error');
-  }, [showToast]);
+  const showInfo = useCallback(
+    (message: string) => {
+      showToast('提示', message, 'info');
+    },
+    [showToast]
+  );
 
-  const showInfo = useCallback((message: string) => {
-    showToast('提示', message, 'info');
-  }, [showToast]);
-
-  const showWarning = useCallback((message: string) => {
-    showToast('警告', message, 'warning');
-  }, [showToast]);
+  const showWarning = useCallback(
+    (message: string) => {
+      showToast('警告', message, 'warning');
+    },
+    [showToast]
+  );
 
   return (
     <ToastContext.Provider value={{ showToast, showSuccess, showError, showInfo, showWarning }}>

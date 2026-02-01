@@ -4,7 +4,7 @@ import type {
   FileUploadParams,
   PaginatedResponse,
   ApiResponse,
-  PaginationParams
+  PaginationParams,
 } from '../types';
 
 /**
@@ -20,7 +20,7 @@ export const filesApi = {
   uploadFile: (params: FileUploadParams) => {
     const formData = new FormData();
     formData.append('file', params.file);
-    
+
     return http.post<FileInfo>('/files', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

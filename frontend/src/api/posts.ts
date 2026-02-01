@@ -9,7 +9,7 @@ import type {
   ApiResponseV2,
   ApiListResponseV2,
   Tag,
-  Comment
+  Comment,
 } from '../types';
 
 export const postsApi = {

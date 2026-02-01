@@ -115,13 +115,13 @@ export function PostList({ userId, onPostClick }: PostListProps) {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="post-excerpt">
-                  {post.content.length > 200 
-                    ? `${post.content.substring(0, 200)}...` 
+                  {post.content.length > 200
+                    ? `${post.content.substring(0, 200)}...`
                     : post.content}
                 </div>
-                
+
                 <div className="post-meta">
                   <span className="meta-item">
                     <i className="icon-views">👁</i>
@@ -157,11 +157,11 @@ export function PostList({ userId, onPostClick }: PostListProps) {
               >
                 上一页
               </button>
-              
+
               <div className="page-info">
                 第 {currentPage} / {totalPages} 页
               </div>
-              
+
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -172,13 +172,9 @@ export function PostList({ userId, onPostClick }: PostListProps) {
             </div>
           )}
 
-          <div className="total-info">
-            共 {totalPosts} 篇文章
-          </div>
+          <div className="total-info">共 {totalPosts} 篇文章</div>
         </>
       )}
     </div>
   );
-};
-
-
+}

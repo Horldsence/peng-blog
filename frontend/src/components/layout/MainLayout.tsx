@@ -62,6 +62,10 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
   },
+  navDrawerDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Dark Acrylic
+    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+  },
   globalBackground: {
     position: 'fixed',
     top: 0,
@@ -72,8 +76,11 @@ const useStyles = makeStyles({
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    transition: 'background-image 0.5s ease-in-out',
+    transition: 'background-image 0.5s ease-in-out, filter 0.5s ease-in-out',
     pointerEvents: 'none',
+  },
+  globalBackgroundDark: {
+    filter: 'brightness(0.5) contrast(1.1)',
   },
   navDrawerExpanded: {
     width: '260px',
@@ -94,11 +101,12 @@ const useStyles = makeStyles({
     position: 'relative', // For absolute positioning of indicator
     boxSizing: 'border-box',
     '&:hover': {
-      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+      backgroundColor: tokens.colorNeutralBackground1Hover,
     },
     '&[aria-selected="true"]': {
-      backgroundColor: 'rgba(0, 0, 0, 0.06)',
+      backgroundColor: tokens.colorNeutralBackground1Selected,
       fontWeight: tokens.fontWeightSemibold,
+      color: tokens.colorNeutralForeground1Selected,
     },
     // Hide default indicator mechanisms from Fluent UI just in case
     '&::after': { display: 'none' },
@@ -124,7 +132,8 @@ const useStyles = makeStyles({
     minWidth: '24px', // Tighten min-width to avoid claiming too much space
     height: '24px',
     zIndex: 2, // Ensure icon is above indicator
-    transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition:
+      'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
   navItemContent: {
     marginLeft: '12px',
@@ -177,7 +186,7 @@ const useStyles = makeStyles({
     // Remove static padding to allow precise control via inline styles
     padding: 0,
     '&:hover': {
-      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+      backgroundColor: tokens.colorNeutralBackground1Hover,
     },
   },
   contentAcrylic: {
@@ -255,7 +264,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     if (typeof value === 'string') {
       navigate(value);
     } else if (e && e.currentTarget && e.currentTarget.getAttribute('value')) {
-        navigate(e.currentTarget.getAttribute('value'));
+      navigate(e.currentTarget.getAttribute('value'));
     }
   };
 
@@ -278,11 +287,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         }}
       >
         {isSelected && <div className={styles.activeIndicator} />}
-        <div 
+        <div
           className={styles.navItemIcon}
-          style={{ 
+          style={{
             width: isExpanded ? '24px' : '80px',
-            marginLeft: isExpanded ? '16px' : '0'
+            marginLeft: isExpanded ? '16px' : '0',
           }}
         >
           {icon}
@@ -298,7 +307,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     <div className={styles.root}>
       {/* Global Background */}
       <div
-        className={styles.globalBackground}
+        className={mergeClasses(
+          styles.globalBackground,
+          mode === 'dark' && styles.globalBackgroundDark
+        )}
         style={{ backgroundImage: bingImage ? `url(${bingImage})` : undefined }}
       />
 
@@ -309,16 +321,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         type="inline"
         className={mergeClasses(
           styles.navDrawer,
+          mode === 'dark' && styles.navDrawerDark,
           isExpanded ? styles.navDrawerExpanded : styles.navDrawerCollapsed
         )}
       >
         <NavDrawerHeader>
-          <div
-            className={mergeClasses(
-              styles.logo,
-              isExpanded ? styles.logoExpanded : undefined
-            )}
-          >
+          <div className={mergeClasses(styles.logo, isExpanded ? styles.logoExpanded : undefined)}>
             {isExpanded ? 'Peng Blog' : 'PB'}
           </div>
         </NavDrawerHeader>
@@ -333,8 +341,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {hasAdminPermission && (
             <>
               <Divider style={{ margin: '8px 0', opacity: isExpanded ? 1 : 0 }} />
-               {isExpanded && <NavSectionHeader>管理</NavSectionHeader>}
-               {renderNavItem('管理后台', <SettingsRegular />, '/admin')}
+              {isExpanded && <NavSectionHeader>管理</NavSectionHeader>}
+              {renderNavItem('管理后台', <SettingsRegular />, '/admin')}
             </>
           )}
         </NavDrawerBody>
@@ -342,8 +350,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <NavDrawerFooter className={styles.footer}>
           <Divider />
 
-           {/* Theme Toggle */}
-           <Tooltip content={mode === 'light' ? '深色模式' : '浅色模式'} relationship="label" positioning="after">
+          {/* Theme Toggle */}
+          <Tooltip
+            content={mode === 'light' ? '深色模式' : '浅色模式'}
+            relationship="label"
+            positioning="after"
+          >
             <button
               className={styles.footerItem}
               onClick={toggleTheme}
@@ -352,11 +364,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 paddingRight: isExpanded ? '10px' : '0', // Ensure symmetry in collapsed state
               }}
             >
-              <div 
+              <div
                 className={styles.navItemIcon}
-                style={{ 
+                style={{
                   width: isExpanded ? '24px' : '80px',
-                  marginLeft: isExpanded ? '16px' : '0'
+                  marginLeft: isExpanded ? '16px' : '0',
                 }}
               >
                 {mode === 'light' ? <WeatherMoonRegular /> : <WeatherSunnyFilled />}
@@ -378,18 +390,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   cursor: 'default', // Profile info usually static, but keeps hover style for consistency
                 }}
               >
-                <div 
+                <div
                   className={styles.navItemIcon}
-                  style={{ 
+                  style={{
                     width: isExpanded ? '24px' : '80px',
-                    marginLeft: isExpanded ? '16px' : '0'
+                    marginLeft: isExpanded ? '16px' : '0',
                   }}
                 >
                   <Avatar name={currentUser.username} size={32} color="brand" />
                 </div>
-                <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
-                  <div style={{ lineHeight: '1.2', fontWeight: tokens.fontWeightSemibold }}>{currentUser.username}</div>
-                  <div style={{ lineHeight: '1.2', fontSize: tokens.fontSizeBase200, color: tokens.colorNeutralForeground3 }}>
+                <span
+                  className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
+                >
+                  <div style={{ lineHeight: '1.2', fontWeight: tokens.fontWeightSemibold }}>
+                    {currentUser.username}
+                  </div>
+                  <div
+                    style={{
+                      lineHeight: '1.2',
+                      fontSize: tokens.fontSizeBase200,
+                      color: tokens.colorNeutralForeground3,
+                    }}
+                  >
                     {hasAdminPermission ? '管理员' : '用户'}
                   </div>
                 </span>
@@ -404,19 +426,25 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     paddingRight: isExpanded ? '10px' : '0',
                   }}
                 >
-                  <div 
+                  <div
                     className={styles.navItemIcon}
-                    style={{ 
+                    style={{
                       width: isExpanded ? '24px' : '80px',
-                      marginLeft: isExpanded ? '16px' : '0'
+                      marginLeft: isExpanded ? '16px' : '0',
                     }}
-                  ><SignOutRegular /></div>
-                  <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>登出</span>
+                  >
+                    <SignOutRegular />
+                  </div>
+                  <span
+                    className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
+                  >
+                    登出
+                  </span>
                 </button>
               </Tooltip>
             </>
           ) : (
-             <Tooltip content="登录" relationship="label" positioning="after">
+            <Tooltip content="登录" relationship="label" positioning="after">
               <button
                 className={styles.footerItem}
                 onClick={() => navigate('/login')}
@@ -425,21 +453,31 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   paddingRight: isExpanded ? '10px' : '0',
                 }}
               >
-                <div 
+                <div
                   className={styles.navItemIcon}
-                  style={{ 
+                  style={{
                     width: isExpanded ? '24px' : '80px',
-                    marginLeft: isExpanded ? '16px' : '0'
+                    marginLeft: isExpanded ? '16px' : '0',
                   }}
-                ><ArrowEnterRegular /></div>
-                <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>登录</span>
+                >
+                  <ArrowEnterRegular />
+                </div>
+                <span
+                  className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
+                >
+                  登录
+                </span>
               </button>
             </Tooltip>
           )}
 
-           {/* Collapse Toggle */}
-           <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-            <Tooltip content={isExpanded ? '折叠' : '展开'} relationship="label" positioning="after">
+          {/* Collapse Toggle */}
+          <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+            <Tooltip
+              content={isExpanded ? '折叠' : '展开'}
+              relationship="label"
+              positioning="after"
+            >
               <button
                 className={styles.footerItem}
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -448,16 +486,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   paddingRight: isExpanded ? '10px' : '0',
                 }}
               >
-                <div 
+                <div
                   className={styles.navItemIcon}
-                  style={{ 
+                  style={{
                     width: isExpanded ? '24px' : '80px',
-                    marginLeft: isExpanded ? '16px' : '0'
+                    marginLeft: isExpanded ? '16px' : '0',
                   }}
                 >
-                   {isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
+                  {isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
                 </div>
-                 <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>折叠导航</span>
+                <span
+                  className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
+                >
+                  折叠导航
+                </span>
               </button>
             </Tooltip>
           </div>
@@ -465,10 +507,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       </NavDrawer>
 
       {/* 内容区域 */}
-      <main 
+      <main
         className={mergeClasses(
           styles.contentArea,
-          location.pathname !== '/' && (mode === 'dark' ? styles.contentAcrylicDark : styles.contentAcrylic)
+          location.pathname !== '/' &&
+            (mode === 'dark' ? styles.contentAcrylicDark : styles.contentAcrylic)
         )}
       >
         {children}

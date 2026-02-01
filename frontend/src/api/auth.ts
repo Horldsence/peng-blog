@@ -1,5 +1,11 @@
 import { http } from '../utils/request';
-import type { UserCreateRequest, UserLoginRequest, UserLoginResponse, User, ApiResponse } from '../types';
+import type {
+  UserCreateRequest,
+  UserLoginRequest,
+  UserLoginResponse,
+  User,
+  ApiResponse,
+} from '../types';
 
 /**
  * 认证 API 模块
@@ -23,7 +29,10 @@ export const authApi = {
    * @returns 登录响应，包含 token 和用户信息
    */
   login: async (data: UserLoginRequest) => {
-    const response = await http.post<{ code: number; message: string; data: UserLoginResponse }>('/auth/login', data);
+    const response = await http.post<{ code: number; message: string; data: UserLoginResponse }>(
+      '/auth/login',
+      data
+    );
     return response.data;
   },
 

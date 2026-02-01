@@ -1,4 +1,8 @@
 use api::{file_cache::FileCache, middleware::auth::set_jwt_secret, routes, AppState, AuthState};
+use axum::{
+    body::Body,
+    http::{Response, StatusCode},
+};
 use infrastructure::MigratorTrait;
 use infrastructure::{
     establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, FileRepositoryImpl,
@@ -9,7 +13,9 @@ use service::{
     CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
     TagService, UserService,
 };
+use std::convert::Infallible;
 use std::sync::Arc;
+use tower::ServiceExt;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -106,15 +112,73 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     api::bing::start_bing_cache_refresh_task(state.clone()).await;
 
+    // Static file service with SPA fallback
+    let serve_dir = ServeDir::new("dist");
+
     let app = axum::Router::new()
         .nest("/api", routes())
-        .fallback_service(ServeDir::new("static"))
+        .fallback_service(tower::service_fn(move |req: axum::http::Request<Body>| {
+            let serve_dir = serve_dir.clone();
+            async move {
+                let path = req.uri().path().to_string();
+
+                // Skip API routes
+                if path.starts_with("/api") {
+                    return Ok::<_, Infallible>(
+                        Response::builder()
+                            .status(StatusCode::NOT_FOUND)
+                            .body(Body::from("Not Found"))
+                            .unwrap(),
+                    );
+                }
+
+                // Try to serve the file
+                let res = serve_dir.clone().oneshot(req).await;
+
+                let response = match res {
+                    Ok(response) => {
+                        let status = response.status();
+                        // If file not found and it's not a file request (no extension or is a route),
+                        // serve index.html for SPA routing
+                        if status == StatusCode::NOT_FOUND {
+                            let has_extension = path.contains('.') && !path.ends_with('/');
+                            if !has_extension {
+                                // Serve index.html for SPA routes
+                                let index_path = std::path::Path::new("dist").join("index.html");
+                                if let Ok(content) = tokio::fs::read_to_string(&index_path).await {
+                                    Response::builder()
+                                        .status(StatusCode::OK)
+                                        .header("content-type", "text/html; charset=utf-8")
+                                        .body(Body::from(content))
+                                        .unwrap()
+                                } else {
+                                    response.map(Body::new)
+                                }
+                            } else {
+                                response.map(Body::new)
+                            }
+                        } else {
+                            // Convert ServeFileSystemResponseBody to Body
+                            response.map(Body::new)
+                        }
+                    }
+                    Err(_) => Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .body(Body::from("Internal Server Error"))
+                        .unwrap(),
+                };
+
+                Ok::<_, Infallible>(response)
+            }
+        }))
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::info!("Listening on {}", listener.local_addr()?);
+    tracing::info!("Frontend served from ./dist directory");
+    tracing::info!("API available at http://localhost:3000/api");
 
     axum::serve(listener, app).await?;
 

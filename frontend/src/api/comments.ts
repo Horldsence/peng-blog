@@ -5,7 +5,7 @@ import type {
   CommentUpdateRequest,
   CommentPatchRequest,
   ApiResponseV2,
-  GitHubAuthResponse
+  GitHubAuthResponse,
 } from '../types';
 
 export const commentsApi = {

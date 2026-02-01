@@ -1,9 +1,5 @@
 import { http } from '../utils/request';
-import type {
-  Session,
-  SessionCreateRequest,
-  ApiResponseV2
-} from '../types';
+import type { Session, SessionCreateRequest, ApiResponseV2 } from '../types';
 
 export const sessionsApi = {
   /**

@@ -13,7 +13,6 @@ import {
   Spinner,
   tokens,
   makeStyles,
-  mergeClasses,
 } from '@fluentui/react-components';
 import { TagRegular } from '@fluentui/react-icons';
 import { tagsApi, postsApi } from '../api';
@@ -199,9 +198,7 @@ export function TagsPage() {
           />
           <div>
             {posts.length === 0 ? (
-              <Body1 className={styles.emptyPosts}>
-                该标签下暂无文章
-              </Body1>
+              <Body1 className={styles.emptyPosts}>该标签下暂无文章</Body1>
             ) : (
               posts.map((post) => (
                 <div
@@ -209,12 +206,8 @@ export function TagsPage() {
                   className={styles.postItem}
                   onClick={() => navigate(`/post/${post.id}`)}
                 >
-                  <Body1 className={styles.postTitle}>
-                    {post.title}
-                  </Body1>
-                  <Body1 className={styles.postExcerpt}>
-                    {post.content.substring(0, 100)}...
-                  </Body1>
+                  <Body1 className={styles.postTitle}>{post.title}</Body1>
+                  <Body1 className={styles.postExcerpt}>{post.content.substring(0, 100)}...</Body1>
                 </div>
               ))
             )}

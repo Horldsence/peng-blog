@@ -14,7 +14,6 @@ import {
   TabList,
   Divider,
   makeStyles,
-  mergeClasses,
 } from '@fluentui/react-components';
 import {
   HomeRegular,
@@ -50,7 +49,7 @@ const useStyles = makeStyles({
   layout: {
     display: 'flex',
     height: '100%',
-    minHeight: 'calc(100vh - 48px)', 
+    minHeight: 'calc(100vh - 48px)',
   },
   sidebar: {
     width: '260px',
@@ -165,7 +164,9 @@ export function AdminPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'posts' | 'users' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'posts' | 'users' | 'settings'>(
+    'dashboard'
+  );
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -174,9 +175,8 @@ export function AdminPage() {
 
   const hasAdminPermission = (user: User | null) => {
     if (!user) return false;
-    const permissions = typeof user.permissions === 'string'
-      ? parseInt(user.permissions, 10)
-      : user.permissions;
+    const permissions =
+      typeof user.permissions === 'string' ? parseInt(user.permissions, 10) : user.permissions;
     return (permissions & Permission.USER_MANAGE) !== 0;
   };
 
@@ -242,7 +242,7 @@ export function AdminPage() {
 
     try {
       await postsApi.deletePost(postId);
-      setPosts(posts.filter(p => p.id !== postId));
+      setPosts(posts.filter((p) => p.id !== postId));
       toast.showSuccess('文章删除成功');
     } catch (err: any) {
       toast.showError(err.message || '删除失败');
@@ -269,7 +269,7 @@ export function AdminPage() {
 
     try {
       await usersApi.deleteUser(userId);
-      setUsers(users.filter(u => u.id !== userId));
+      setUsers(users.filter((u) => u.id !== userId));
       toast.showSuccess('用户删除成功');
     } catch (err: any) {
       toast.showError(err.message || '删除失败');
@@ -333,9 +333,7 @@ export function AdminPage() {
 
             <div className={styles.sidebarFooter}>
               <Divider style={{ margin: '24px 0' }} />
-              <div className={styles.userInfo}>
-                {currentUser?.username}
-              </div>
+              <div className={styles.userInfo}>{currentUser?.username}</div>
               <Button
                 appearance="transparent"
                 icon={<ArrowLeftRegular />}
@@ -353,11 +351,7 @@ export function AdminPage() {
             {error && (
               <div className={styles.errorBox}>
                 <Body1>{error}</Body1>
-                <Button
-                  appearance="transparent"
-                  size="small"
-                  onClick={() => setError('')}
-                >
+                <Button appearance="transparent" size="small" onClick={() => setError('')}>
                   ×
                 </Button>
               </div>
@@ -376,19 +370,12 @@ export function AdminPage() {
                 <Title2 style={{ marginBottom: '24px' }}>仪表板</Title2>
                 <div className={styles.dashboardGrid}>
                   {statCards.map((stat, index) => (
-                    <Card
-                      key={index}
-                      className={styles.statCard}
-                    >
+                    <Card key={index} className={styles.statCard}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span className={styles.statIcon}>{stat.icon}</span>
                         <div>
-                          <Body1 className={styles.statValue}>
-                            {stat.value}
-                          </Body1>
-                          <Caption1 className={styles.statLabel}>
-                            {stat.label}
-                          </Caption1>
+                          <Body1 className={styles.statValue}>{stat.value}</Body1>
+                          <Caption1 className={styles.statLabel}>{stat.label}</Caption1>
                         </div>
                       </div>
                     </Card>
@@ -414,28 +401,21 @@ export function AdminPage() {
                 <Card className={styles.listCard}>
                   {posts.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <Body1 className={styles.metaText}>
-                        暂无文章
-                      </Body1>
+                      <Body1 className={styles.metaText}>暂无文章</Body1>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       {posts.map((post) => (
                         <div key={post.id} className={styles.listItem}>
                           <div className={styles.listItemContent}>
-                            <Link
-                              to={`/post/${post.id}`}
-                              className={styles.listItemTitle}
-                            >
+                            <Link to={`/post/${post.id}`} className={styles.listItemTitle}>
                               {post.title}
                             </Link>
                             <div className={styles.listItemMeta}>
                               <Caption1 className={styles.metaText}>
                                 {formatDate(post.created_at)}
                               </Caption1>
-                              <Caption1 className={styles.metaText}>
-                                {post.views} 次阅读
-                              </Caption1>
+                              <Caption1 className={styles.metaText}>{post.views} 次阅读</Caption1>
                             </div>
                           </div>
 
@@ -488,9 +468,7 @@ export function AdminPage() {
                 <Card className={styles.listCard}>
                   {users.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <Body1 className={styles.metaText}>
-                        暂无用户
-                      </Body1>
+                      <Body1 className={styles.metaText}>暂无用户</Body1>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -505,9 +483,15 @@ export function AdminPage() {
 
                           <Badge
                             appearance="filled"
-                            color={(user.permissions & Permission.USER_MANAGE) !== 0 ? 'brand' : 'success'}
+                            color={
+                              (user.permissions & Permission.USER_MANAGE) !== 0
+                                ? 'brand'
+                                : 'success'
+                            }
                           >
-                            {(user.permissions & Permission.USER_MANAGE) !== 0 ? '管理员' : '普通用户'}
+                            {(user.permissions & Permission.USER_MANAGE) !== 0
+                              ? '管理员'
+                              : '普通用户'}
                           </Badge>
 
                           <Button
@@ -532,9 +516,7 @@ export function AdminPage() {
               <div>
                 <Title2 style={{ marginBottom: '24px' }}>设置</Title2>
                 <Card style={{ borderRadius: tokens.borderRadiusLarge, padding: '32px' }}>
-                  <Body1 className={styles.metaText}>
-                    设置功能开发中...
-                  </Body1>
+                  <Body1 className={styles.metaText}>设置功能开发中...</Body1>
                 </Card>
               </div>
             )}
@@ -543,4 +525,4 @@ export function AdminPage() {
       </Card>
     </div>
   );
-};
+}

@@ -24,7 +24,9 @@ help: ## 显示帮助信息
 	@echo ""
 	@echo "Build:"
 	@echo "  make build        - 构建 debug 版本"
+	@echo "  make build-all    - 构建前端和后端（debug）"
 	@echo "  make release      - 构建 release 版本"
+	@echo "  make release-all  - 构建前端和后端（release）"
 	@echo "  make clean        - 清理构建产物"
 	@echo ""
 	@echo "Testing:"
@@ -88,6 +90,15 @@ build: ## 构建 debug 版本
 	@echo "Building debug version..."
 	cargo build --workspace
 
+build-all: frontend-build build ## 构建前端和后端（debug）
+	@echo ""
+	@echo "Full build complete!"
+	@echo "Frontend: ./dist"
+	@echo "Backend: ./target/debug/peng-blog"
+	@echo ""
+	@echo "Run with: cargo run"
+	@echo "Server will serve frontend at http://localhost:3000"
+
 release: ## 构建 release 版本
 	@echo "Building release version..."
 	cargo build --release --workspace
@@ -95,12 +106,23 @@ release: ## 构建 release 版本
 	@echo "Build complete! Binary location:"
 	@ls -lh target/release/peng-blog 2>/dev/null || echo "Binary not found"
 
+release-all: frontend-build release ## 构建前端和后端（release）
+	@echo ""
+	@echo "Full production build complete!"
+	@echo "Frontend: ./dist"
+	@echo "Backend: ./target/release/peng-blog"
+	@echo ""
+	@echo "Run with: ./target/release/peng-blog"
+	@echo "Server will serve frontend at http://localhost:3000"
+
 clean: ## 清理构建产物
 	@echo "Cleaning build artifacts..."
 	cargo clean
 	@echo "Cleaning temporary files..."
 	rm -f /tmp/ci-output.log
 	rm -f coverage/*.html coverage/*.json 2>/dev/null || true
+	@echo "Cleaning frontend dist..."
+	rm -rf dist
 	@echo "Clean complete!"
 
 ##############################################################################
@@ -274,7 +296,8 @@ frontend-lint: ## 检查前端代码
 
 frontend-clean: ## 清理前端构建产物
 	@echo "Cleaning frontend build artifacts..."
-	cd frontend && rm -rf dist node_modules/.vite
+	rm -rf dist
+	cd frontend && rm -rf node_modules/.vite
 
 ##############################################################################
 # 组合命令
@@ -294,7 +317,8 @@ setup: install-hooks frontend-install ## 初始化开发环境
 	@echo "  1. Copy .env.example to .env and configure"
 	@echo "  2. Run 'make db-migrate' to initialize database"
 	@echo "  3. Run 'make user-create' to create admin user"
-	@echo "  4. Run 'make dev' to start the server"
+	@echo "  4. Run 'make build-all' to build frontend and backend"
+	@echo "  5. Run 'make dev' or 'cargo run' to start the server"
 	@echo ""
 
 full-check: fmt clippy test ## 完整代码检查（格式化、clippy、测试）

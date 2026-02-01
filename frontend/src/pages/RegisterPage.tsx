@@ -10,11 +10,7 @@ import {
   tokens,
   makeStyles,
 } from '@fluentui/react-components';
-import {
-  ArrowLeftRegular,
-  PersonRegular,
-  LockClosedRegular,
-} from '@fluentui/react-icons';
+import { ArrowLeftRegular, PersonRegular, LockClosedRegular } from '@fluentui/react-icons';
 import { authApi } from '../api';
 import type { UserCreateRequest } from '../types';
 
@@ -144,9 +140,7 @@ export function RegisterPage() {
           header={
             <div className={styles.headerContent}>
               <Title2>创建账户</Title2>
-              <Body1 className={styles.headerSubtitle}>
-                加入 Peng Blog，开始你的写作之旅
-              </Body1>
+              <Body1 className={styles.headerSubtitle}>加入 Peng Blog，开始你的写作之旅</Body1>
             </div>
           }
         />
@@ -155,11 +149,7 @@ export function RegisterPage() {
         {error && (
           <div className={styles.errorBox}>
             <Body1>{error}</Body1>
-            <Button
-              appearance="transparent"
-              size="small"
-              onClick={() => setError('')}
-            >
+            <Button appearance="transparent" size="small" onClick={() => setError('')}>
               ×
             </Button>
           </div>
@@ -168,15 +158,13 @@ export function RegisterPage() {
         {/* 注册表单 */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <div>
-            <label className={styles.fieldLabel}>
-              用户名
-            </label>
+            <label className={styles.fieldLabel}>用户名</label>
             <Input
               name="username"
               placeholder="至少3个字符"
               value={formData.username}
               onChange={(_, data) => {
-                setFormData(prev => ({ ...prev, username: data.value }));
+                setFormData((prev) => ({ ...prev, username: data.value }));
                 if (error) setError('');
               }}
               contentBefore={<PersonRegular />}
@@ -188,16 +176,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className={styles.fieldLabel}>
-              密码
-            </label>
+            <label className={styles.fieldLabel}>密码</label>
             <Input
               type="password"
               name="password"
               placeholder="至少8个字符"
               value={formData.password}
               onChange={(_, data) => {
-                setFormData(prev => ({ ...prev, password: data.value }));
+                setFormData((prev) => ({ ...prev, password: data.value }));
                 if (error) setError('');
               }}
               contentBefore={<LockClosedRegular />}
@@ -209,9 +195,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className={styles.fieldLabel}>
-              确认密码
-            </label>
+            <label className={styles.fieldLabel}>确认密码</label>
             <Input
               type="password"
               placeholder="再次输入密码"
@@ -240,10 +224,7 @@ export function RegisterPage() {
         <div className={styles.footer}>
           <Body1 className={styles.footerText}>
             已有账户？{' '}
-            <Link
-              to="/login"
-              className={styles.link}
-            >
+            <Link to="/login" className={styles.link}>
               立即登录
             </Link>
           </Body1>
@@ -263,4 +244,4 @@ export function RegisterPage() {
       </Card>
     </div>
   );
-};
+}

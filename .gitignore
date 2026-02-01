@@ -27,6 +27,7 @@ Thumbs.db
 # Frontend
 /frontend/node_modules
 /node_modules
+/dist
 
 # IDEs
 .idea

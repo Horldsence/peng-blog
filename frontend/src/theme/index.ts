@@ -3,11 +3,7 @@
  * 支持深色/浅色模式切换
  */
 
-import {
-  webLightTheme,
-  webDarkTheme,
-  Theme,
-} from '@fluentui/react-components';
+import { webLightTheme, webDarkTheme, Theme } from '@fluentui/react-components';
 
 /**
  * 自定义浅色主题 */

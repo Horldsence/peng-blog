@@ -1,11 +1,5 @@
 import { http } from '../utils/request';
-import type {
-  Tag,
-  TagCreateRequest,
-  ApiResponseV2,
-  ApiListResponseV2,
-  Post
-} from '../types';
+import type { Tag, TagCreateRequest, ApiResponseV2, ApiListResponseV2, Post } from '../types';
 
 export const tagsApi = {
   /**

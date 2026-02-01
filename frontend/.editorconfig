@@ -1,0 +1,30 @@
+# EditorConfig 是跨编辑器和 IDE 的编码风格配置文件
+# https://editorconfig.org
+
+root = true
+
+# 默认设置（所有文件）
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# 使用空格缩进
+[*.{js,jsx,ts,tsx,json,html,css,scss,md}]
+indent_style = space
+indent_size = 2
+
+# Markdown 文件的特殊设置
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML 文件
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# 包文件（package.json, yarn.lock）
+[{package.json,yarn.lock}]
+indent_style = space
+indent_size = 2

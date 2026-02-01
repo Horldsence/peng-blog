@@ -13,13 +13,8 @@ import {
   Spinner,
   tokens,
   makeStyles,
-  mergeClasses,
 } from '@fluentui/react-components';
-import {
-  SearchRegular,
-  CalendarRegular,
-  EyeRegular,
-} from '@fluentui/react-icons';
+import { SearchRegular, CalendarRegular, EyeRegular } from '@fluentui/react-icons';
 import { postsApi } from '../api';
 import { useToast } from '../components/ui/Toast';
 import type { Post } from '../types';
@@ -230,10 +225,7 @@ export function SearchPage() {
 
     return parts.map((part, index) =>
       regex.test(part) ? (
-        <mark
-          key={index}
-          className={styles.highlight}
-        >
+        <mark key={index} className={styles.highlight}>
           {part}
         </mark>
       ) : (
@@ -287,12 +279,8 @@ export function SearchPage() {
         <>
           {results.length === 0 ? (
             <Card className={styles.emptyCard}>
-              <Body1 className={styles.emptyText}>
-                未找到与 "{query}" 相关的文章
-              </Body1>
-              <Body1 className={styles.emptySubtext}>
-                请尝试其他关键词
-              </Body1>
+              <Body1 className={styles.emptyText}>未找到与 "{query}" 相关的文章</Body1>
+              <Body1 className={styles.emptySubtext}>请尝试其他关键词</Body1>
             </Card>
           ) : (
             <>
@@ -347,9 +335,7 @@ export function SearchPage() {
       {/* 搜索提示 */}
       {!hasSearched && !query && (
         <Card className={styles.tipsCard}>
-          <Body1 className={styles.tipsTitle}>
-            搜索提示
-          </Body1>
+          <Body1 className={styles.tipsTitle}>搜索提示</Body1>
           <ul className={styles.tipsList}>
             <li>搜索文章标题和内容</li>
             <li>支持关键词模糊匹配</li>

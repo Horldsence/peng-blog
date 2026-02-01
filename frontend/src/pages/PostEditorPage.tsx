@@ -12,11 +12,7 @@ import {
   Spinner,
   tokens,
 } from '@fluentui/react-components';
-import {
-  ArrowLeftRegular,
-  SaveRegular,
-  SendRegular,
-} from '@fluentui/react-icons';
+import { ArrowLeftRegular, SaveRegular, SendRegular } from '@fluentui/react-icons';
 import { postsApi } from '../api';
 import type { PostCreateRequest, PostUpdateRequest } from '../types';
 
@@ -135,11 +131,7 @@ export function PostEditorPage() {
 
       {/* 编辑器卡片 */}
       <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
-        <CardHeader
-          header={
-            <Title2>{isEditing ? '编辑文章' : '新建文章'}</Title2>
-          }
-        />
+        <CardHeader header={<Title2>{isEditing ? '编辑文章' : '新建文章'}</Title2>} />
 
         {/* 错误提示 */}
         {error && (
@@ -157,11 +149,7 @@ export function PostEditorPage() {
             }}
           >
             <Body1>{error}</Body1>
-            <Button
-              appearance="transparent"
-              size="small"
-              onClick={() => setError('')}
-            >
+            <Button appearance="transparent" size="small" onClick={() => setError('')}>
               ×
             </Button>
           </div>
@@ -171,9 +159,7 @@ export function PostEditorPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* 标题输入 */}
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
-              文章标题
-            </Body1>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>文章标题</Body1>
             <Input
               placeholder="输入文章标题..."
               value={title}
@@ -186,9 +172,7 @@ export function PostEditorPage() {
 
           {/* 内容输入 */}
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>
-              文章内容
-            </Body1>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>文章内容</Body1>
             <Textarea
               placeholder="在这里写下你的文章内容..."
               value={content}
@@ -225,11 +209,7 @@ export function PostEditorPage() {
 
           {/* 操作按钮 */}
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <Button
-              appearance="secondary"
-              onClick={() => navigate(-1)}
-              disabled={loading}
-            >
+            <Button appearance="secondary" onClick={() => navigate(-1)} disabled={loading}>
               取消
             </Button>
             <Button
@@ -268,4 +248,4 @@ export function PostEditorPage() {
       </Card>
     </div>
   );
-};
+}

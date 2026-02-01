@@ -16,14 +16,8 @@ import {
   Textarea,
   makeStyles,
   tokens,
-  mergeClasses,
 } from '@fluentui/react-components';
-import {
-  ArrowLeftRegular,
-  EditRegular,
-  CalendarRegular,
-  EyeRegular,
-} from '@fluentui/react-icons';
+import { ArrowLeftRegular, EditRegular, CalendarRegular, EyeRegular } from '@fluentui/react-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -275,11 +269,7 @@ export function PostDetailPage() {
       {/* 文章卡片 */}
       <Card className={styles.postCard}>
         <CardHeader
-          header={
-            <Title1 className={styles.title}>
-              {post.title}
-            </Title1>
-          }
+          header={<Title1 className={styles.title}>{post.title}</Title1>}
           description={
             <div className={styles.metaContainer}>
               <div className={styles.metaItem}>
@@ -325,10 +315,14 @@ export function PostDetailPage() {
                   <code className={styles.mdBlockCode} {...props} />
                 ),
               pre: ({ node, ...props }) => <pre className={styles.mdPre} {...props} />,
-              a: ({ node, ...props }) => <a className={styles.mdLink} target="_blank" rel="noopener noreferrer" {...props} />,
+              a: ({ node, ...props }) => (
+                <a className={styles.mdLink} target="_blank" rel="noopener noreferrer" {...props} />
+              ),
               ul: ({ node, ...props }) => <ul className={styles.mdList} {...props} />,
               ol: ({ node, ...props }) => <ol className={styles.mdList} {...props} />,
-              blockquote: ({ node, ...props }) => <blockquote className={styles.mdBlockquote} {...props} />,
+              blockquote: ({ node, ...props }) => (
+                <blockquote className={styles.mdBlockquote} {...props} />
+              ),
             }}
           >
             {post.content}
@@ -352,7 +346,11 @@ export function PostDetailPage() {
               onChange={(_, data) => setCommentContent(data.value)}
               className={styles.commentTextarea}
             />
-            <Button appearance="primary" onClick={handleCommentSubmit} disabled={!commentContent.trim()}>
+            <Button
+              appearance="primary"
+              onClick={handleCommentSubmit}
+              disabled={!commentContent.trim()}
+            >
               发表评论
             </Button>
           </div>
@@ -378,10 +376,7 @@ export function PostDetailPage() {
             </div>
           ) : (
             comments.map((comment) => (
-              <div
-                key={comment.id}
-                className={styles.commentItem}
-              >
+              <div key={comment.id} className={styles.commentItem}>
                 <div className={styles.commentHeader}>
                   <strong className={styles.commentUser}>
                     {comment.github_username || '用户'}

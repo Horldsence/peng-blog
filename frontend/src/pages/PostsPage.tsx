@@ -13,7 +13,6 @@ import {
   Input,
   tokens,
   makeStyles,
-  mergeClasses,
 } from '@fluentui/react-components';
 import {
   ArrowRightRegular,
@@ -269,18 +268,19 @@ export function PostsPage() {
               contentBefore={<SearchRegular />}
               size="large"
             />
-            <Button
-              appearance="primary"
-              onClick={handleSearch}
-              size="large"
-            >
+            <Button appearance="primary" onClick={handleSearch} size="large">
               搜索
             </Button>
           </div>
 
           {/* 快速过滤 */}
           <div className={styles.filtersContainer}>
-            <Badge size="extra-large" color="brand" appearance="filled" className={styles.filterBadge}>
+            <Badge
+              size="extra-large"
+              color="brand"
+              appearance="filled"
+              className={styles.filterBadge}
+            >
               全部文章
             </Badge>
             <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
@@ -313,7 +313,9 @@ export function PostsPage() {
               {posts.map((post, index) => (
                 <Card
                   key={post.id}
-                  ref={(el) => { cardsRef.current[index] = el; }}
+                  ref={(el) => {
+                    cardsRef.current[index] = el;
+                  }}
                   className={styles.postCard}
                   onClick={() => navigate(`/post/${post.id}`)}
                   onMouseEnter={(e) => {
@@ -336,11 +338,7 @@ export function PostsPage() {
                   <CardHeader
                     className={styles.cardHeader}
                     header={
-                      <Text
-                        weight="semibold"
-                        size={500}
-                        className={styles.cardTitle}
-                      >
+                      <Text weight="semibold" size={500} className={styles.cardTitle}>
                         {post.title}
                       </Text>
                     }

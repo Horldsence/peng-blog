@@ -5,7 +5,7 @@ import type {
   CategoryUpdateRequest,
   ApiResponseV2,
   ApiListResponseV2,
-  Post
+  Post,
 } from '../types';
 
 export const categoriesApi = {

@@ -133,17 +133,17 @@ export interface PostPatchRequest {
 export interface PostListParams {
   page?: number;
   per_page?: number;
-  author?: UUID;        // 按 author 过滤（替代 user_id）
-  category?: UUID;      // 按 category 过滤（替代 category_id）
-  tag?: UUID;           // 按 tag 过滤
-  status?: 'published' | 'draft' | 'all';  // 按 status 过滤
+  author?: UUID; // 按 author 过滤（替代 user_id）
+  category?: UUID; // 按 category 过滤（替代 category_id）
+  tag?: UUID; // 按 tag 过滤
+  status?: 'published' | 'draft' | 'all'; // 按 status 过滤
 }
 
 /**
  * 文章搜索查询参数
  */
 export interface PostSearchParams {
-  q: string;             // 搜索关键词
+  q: string; // 搜索关键词
   page?: number;
   per_page?: number;
 }
@@ -203,7 +203,7 @@ export interface Comment {
 export interface CommentCreateRequest {
   post_id: UUID;
   content: string;
-  access_token?: string;  // GitHub OAuth token
+  access_token?: string; // GitHub OAuth token
 }
 
 export interface CommentUpdateRequest {
@@ -295,18 +295,24 @@ export interface RecordVisitRequest {
 // ===== 权限位标志 =====
 
 export enum Permission {
-  POST_CREATE = 1 << 0,    // 1
-  POST_UPDATE = 1 << 1,    // 2
-  POST_DELETE = 1 << 2,    // 4
-  POST_PUBLISH = 1 << 3,   // 8
-  USER_MANAGE = 1 << 4,    // 16
+  POST_CREATE = 1 << 0, // 1
+  POST_UPDATE = 1 << 1, // 2
+  POST_DELETE = 1 << 2, // 4
+  POST_PUBLISH = 1 << 3, // 8
+  USER_MANAGE = 1 << 4, // 16
 }
 
 // 默认用户权限
-export const DEFAULT_USER_PERMISSIONS = Permission.POST_CREATE | Permission.POST_UPDATE | Permission.POST_PUBLISH;
+export const DEFAULT_USER_PERMISSIONS =
+  Permission.POST_CREATE | Permission.POST_UPDATE | Permission.POST_PUBLISH;
 
 // 管理员权限
-export const ADMIN_PERMISSIONS = Permission.POST_CREATE | Permission.POST_UPDATE | Permission.POST_DELETE | Permission.POST_PUBLISH | Permission.USER_MANAGE;
+export const ADMIN_PERMISSIONS =
+  Permission.POST_CREATE |
+  Permission.POST_UPDATE |
+  Permission.POST_DELETE |
+  Permission.POST_PUBLISH |
+  Permission.USER_MANAGE;
 
 // ===== 查询参数通用接口 =====
 

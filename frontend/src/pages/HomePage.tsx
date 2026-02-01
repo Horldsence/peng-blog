@@ -1,17 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Button,
-  Input,
-  tokens,
-  makeStyles,
-  mergeClasses,
-} from '@fluentui/react-components';
-import {
-  SearchRegular,
-  ChevronDownRegular,
-} from '@fluentui/react-icons';
+import { Button, Input, tokens, makeStyles, mergeClasses } from '@fluentui/react-components';
+import { SearchRegular, ChevronDownRegular } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { postsApi } from '../api';
+import { useTheme } from '../contexts/ThemeContext';
 import gsap from 'gsap';
 
 const useStyles = makeStyles({
@@ -39,7 +31,8 @@ const useStyles = makeStyles({
     right: 0,
     bottom: 0,
     // Lighter gradient since we have acrylic in MainLayout
-    background: 'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1) 100%)',
+    background:
+      'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1) 100%)',
     zIndex: 0,
     pointerEvents: 'none',
   },
@@ -70,7 +63,12 @@ const useStyles = makeStyles({
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     '& input': {
       backgroundColor: 'transparent',
-    }
+    },
+  },
+  searchInputDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
   },
   searchButton: {
     borderRadius: tokens.borderRadiusCircular,
@@ -92,16 +90,16 @@ const useStyles = makeStyles({
     margin: '0 0 24px 0',
     lineHeight: '1.1',
     letterSpacing: '-0.02em',
-    backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 100%)',
+    backgroundImage: `linear-gradient(180deg, ${tokens.colorNeutralForeground1} 0%, ${tokens.colorNeutralForeground2} 100%)`,
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
-    filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.3))',
+    filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.1))',
   },
   welcomeSubtitle: {
     fontSize: tokens.fontSizeBase500,
-    color: 'rgba(255,255,255,0.9)',
+    color: tokens.colorNeutralForeground2,
     margin: '0 0 24px 0',
-    textShadow: '0 2px 10px rgba(0,0,0,0.3)',
+    textShadow: '0 2px 10px rgba(0,0,0,0.1)',
     lineHeight: '1.7',
     maxWidth: '450px',
   },
@@ -117,12 +115,12 @@ const useStyles = makeStyles({
   statNumber: {
     fontSize: tokens.fontSizeBase600,
     fontWeight: tokens.fontWeightBold,
-    color: '#ffffff',
-    textShadow: '0 2px 10px rgba(0,0,0,0.3)',
+    color: tokens.colorNeutralForeground1,
+    textShadow: '0 2px 10px rgba(0,0,0,0.1)',
   },
   statLabel: {
     fontSize: tokens.fontSizeBase200,
-    color: 'rgba(255,255,255,0.7)',
+    color: tokens.colorNeutralForeground3,
     marginTop: '4px',
   },
   scrollIndicator: {
@@ -134,7 +132,7 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     alignItems: 'center',
     gap: '8px',
-    color: 'rgba(255,255,255,0.8)',
+    color: tokens.colorNeutralForeground3,
     cursor: 'pointer',
     zIndex: 3,
     opacity: 0,
@@ -142,7 +140,7 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusCircular,
     transition: 'background-color 0.3s ease',
     ':hover': {
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      backgroundColor: tokens.colorNeutralBackground1Hover,
     },
   },
   scrollText: {
@@ -153,12 +151,13 @@ const useStyles = makeStyles({
   },
   scrollArrow: {
     fontSize: '24px',
-  }
+  },
 });
 
 export function HomePage() {
   const styles = useStyles();
   const navigate = useNavigate();
+  const { mode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [postsCount, setPostsCount] = useState<number>(0);
 
@@ -270,7 +269,10 @@ export function HomePage() {
               value={searchQuery}
               onChange={(_, data) => setSearchQuery(data.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className={styles.searchInput}
+              className={mergeClasses(
+                styles.searchInput,
+                mode === 'dark' && styles.searchInputDark
+              )}
               contentBefore={<SearchRegular />}
               size="large"
             />
@@ -287,11 +289,11 @@ export function HomePage() {
           {/* 欢迎语 - 左下角 */}
           <div ref={welcomeRef} className={styles.welcomeContainer}>
             <h1 className={styles.welcomeTitle}>
-              欢迎来到<br />Peng Blog
+              欢迎来到
+              <br />
+              Peng Blog
             </h1>
-            <p className={styles.welcomeSubtitle}>
-              探索技术文章、教程和见解，记录学习，分享成长
-            </p>
+            <p className={styles.welcomeSubtitle}>探索技术文章、教程和见解，记录学习，分享成长</p>
             <div ref={statsRef} className={styles.statsRow}>
               <div className={styles.statItem}>
                 <span className={styles.statNumber}>{postsCount}+</span>
@@ -316,7 +318,7 @@ export function HomePage() {
           onClick={handleScrollToPosts}
         >
           <span className={styles.scrollText}>浏览文章</span>
-          <ChevronDownRegular className={mergeClasses("scroll-arrow", styles.scrollArrow)} />
+          <ChevronDownRegular className={mergeClasses('scroll-arrow', styles.scrollArrow)} />
         </div>
       </section>
     </div>

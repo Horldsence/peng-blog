@@ -139,9 +139,101 @@ jobs:
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }} --workspace
 
+  frontend-lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  frontend-format:
+    name: Frontend Format Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Prettier formatting
+        run: npm run format:check
+
+  frontend-type-check:
+    name: Frontend Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript type check
+        run: npm run type-check
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
   summary:
     name: CI Summary
-    needs: [check, test, clippy, fmt, build]
+    needs: [check, test, clippy, fmt, build, frontend-lint, frontend-format, frontend-type-check, frontend-build]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -149,6 +241,7 @@ jobs:
         run: |
           echo "### CI Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Backend" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Check | ${{ needs.check.result }} |" >> $GITHUB_STEP_SUMMARY
@@ -156,17 +249,45 @@ jobs:
           echo "| Clippy | ${{ needs.clippy.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Format | ${{ needs.fmt.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Frontend" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.frontend-lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Format | ${{ needs.frontend-format.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ${{ needs.frontend-type-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.frontend-build.result }} |" >> $GITHUB_STEP_SUMMARY
           
-          # Check if all jobs succeeded
+          # Check if all backend jobs succeeded
+          BACKEND_SUCCESS=true
           if [ "${{ needs.check.result }}" != "success" ] || \
              [ "${{ needs.test.result }}" != "success" ] || \
              [ "${{ needs.clippy.result }}" != "success" ] || \
              [ "${{ needs.fmt.result }}" != "success" ] || \
              [ "${{ needs.build.result }}" != "success" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "❌ CI failed" >> $GITHUB_STEP_SUMMARY
+            BACKEND_SUCCESS=false
+          fi
+          
+          # Check if all frontend jobs succeeded
+          FRONTEND_SUCCESS=true
+          if [ "${{ needs.frontend-lint.result }}" != "success" ] || \
+             [ "${{ needs.frontend-format.result }}" != "success" ] || \
+             [ "${{ needs.frontend-type-check.result }}" != "success" ] || \
+             [ "${{ needs.frontend-build.result }}" != "success" ]; then
+            FRONTEND_SUCCESS=false
+          fi
+          
+          # Generate final status
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$BACKEND_SUCCESS" = false ] && [ "$FRONTEND_SUCCESS" = false ]; then
+            echo "❌ Backend and Frontend CI failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          elif [ "$BACKEND_SUCCESS" = false ]; then
+            echo "❌ Backend CI failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          elif [ "$FRONTEND_SUCCESS" = false ]; then
+            echo "❌ Frontend CI failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ All checks passed" >> $GITHUB_STEP_SUMMARY
           fi

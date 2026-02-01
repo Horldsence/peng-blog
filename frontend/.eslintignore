@@ -1,0 +1,8 @@
+build
+node_modules
+coverage
+*.config.js
+*.config.ts
+vite.config.ts
+public
+.vscode

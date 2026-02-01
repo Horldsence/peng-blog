@@ -16,11 +16,8 @@ import {
   Spinner,
   tokens,
   makeStyles,
-  mergeClasses,
 } from '@fluentui/react-components';
-import {
-  FolderRegular,
-} from '@fluentui/react-icons';
+import { FolderRegular } from '@fluentui/react-icons';
 import { categoriesApi, postsApi } from '../api';
 import type { Category, Post } from '../types';
 
@@ -165,10 +162,10 @@ export function CategoriesPage() {
   // 构建分类树
   const buildCategoryTree = (categories: Category[]): any[] => {
     const map = new Map<string, any>();
-    categories.forEach(cat => map.set(cat.id, { ...cat, children: [] }));
+    categories.forEach((cat) => map.set(cat.id, { ...cat, children: [] }));
 
     const root: Category[] = [];
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       const node = map.get(cat.id)!;
       if (cat.parent_id) {
         const parent = map.get(cat.parent_id);
@@ -186,10 +183,7 @@ export function CategoriesPage() {
 
   const renderCategory = (category: any, level: number = 0) => (
     <AccordionItem key={category.id} value={category.id}>
-      <AccordionHeader
-        expandIconPosition="end"
-        style={{ paddingLeft: `${level * 16}px` }}
-      >
+      <AccordionHeader expandIconPosition="end" style={{ paddingLeft: `${level * 16}px` }}>
         <div
           className={styles.accordionHeaderContent}
           onClick={(e) => {
@@ -200,9 +194,7 @@ export function CategoriesPage() {
           <FolderRegular />
           <span className={styles.categoryName}>{category.name}</span>
           {category.description && (
-            <span className={styles.categoryDesc}>
-              {category.description}
-            </span>
+            <span className={styles.categoryDesc}>{category.description}</span>
           )}
         </div>
       </AccordionHeader>
@@ -242,7 +234,7 @@ export function CategoriesPage() {
             <Body1 className={styles.emptyText}>暂无分类</Body1>
           ) : (
             <Accordion collapsible defaultOpenItems={[]}>
-              {categoryTree.map(category => renderCategory(category))}
+              {categoryTree.map((category) => renderCategory(category))}
             </Accordion>
           )}
         </Card>
@@ -253,16 +245,10 @@ export function CategoriesPage() {
         <div className={styles.mainContent}>
           <Card className={styles.postsCard}>
             <CardHeader
-              header={
-                <Body1 className={styles.postsHeader}>
-                  {selectedCategory.name}
-                </Body1>
-              }
+              header={<Body1 className={styles.postsHeader}>{selectedCategory.name}</Body1>}
               description={
                 selectedCategory.description ? (
-                  <Body1 className={styles.postsHeaderDesc}>
-                    {selectedCategory.description}
-                  </Body1>
+                  <Body1 className={styles.postsHeaderDesc}>{selectedCategory.description}</Body1>
                 ) : (
                   <Body1>{posts.length} 篇文章</Body1>
                 )
@@ -270,9 +256,7 @@ export function CategoriesPage() {
             />
             <div>
               {posts.length === 0 ? (
-                <Body1 className={styles.emptyText}>
-                  该分类下暂无文章
-                </Body1>
+                <Body1 className={styles.emptyText}>该分类下暂无文章</Body1>
               ) : (
                 posts.map((post) => (
                   <div
@@ -280,9 +264,7 @@ export function CategoriesPage() {
                     className={styles.postItem}
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
-                    <Body1 className={styles.postTitle}>
-                      {post.title}
-                    </Body1>
+                    <Body1 className={styles.postTitle}>{post.title}</Body1>
                     <Body1 className={styles.postExcerpt}>
                       {post.content.substring(0, 100)}...
                     </Body1>

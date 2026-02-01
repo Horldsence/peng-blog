@@ -5,7 +5,7 @@ import type {
   ApiResponseV2,
   ApiListResponseV2,
   PaginationParams,
-  Post
+  Post,
 } from '../types';
 
 export const usersApi = {

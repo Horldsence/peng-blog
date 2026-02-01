@@ -59,9 +59,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme, setTheme, theme }}>
-      <FluentProvider theme={theme}>
-        {children}
-      </FluentProvider>
+      <FluentProvider theme={theme}>{children}</FluentProvider>
     </ThemeContext.Provider>
   );
 }

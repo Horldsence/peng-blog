@@ -4,7 +4,7 @@ import type {
   PostViews,
   AdminStats,
   RecordVisitRequest,
-  ApiResponseV2
+  ApiResponseV2,
 } from '../types';
 
 export const statsApi = {

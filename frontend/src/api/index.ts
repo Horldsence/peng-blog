@@ -1,9 +1,9 @@
 /**
  * API 统一导出文件
- * 
+ *
  * 使用方式：
  * import { authApi, postsApi } from '@/api';
- * 
+ *
  * 或者：
  * import api from '@/api';
  * api.auth.login({...});
