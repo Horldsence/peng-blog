@@ -149,7 +149,7 @@ impl StatsRepository for StatsRepositoryImpl {
         // Ensure stats record exists
         let _stats = self.get_or_create_post_stats(post_id).await?;
 
-        // Increment views
+        // Increment views in post_stats table
         PostStatsEntity::update_many()
             .filter(post_stats::Column::PostId.eq(post_id.to_string()))
             .col_expr(
@@ -175,6 +175,15 @@ impl StatsRepository for StatsRepositoryImpl {
             .update(&*self.db)
             .await
             .map_err(|e| Error::Internal(format!("Failed to update post stats: {}", e)))?;
+
+        // Also increment views in post table for consistency
+        use crate::entity::post;
+        PostEntity::update_many()
+            .filter(post::Column::Id.eq(post_id.to_string()))
+            .col_expr(post::Column::Views, Expr::col(post::Column::Views).add(1))
+            .exec(&*self.db)
+            .await
+            .map_err(|e| Error::Internal(format!("Failed to increment post views: {}", e)))?;
 
         Ok(())
     }

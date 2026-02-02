@@ -34,7 +34,7 @@ fn post_to_entity(post: &Post) -> crate::entity::post::Model {
         category_id: post.category_id.map(|id| id.to_string()),
         published_at: post.published_at.map(|d| d.to_rfc3339()),
         created_at: post.created_at.to_rfc3339(),
-        views: 0,
+        views: post.views as i64,
     }
 }
 

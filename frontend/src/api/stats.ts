@@ -1,10 +1,5 @@
 import { http } from '../utils/request';
-import type {
-  GlobalStats,
-  AdminStats,
-  RecordVisitRequest,
-  ApiResponseV2,
-} from '../types';
+import type { GlobalStats, AdminStats, RecordVisitRequest, ApiResponseV2 } from '../types';
 
 export const statsApi = {
   /**
