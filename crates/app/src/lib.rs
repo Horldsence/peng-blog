@@ -41,8 +41,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
-    let database_url =
-        std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgresql://postgres:postgres@localhost/peng_blog".to_string());
+    let database_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgresql://postgres:postgres@localhost/peng_blog".to_string());
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "change-this-secret-in-production".to_string());
 
