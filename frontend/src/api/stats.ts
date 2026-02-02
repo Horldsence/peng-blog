@@ -1,7 +1,6 @@
 import { http } from '../utils/request';
 import type {
   GlobalStats,
-  PostViews,
   AdminStats,
   RecordVisitRequest,
   ApiResponseV2,
@@ -20,13 +19,6 @@ export const statsApi = {
    */
   recordVisit: (data?: RecordVisitRequest) => {
     return http.post<ApiResponseV2<{ message: string }>>('/stats/visits', data || {});
-  },
-
-  /**
-   * 获取文章阅读量
-   */
-  getPostViews: (postId: string) => {
-    return http.get<ApiResponseV2<PostViews>>(`/stats/posts/${postId}/views`);
   },
 
   /**

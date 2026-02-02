@@ -185,6 +185,10 @@ export function PostDetailPage() {
 
       // 记录阅读量
       await statsApi.recordPostView(id);
+
+      // 重新获取文章数据以显示最新阅读量
+      const updatedResponse = await postsApi.getPost(id);
+      setPost(updatedResponse.data);
     } catch (error) {
       console.error('Failed to fetch post:', error);
     } finally {

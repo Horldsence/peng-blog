@@ -21,18 +21,14 @@ const useStyles = makeStyles({
   },
   // Removed heroBackground
   heroOverlay: {
-    // Only needed if we want to darken the global background specifically for home,
-    // otherwise relies on MainLayout's acrylic or just transparent.
-    // Let's keep a slight gradient for text readability if the acrylic isn't enough
-    // or if we want that 'hero' look.
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    // Lighter gradient since we have acrylic in MainLayout
-    background:
-      'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1) 100%)',
+    // Gradient mask from screen edge inwards using token colors
+    background: `radial-gradient(circle at 0% 10%, ${tokens.colorNeutralBackground1} 0%, transparent 10%),
+                 radial-gradient(circle at 0% 100%, ${tokens.colorNeutralBackground1} 0%, transparent 60%)`,
     zIndex: 0,
     pointerEvents: 'none',
   },
@@ -43,7 +39,7 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    padding: '48px 56px',
+    padding: '32px 42px',
     boxSizing: 'border-box',
   },
   searchContainer: {
@@ -81,7 +77,7 @@ const useStyles = makeStyles({
     maxWidth: '550px',
     opacity: 0,
     transform: 'translateY(30px)',
-    padding: '32px 0',
+    padding: '16px 0',
   },
   welcomeTitle: {
     fontSize: '64px',
