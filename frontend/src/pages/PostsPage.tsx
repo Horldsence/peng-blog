@@ -6,11 +6,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Card,
   CardHeader,
-  Badge,
   Caption1,
   Text,
   Button,
   Input,
+  TabList,
+  Tab,
+  Tag,
   tokens,
   makeStyles,
 } from '@fluentui/react-components';
@@ -21,8 +23,8 @@ import {
   SearchRegular,
 } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
-import { postsApi } from '../api';
-import type { Post } from '../types';
+import { postsApi, categoriesApi, tagsApi } from '../api';
+import type { Post, Category, Tag as TagModel } from '../types';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { getPostExcerpt } from '../utils/markdown';
@@ -171,12 +173,35 @@ export function PostsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<TagModel[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   const pageRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    fetchPosts();
+    const loadFilters = async () => {
+      try {
+        const [categoriesRes, tagsRes] = await Promise.all([
+          categoriesApi.getCategories({ per_page: 100 }),
+          tagsApi.getTags({ per_page: 100 }),
+        ]);
+        setCategories(categoriesRes.data);
+        setTags(tagsRes.data);
+      } catch (err) {
+        console.error('加载筛选选项失败:', err);
+      }
+    };
+    loadFilters();
   }, []);
+
+  useEffect(() => {
+    if (!searchQuery) {
+      fetchPosts();
+    }
+  }, [selectedCategoryId, selectedTagIds]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -204,10 +229,20 @@ export function PostsPage() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await postsApi.getPosts({
+      const params: any = {
         page: 1,
         per_page: 50,
-      });
+      };
+
+      if (selectedCategoryId !== 'all') {
+        params.category = selectedCategoryId;
+      }
+
+      if (selectedTagIds.length > 0) {
+        params.tag = selectedTagIds[selectedTagIds.length - 1];
+      }
+
+      const response = await postsApi.getPosts(params);
       setPosts(response.data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
@@ -221,6 +256,10 @@ export function PostsPage() {
       fetchPosts();
       return;
     }
+
+    // 搜索时清除筛选
+    setSelectedCategoryId('all');
+    setSelectedTagIds([]);
 
     try {
       setLoading(true);
@@ -274,27 +313,54 @@ export function PostsPage() {
           </div>
 
           {/* 快速过滤 */}
-          <div className={styles.filtersContainer}>
-            <Badge
-              size="extra-large"
-              color="brand"
-              appearance="filled"
-              className={styles.filterBadge}
-            >
-              全部文章
-            </Badge>
-            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
-              Rust
-            </Badge>
-            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
-              React
-            </Badge>
-            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
-              TypeScript
-            </Badge>
-            <Badge size="extra-large" appearance="ghost" className={styles.filterBadge}>
-              Web 开发
-            </Badge>
+          <div className={styles.filtersContainer} style={{ flexDirection: 'column', gap: '16px' }}>
+            <div style={{ width: '100%' }}>
+              <TabList
+                selectedValue={selectedCategoryId}
+                onTabSelect={(_, data) => {
+                  setSearchQuery('');
+                  setSelectedCategoryId(String(data.value));
+                }}
+              >
+                <Tab value="all">全部</Tab>
+                {categories.map((c) => (
+                  <Tab key={c.id} value={c.id}>
+                    {c.name}
+                  </Tab>
+                ))}
+              </TabList>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {tags.map((t) => {
+                const isSelected = selectedTagIds.includes(t.id);
+                return (
+                  <Tag
+                    key={t.id}
+                    appearance={isSelected ? 'filled' : 'outline'}
+                    shape="circular"
+                    style={{
+                      cursor: 'pointer',
+                      ...(isSelected && {
+                        backgroundColor: tokens.colorBrandBackground,
+                        color: tokens.colorNeutralForegroundOnBrand,
+                        borderColor: 'transparent',
+                      }),
+                    }}
+                    onClick={() => {
+                      setSearchQuery('');
+                      if (isSelected) {
+                        setSelectedTagIds(selectedTagIds.filter((id) => id !== t.id));
+                      } else {
+                        setSelectedTagIds([...selectedTagIds, t.id]);
+                      }
+                    }}
+                  >
+                    {t.name}
+                  </Tag>
+                );
+              })}
+            </div>
           </div>
 
           {/* 文章网格 */}
