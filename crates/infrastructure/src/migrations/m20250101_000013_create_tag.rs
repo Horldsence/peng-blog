@@ -12,27 +12,34 @@ impl MigrationName for CreateTag {
 #[async_trait::async_trait]
 impl MigrationTrait for CreateTag {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let sql = r#"
+        let db = manager.get_connection();
+
+        let create_table = r#"
             CREATE TABLE tag (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL UNIQUE,
                 slug TEXT NOT NULL UNIQUE,
                 created_at TEXT NOT NULL
-            );
-            CREATE INDEX idx_tag_slug ON tag(slug);
+            )
         "#;
-        manager
-            .get_connection()
-            .execute(Statement::from_string(
-                manager.get_database_backend(),
-                sql.to_owned(),
-            ))
-            .await
-            .map(|_| ())
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            create_table.to_owned(),
+        ))
+        .await
+        .map(|_| ())?;
+
+        let idx_slug = "CREATE INDEX idx_tag_slug ON tag(slug)";
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            idx_slug.to_owned(),
+        ))
+        .await
+        .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let sql = "DROP TABLE tag;";
+        let sql = "DROP TABLE tag";
         manager
             .get_connection()
             .execute(Statement::from_string(

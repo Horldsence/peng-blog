@@ -29,7 +29,7 @@
 
 ### 数据库
 - **SeaORM** - 异步 ORM
-- **SQLite** - 轻量级数据库
+- **PostgreSQL** - 关系型数据库
 - **SeaORM Migration** - 数据库迁移工具
 
 ### 安全与认证
@@ -94,7 +94,7 @@ peng-blog/
 ### 环境要求
 
 - Rust 1.70 或更高版本
-- SQLite 3
+- PostgreSQL 12+ (需要先安装并启动 PostgreSQL 服务)
 - Git
 
 ### 安装步骤
@@ -106,10 +106,11 @@ peng-blog/
    ```
 
 2. **配置环境变量**
-   
+
    创建 `.env` 文件：
    ```env
-   DATABASE_URL=sqlite://blog.db
+   # PostgreSQL 连接字符串格式: postgresql://username:password@hostname:port/database_name
+   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/peng_blog
    JWT_SECRET=your-secret-key-here
    UPLOAD_DIR=./uploads
    BASE_URL=http://localhost:3000

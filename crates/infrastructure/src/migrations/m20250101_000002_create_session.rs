@@ -12,25 +12,39 @@ impl MigrationName for CreateSession {
 #[async_trait::async_trait]
 impl MigrationTrait for CreateSession {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let sql = r#"
+        let db = manager.get_connection();
+
+        let create_table = r#"
             CREATE TABLE session (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 expires_at TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-            );
-            CREATE INDEX idx_session_user_id ON session(user_id);
-            CREATE INDEX idx_session_expires_at ON session(expires_at);
+                FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
+            )
         "#;
-        manager
-            .get_connection()
-            .execute(Statement::from_string(
-                manager.get_database_backend(),
-                sql.to_owned(),
-            ))
-            .await
-            .map(|_| ())
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            create_table.to_owned(),
+        ))
+        .await
+        .map(|_| ())?;
+
+        let idx_user_id = "CREATE INDEX idx_session_user_id ON session(user_id)";
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            idx_user_id.to_owned(),
+        ))
+        .await
+        .map(|_| ())?;
+
+        let idx_expires_at = "CREATE INDEX idx_session_expires_at ON session(expires_at)";
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            idx_expires_at.to_owned(),
+        ))
+        .await
+        .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {

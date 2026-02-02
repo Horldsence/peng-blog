@@ -24,7 +24,7 @@ use tower_http::trace::TraceLayer;
 ///
 /// This function initializes the database, runs migrations, and starts the web server.
 /// It uses environment variables for configuration:
-/// - DATABASE_URL: SQLite database connection string (default: required)
+/// - DATABASE_URL: PostgreSQL database connection string (default: required)
 /// - JWT_SECRET: Secret key for JWT tokens (default: "change-this-secret-in-production")
 /// - UPLOAD_DIR: Directory for file uploads (default: "./uploads")
 /// - BASE_URL: Base URL for the application (default: "http://localhost:3000")
@@ -42,7 +42,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let database_url =
-        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://blog.db".to_string());
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgresql://postgres:postgres@localhost/peng_blog".to_string());
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "change-this-secret-in-production".to_string());
 

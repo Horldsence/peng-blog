@@ -44,7 +44,7 @@ use std::sync::Arc;
 /// Establish database connection
 ///
 /// # Arguments
-/// * `database_url` - SQLite database URL (e.g., "sqlite://blog.db")
+/// * `database_url` - PostgreSQL database URL (e.g., "postgresql://user:password@localhost/database")
 ///
 /// # Returns
 /// * `Ok(Arc<DatabaseConnection>)` - Database connection

@@ -17,7 +17,7 @@ Peng Blog 是一个使用 Rust 构建的现代化博客系统，采用分层架�
 
 **技术栈:**
 - **后端框架**: Tokio (异步运行时) + Axum (Web 框架) + Tower (中间件)
-- **数据库**: SeaORM (异步 ORM) + SQLite
+- **数据库**: SeaORM (异步 ORM) + PostgreSQL
 - **安全**: JWT 认证 + Argon2 密码哈希
 - **前端**: React + TypeScript + Vite
 - **日志**: Tracing (结构化日志)
@@ -60,7 +60,6 @@ peng-blog/
 │       └── CHANGES_v2.md    # API v2 变更记录
 ├── test/                # Python 测试工具
 ├── uploads/             # 文件上传目录
-├── blog.db              # SQLite 数据库文件
 └── .env                 # 环境变量配置
 ```
 
@@ -115,7 +114,7 @@ App → API → Service → Domain
 ### 环境要求
 
 - Rust 1.70+
-- SQLite 3
+- PostgreSQL 12+ (需要先安装并启动 PostgreSQL 服务)
 - Node.js 18+ (前端开发)
 
 ### 环境变量配置
@@ -124,7 +123,8 @@ App → API → Service → Domain
 
 ```env
 # Database
-DATABASE_URL=sqlite://blog.db
+# PostgreSQL 连接字符串格式: postgresql://username:password@hostname:port/database_name
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/peng_blog
 
 # Server
 HOST=0.0.0.0

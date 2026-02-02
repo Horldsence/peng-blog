@@ -132,7 +132,7 @@ async fn main() -> anyhow::Result<()> {
 
             // Get database URL
             let database_url =
-                std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://blog.db".to_string());
+                std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgresql://postgres:postgres@localhost/peng_blog".to_string());
 
             match command {
                 Commands::User { user_command } => {

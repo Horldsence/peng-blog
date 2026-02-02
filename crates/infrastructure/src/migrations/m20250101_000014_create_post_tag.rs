@@ -12,28 +12,35 @@ impl MigrationName for CreatePostTag {
 #[async_trait::async_trait]
 impl MigrationTrait for CreatePostTag {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let sql = r#"
+        let db = manager.get_connection();
+
+        let create_table = r#"
             CREATE TABLE post_tag (
                 post_id TEXT NOT NULL,
                 tag_id TEXT NOT NULL,
                 PRIMARY KEY (post_id, tag_id),
                 FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE,
                 FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE
-            );
-            CREATE INDEX idx_post_tag_tag_id ON post_tag(tag_id);
+            )
         "#;
-        manager
-            .get_connection()
-            .execute(Statement::from_string(
-                manager.get_database_backend(),
-                sql.to_owned(),
-            ))
-            .await
-            .map(|_| ())
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            create_table.to_owned(),
+        ))
+        .await
+        .map(|_| ())?;
+
+        let idx_tag_id = "CREATE INDEX idx_post_tag_tag_id ON post_tag(tag_id)";
+        db.execute(Statement::from_string(
+            manager.get_database_backend(),
+            idx_tag_id.to_owned(),
+        ))
+        .await
+        .map(|_| ())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let sql = "DROP TABLE post_tag;";
+        let sql = "DROP TABLE post_tag";
         manager
             .get_connection()
             .execute(Statement::from_string(

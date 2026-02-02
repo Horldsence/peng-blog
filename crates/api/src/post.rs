@@ -232,6 +232,18 @@ async fn create_post(
     let user_id = Uuid::parse_str(&user.sub)
         .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
 
+    // Verify user exists before creating post
+    state
+        .user_service
+        .get(user_id)
+        .await
+        .map_err(|e| match e {
+            domain::Error::NotFound(_) => {
+                ApiError::Unauthorized("User not found. Please log in again.".to_string())
+            }
+            _ => ApiError::Domain(e),
+        })?;
+
     let post = state
         .post_service
         .create(user_id, input.title, input.content)
