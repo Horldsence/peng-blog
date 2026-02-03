@@ -19,6 +19,7 @@ import { commentsApi } from './comments';
 import { statsApi } from './stats';
 import { categoriesApi } from './categories';
 import { tagsApi } from './tags';
+import { bingApi } from './bing';
 
 // 重新导出所有 API 模块
 export { authApi } from './auth';
@@ -30,6 +31,7 @@ export { commentsApi } from './comments';
 export { statsApi } from './stats';
 export { categoriesApi } from './categories';
 export { tagsApi } from './tags';
+export { bingApi } from './bing';
 
 // 创建统一的 API 对象
 export const api = {
@@ -42,6 +44,7 @@ export const api = {
   stats: statsApi,
   categories: categoriesApi,
   tags: tagsApi,
+  bing: bingApi,
 };
 
 // 默认导出统一 API 对象

@@ -30,7 +30,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import mermaid from 'mermaid';
-import { postsApi, authApi, statsApi } from '../api';
+import { postsApi, authApi, statsApi, bingApi } from '../api';
+import { getDominantColor } from '../utils/color';
 import type { Post, Comment } from '../types';
 import 'highlight.js/styles/github-dark.css';
 
@@ -245,10 +246,11 @@ const useStyles = makeStyles({
     borderRadius: '8px',
     marginBottom: '16px',
     overflowX: 'auto',
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
   },
 });
 
-const MermaidDiagram = ({ chart }: { chart: string }) => {
+const MermaidDiagram = ({ chart, accentColor }: { chart: string; accentColor?: string }) => {
   const styles = useStyles();
   const [svg, setSvg] = useState<string>('');
 
@@ -257,7 +259,21 @@ const MermaidDiagram = ({ chart }: { chart: string }) => {
       if (!chart) return;
       try {
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
-        const { svg } = await mermaid.render(id, chart);
+
+        let chartCode = chart;
+        if (accentColor) {
+          const config = {
+            theme: 'base',
+            themeVariables: {
+              primaryColor: accentColor,
+              lineColor: accentColor,
+              primaryBorderColor: accentColor,
+            },
+          };
+          chartCode = `%%{init: ${JSON.stringify(config)} }%%\n${chart}`;
+        }
+
+        const { svg } = await mermaid.render(id, chartCode);
         setSvg(svg);
       } catch (error) {
         console.error('Mermaid render error:', error);
@@ -283,6 +299,22 @@ export function PostDetailPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentContent, setCommentContent] = useState('');
+  const [accentColor, setAccentColor] = useState<string>('');
+
+  useEffect(() => {
+    const fetchBingColor = async () => {
+      try {
+        const response = await bingApi.getDailyImage();
+        if (response.data?.url) {
+          const color = await getDominantColor(response.data.url);
+          setAccentColor(color);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Bing color:', error);
+      }
+    };
+    fetchBingColor();
+  }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -495,7 +527,12 @@ export function PostDetailPage() {
                   const isMermaid = match && match[1] === 'mermaid';
 
                   if (isMermaid) {
-                    return <MermaidDiagram chart={String(children).replace(/\n$/, '')} />;
+                    return (
+                      <MermaidDiagram
+                        chart={String(children).replace(/\n$/, '')}
+                        accentColor={accentColor}
+                      />
+                    );
                   }
 
                   return (

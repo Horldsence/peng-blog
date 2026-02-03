@@ -307,7 +307,8 @@ export function PostEditorPage() {
               placeholder="在这里写下你的文章内容..."
               value={content}
               onChange={(_, data) => setContent(data.value)}
-              style={{ width: '100%', minHeight: '400px' }}
+              style={{ width: '100%' }}
+              textarea={{ style: { minHeight: '400px' } }}
               disabled={loading}
               resize="vertical"
             />
