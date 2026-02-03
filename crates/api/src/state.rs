@@ -4,6 +4,7 @@
 //! The state uses trait objects for services, allowing for easy testing
 //! and swapping of different database backends.
 
+use config::AppConfig;
 use service::{
     CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
     TagService, UserService,
@@ -20,6 +21,9 @@ use crate::middleware::auth::AuthState;
 /// (e.g., real database vs. mock for testing) without generic type parameters.
 #[derive(Clone)]
 pub struct AppState {
+    /// Application configuration
+    pub config: AppConfig,
+
     /// Post service with business logic for post operations
     pub post_service: Arc<PostService>,
 
@@ -111,6 +115,7 @@ impl AppState {
 /// ```
 #[derive(Default)]
 pub struct AppStateBuilder {
+    config: Option<AppConfig>,
     post_service: Option<PostService>,
     user_service: Option<UserService>,
     session_service: Option<SessionService>,
@@ -125,6 +130,11 @@ pub struct AppStateBuilder {
 }
 
 impl AppStateBuilder {
+    pub fn config(mut self, config: AppConfig) -> Self {
+        self.config = Some(config);
+        self
+    }
+
     pub fn post_service(mut self, service: PostService) -> Self {
         self.post_service = Some(service);
         self
@@ -187,6 +197,7 @@ impl AppStateBuilder {
     /// Panics if any required field is not set.
     pub fn build(self) -> AppState {
         AppState {
+            config: self.config.expect("config must be set"),
             post_service: Arc::new(self.post_service.expect("post_service must be set")),
             user_service: Arc::new(self.user_service.expect("user_service must be set")),
             session_service: Arc::new(self.session_service.expect("session_service must be set")),

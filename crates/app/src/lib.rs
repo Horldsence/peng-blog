@@ -65,8 +65,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let comment_service = CommentService::new(
         comment_repo,
         user_repo,
-        config.github.client_id,
-        config.github.client_secret,
+        config.github.client_id.clone(),
+        config.github.client_secret.clone(),
     );
     let stats_service = StatsService::new(stats_repo);
     let category_service = CategoryService::new(category_repo);
@@ -74,6 +74,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let auth_state = AuthState::new(&config.auth.jwt_secret);
 
     let state = AppState::builder()
+        .config(config.clone())
         .post_service(post_service)
         .user_service(user_service)
         .session_service(session_service)
@@ -83,7 +84,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .category_service(category_service)
         .tag_service(tag_service)
         .auth_state(auth_state)
-        .upload_dir(config.storage.upload_dir)
+        .upload_dir(config.storage.upload_dir.clone())
         .bing_cache(bing_cache)
         .build();
 

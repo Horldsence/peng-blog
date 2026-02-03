@@ -107,6 +107,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "chrono",
+ "config",
  "domain",
  "infrastructure",
  "jsonwebtoken",
@@ -561,6 +562,7 @@ name = "config"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
  "tokio",
  "toml",
@@ -770,6 +772,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "config",
  "serde",
  "thiserror 2.0.18",
  "uuid",

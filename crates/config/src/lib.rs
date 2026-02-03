@@ -1,8 +1,10 @@
 mod loader;
 pub mod types;
 
+pub use loader::default_config_path;
 pub use loader::load_config;
 pub use loader::load_config_from_path;
+pub use loader::save_config;
 pub use types::{
     AuthConfig, Config, DatabaseConfig, GitHubConfig, ServerConfig, SiteConfig, StorageConfig,
 };

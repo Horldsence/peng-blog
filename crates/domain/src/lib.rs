@@ -8,6 +8,7 @@
 
 pub mod category;
 pub mod comment;
+pub mod config;
 pub mod error;
 pub mod file;
 pub mod post;
@@ -21,6 +22,12 @@ pub mod user;
 pub use category::{Category, CreateCategory, UpdateCategory};
 pub use comment::{
     Comment, CommentResponse, CreateComment, CreateCommentGitHub, GitHubAuthRequest, GitHubUser,
+};
+pub use config::{
+    AuthConfigResponse, ConfigResponse, DatabaseConfigResponse, GitHubConfigResponse,
+    ServerConfigResponse, SiteConfigResponse, StorageConfigResponse, UpdateAuthConfig,
+    UpdateConfigRequest, UpdateDatabaseConfig, UpdateGitHubConfig, UpdateServerConfig,
+    UpdateSiteConfig, UpdateStorageConfig,
 };
 pub use error::{Error, Result};
 pub use file::{File, FileResponse, UploadFile};

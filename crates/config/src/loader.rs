@@ -1,5 +1,6 @@
 use super::types::Config;
 use super::ConfigError;
+use std::fs;
 use std::path::Path;
 
 const DEFAULT_CONFIG: &str = r#"
@@ -115,4 +116,37 @@ fn load_from_env(config: &mut Config) -> Result<(), ConfigError> {
     }
 
     Ok(())
+}
+
+pub fn save_config<P: AsRef<Path>>(config: &Config, path: P) -> Result<(), ConfigError> {
+    let path = path.as_ref();
+
+    if let Some(parent) = path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).map_err(|e| {
+                ConfigError::Io(format!(
+                    "Failed to create config directory {}: {}",
+                    parent.display(),
+                    e
+                ))
+            })?;
+        }
+    }
+
+    let toml_str = toml::to_string_pretty(config)
+        .map_err(|e| ConfigError::Parse(format!("Failed to serialize config to TOML: {}", e)))?;
+
+    fs::write(path, toml_str).map_err(|e| {
+        ConfigError::Io(format!(
+            "Failed to write config file {}: {}",
+            path.display(),
+            e
+        ))
+    })?;
+
+    Ok(())
+}
+
+pub fn default_config_path() -> &'static Path {
+    Path::new("config/config.toml")
 }

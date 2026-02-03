@@ -8,6 +8,7 @@ pub mod auth;
 pub mod bing;
 pub mod category;
 pub mod comment;
+pub mod config;
 pub mod error;
 pub mod file;
 pub mod file_cache;
@@ -58,4 +59,5 @@ pub fn routes() -> axum::Router<AppState> {
         .nest("/categories", category::routes())
         .nest("/tags", tag::routes())
         .nest("/bing", bing::routes())
+        .nest("/config", config::routes())
 }
