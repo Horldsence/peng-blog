@@ -34,6 +34,7 @@ const useStyles = makeStyles({
   },
   searchBoxContainer: {
     marginBottom: '32px',
+    padding: '4px',
   },
   searchInput: {
     width: '100%',

@@ -2,7 +2,7 @@
  * 文章列表页 - 显示所有文章
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
   CardHeader,
@@ -23,18 +23,13 @@ import {
   SearchRegular,
 } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { postsApi, categoriesApi, tagsApi } from '../api';
 import type { Post, Category, Tag as TagModel } from '../types';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { getPostExcerpt } from '../utils/markdown';
 
-gsap.registerPlugin(ScrollTrigger);
-
 const useStyles = makeStyles({
-  pageContainer: {
-    // Removed negative margin as discussed
-  },
+  pageContainer: {},
   contentSection: {
     position: 'relative',
     zIndex: 2,
@@ -95,19 +90,20 @@ const useStyles = makeStyles({
   },
   postCard: {
     cursor: 'pointer',
-    opacity: 0,
-    transform: 'translateY(40px)',
-    transition: 'all 0.3s ease',
     borderRadius: tokens.borderRadiusLarge,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(10px)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
+    height: '100%', // Ensure card fills the motion wrapper
+    display: 'flex',
+    flexDirection: 'column',
     ':hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
   },
   cardHeader: {
     padding: '24px',
+    flexGrow: 1,
   },
   cardTitle: {
     overflow: 'hidden',
@@ -178,9 +174,6 @@ export function PostsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
-  const pageRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-
   useEffect(() => {
     const loadFilters = async () => {
       try {
@@ -202,29 +195,6 @@ export function PostsPage() {
       fetchPosts();
     }
   }, [selectedCategoryId, selectedTagIds]);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      cardsRef.current.forEach((card, index) => {
-        if (card) {
-          gsap.to(card, {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            delay: index * 0.08,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          });
-        }
-      });
-    }, pageRef);
-
-    return () => ctx.revert();
-  }, [posts]);
 
   const fetchPosts = async () => {
     try {
@@ -284,8 +254,10 @@ export function PostsPage() {
     });
   };
 
+
+
   return (
-    <div ref={pageRef} className={styles.pageContainer}>
+    <div className={styles.pageContainer}>
       <section className={styles.contentSection}>
         <div className={styles.contentInner}>
           {/* 区块头部 */}
@@ -376,68 +348,59 @@ export function PostsPage() {
             </div>
           ) : (
             <div className={styles.postsGrid}>
-              {posts.map((post, index) => (
-                <Card
+              {posts.map((post) => (
+                <motion.div
                   key={post.id}
-                  ref={(el) => {
-                    cardsRef.current[index] = el;
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  whileHover={{
+                    y: -8,
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                    transition: { duration: 0.2, ease: 'easeOut' },
                   }}
-                  className={styles.postCard}
                   onClick={() => navigate(`/post/${post.id}`)}
-                  onMouseEnter={(e) => {
-                    gsap.to(e.currentTarget, {
-                      y: -8,
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                      duration: 0.3,
-                      ease: 'power2.out',
-                    });
-                  }}
-                  onMouseLeave={(e) => {
-                    gsap.to(e.currentTarget, {
-                      y: 0,
-                      boxShadow: 'none',
-                      duration: 0.3,
-                      ease: 'power2.out',
-                    });
-                  }}
                 >
-                  <CardHeader
-                    className={styles.cardHeader}
-                    header={
-                      <Text weight="semibold" size={500} className={styles.cardTitle}>
-                        {post.title}
-                      </Text>
-                    }
-                    description={
-                      <Caption1 className={styles.cardDescription}>
-                        {getPostExcerpt(post.content, 180)}
-                      </Caption1>
-                    }
-                  />
+                  <Card className={styles.postCard}>
+                    <CardHeader
+                      className={styles.cardHeader}
+                      header={
+                        <Text weight="semibold" size={500} className={styles.cardTitle}>
+                          {post.title}
+                        </Text>
+                      }
+                      description={
+                        <Caption1 className={styles.cardDescription}>
+                          {getPostExcerpt(post.content, 180)}
+                        </Caption1>
+                      }
+                    />
 
-                  <div className={styles.cardFooter}>
-                    <div className={styles.metaItem}>
-                      <CalendarRegular fontSize={14} />
-                      <Caption1>{formatDate(post.created_at)}</Caption1>
+                    <div className={styles.cardFooter}>
+                      <div className={styles.metaItem}>
+                        <CalendarRegular fontSize={14} />
+                        <Caption1>{formatDate(post.created_at)}</Caption1>
+                      </div>
+                      <div className={styles.metaItem}>
+                        <EyeRegular fontSize={14} />
+                        <Caption1>{post.views}</Caption1>
+                      </div>
+                      <div className={styles.viewButtonContainer}>
+                        <Button
+                          appearance="transparent"
+                          icon={<ArrowRightRegular />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/post/${post.id}`);
+                          }}
+                        >
+                          阅读
+                        </Button>
+                      </div>
                     </div>
-                    <div className={styles.metaItem}>
-                      <EyeRegular fontSize={14} />
-                      <Caption1>{post.views}</Caption1>
-                    </div>
-                    <div className={styles.viewButtonContainer}>
-                      <Button
-                        appearance="transparent"
-                        icon={<ArrowRightRegular />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/post/${post.id}`);
-                        }}
-                      >
-                        阅读
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           )}

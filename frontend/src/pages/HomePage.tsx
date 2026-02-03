@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Input, tokens, makeStyles, mergeClasses } from '@fluentui/react-components';
 import { SearchRegular, ChevronDownRegular } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { postsApi } from '../api';
 import { useTheme } from '../contexts/ThemeContext';
-import gsap from 'gsap';
+import { motion } from 'framer-motion';
 
 const useStyles = makeStyles({
   pageContainer: {
@@ -17,18 +17,15 @@ const useStyles = makeStyles({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center', // Center content vertically
+    justifyContent: 'center',
   },
-  // Removed heroBackground
   heroOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    // Gradient mask from screen edge inwards using token colors
-    background: `radial-gradient(circle at 0% 10%, ${tokens.colorNeutralBackground1} 0%, transparent 10%),
-                 radial-gradient(circle at 0% 100%, ${tokens.colorNeutralBackground1} 0%, transparent 60%)`,
+    background: `radial-gradient(circle at 0% 100%, ${tokens.colorNeutralBackground1} 0%, transparent 60%)`,
     zIndex: 0,
     pointerEvents: 'none',
   },
@@ -47,12 +44,10 @@ const useStyles = makeStyles({
     gap: '12px',
     alignItems: 'center',
     alignSelf: 'flex-end',
-    opacity: 0,
-    transform: 'translateY(20px)',
   },
   searchInput: {
     width: '300px',
-    backgroundColor: 'rgba(255,255,255,0.8)', // Slightly more transparent
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: tokens.borderRadiusCircular,
     border: '1px solid rgba(255,255,255,0.3)',
     backdropFilter: 'blur(10px)',
@@ -69,14 +64,11 @@ const useStyles = makeStyles({
   searchButton: {
     borderRadius: tokens.borderRadiusCircular,
     border: '1px solid rgba(255,255,255,0.3)',
-    // Removed fixed backgroundColor to allow 'primary' appearance (theme color)
     boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
     zIndex: 2,
   },
   welcomeContainer: {
     maxWidth: '550px',
-    opacity: 0,
-    transform: 'translateY(30px)',
     padding: '16px 0',
   },
   welcomeTitle: {
@@ -102,7 +94,6 @@ const useStyles = makeStyles({
   statsRow: {
     display: 'flex',
     gap: '32px',
-    opacity: 0,
   },
   statItem: {
     display: 'flex',
@@ -131,7 +122,6 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     cursor: 'pointer',
     zIndex: 3,
-    opacity: 0,
     padding: '12px 20px',
     borderRadius: tokens.borderRadiusCircular,
     transition: 'background-color 0.3s ease',
@@ -157,12 +147,6 @@ export function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [postsCount, setPostsCount] = useState<number>(0);
 
-  const pageRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const welcomeRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const scrollIndicatorRef = useRef<HTMLDivElement>(null);
-
   // 获取文章数量统计
   useEffect(() => {
     const fetchPostsCount = async () => {
@@ -180,64 +164,6 @@ export function HomePage() {
     fetchPostsCount();
   }, []);
 
-  // GSAP动画
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // 搜索框动画
-      if (searchRef.current) {
-        gsap.to(searchRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          delay: 0.3,
-          ease: 'power3.out',
-        });
-      }
-
-      // 欢迎语动画
-      if (welcomeRef.current) {
-        gsap.to(welcomeRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          delay: 0.5,
-          ease: 'power3.out',
-        });
-      }
-
-      // 统计数字动画
-      if (statsRef.current) {
-        gsap.to(statsRef.current, {
-          opacity: 1,
-          duration: 0.8,
-          delay: 0.8,
-          ease: 'power2.out',
-        });
-      }
-
-      // 滚动指示器动画
-      if (scrollIndicatorRef.current) {
-        gsap.to(scrollIndicatorRef.current, {
-          opacity: 1,
-          duration: 0.8,
-          delay: 1.2,
-          ease: 'power2.out',
-        });
-
-        // 持续跳动动画
-        gsap.to(scrollIndicatorRef.current.querySelector('.scroll-arrow'), {
-          y: 8,
-          duration: 0.8,
-          repeat: -1,
-          yoyo: true,
-          ease: 'power1.inOut',
-        });
-      }
-    }, pageRef);
-
-    return () => ctx.revert();
-  }, []);
-
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/posts?q=${encodeURIComponent(searchQuery)}`);
@@ -251,7 +177,7 @@ export function HomePage() {
   };
 
   return (
-    <div ref={pageRef} className={styles.pageContainer}>
+    <div className={styles.pageContainer}>
       {/* Hero Section */}
       <section className={styles.heroSection}>
         <div className={styles.heroOverlay} />
@@ -259,7 +185,12 @@ export function HomePage() {
         {/* Hero内容 */}
         <div className={styles.heroContent}>
           {/* 搜索框 - 右上角 */}
-          <div ref={searchRef} className={styles.searchContainer}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+            className={styles.searchContainer}
+          >
             <Input
               placeholder="搜索文章..."
               value={searchQuery}
@@ -280,17 +211,27 @@ export function HomePage() {
             >
               搜索
             </Button>
-          </div>
+          </motion.div>
 
           {/* 欢迎语 - 左下角 */}
-          <div ref={welcomeRef} className={styles.welcomeContainer}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
+            className={styles.welcomeContainer}
+          >
             <h1 className={styles.welcomeTitle}>
               欢迎来到
               <br />
               Peng Blog
             </h1>
             <p className={styles.welcomeSubtitle}>探索技术文章、教程和见解，记录学习，分享成长</p>
-            <div ref={statsRef} className={styles.statsRow}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.8, ease: 'easeOut' }}
+              className={styles.statsRow}
+            >
               <div className={styles.statItem}>
                 <span className={styles.statNumber}>{postsCount}+</span>
                 <span className={styles.statLabel}>文章</span>
@@ -303,19 +244,30 @@ export function HomePage() {
                 <span className={styles.statNumber}>24/7</span>
                 <span className={styles.statLabel}>更新</span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* 滚动指示器 */}
-        <div
-          ref={scrollIndicatorRef}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
           className={styles.scrollIndicator}
           onClick={handleScrollToPosts}
         >
           <span className={styles.scrollText}>浏览文章</span>
-          <ChevronDownRegular className={mergeClasses('scroll-arrow', styles.scrollArrow)} />
-        </div>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{
+              duration: 1.6,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          >
+            <ChevronDownRegular className={mergeClasses('scroll-arrow', styles.scrollArrow)} />
+          </motion.div>
+        </motion.div>
       </section>
     </div>
   );
