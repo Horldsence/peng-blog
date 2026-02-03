@@ -58,9 +58,69 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
       - name: Build release binary
         run: |
-          cargo build --release -p cli
+          cargo build --release --workspace
+
+      - name: Verify frontend build
+        run: |
+          echo "🔍 Verifying frontend build..."
+          
+          # Check if dist directory exists
+          if [ ! -d "dist" ]; then
+            echo "❌ dist directory not found!"
+            exit 1
+          fi
+          echo "✅ dist directory exists"
+          
+          # Check for essential frontend files
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ index.html not found in dist/"
+            exit 1
+          fi
+          echo "✅ index.html exists"
+          
+          # Check for JavaScript bundles
+          if ! find dist -name "*.js" -type f | grep -q .; then
+            echo "❌ No JavaScript files found in dist/"
+            exit 1
+          fi
+          echo "✅ JavaScript bundles exist"
+          
+          echo "📁 dist directory contents:"
+          ls -lh dist/
+          echo "✅ Frontend build verification passed!"
+
+      - name: Verify binary
+        run: |
+          echo "🔍 Verifying binary..."
+          
+          BINARY_PATH="target/release/peng-blog"
+          
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "❌ Binary not found"
+            exit 1
+          fi
+          
+          echo "✅ Binary exists"
+          
+          SIZE=$(ls -lh "$BINARY_PATH" | awk '{print $5}')
+          echo "📦 Binary size: $SIZE"
+          
+          # Check if frontend is embedded (should be at least 5MB)
+          SIZE_BYTES=$(stat -c%s "$BINARY_PATH")
+          if [ "$SIZE_BYTES" -lt 5000000 ]; then
+            echo "⚠️  Warning: Binary size is small. Frontend might not be embedded."
+          else
+            echo "✅ Binary size looks good (frontend embedded)"
+          fi
 
       - name: Prepare release artifacts
         run: |
@@ -107,6 +167,9 @@ jobs:
           mkdir -p uploads
           
           # Start server
+          echo "Starting Peng Blog server..."
+          echo "Frontend assets are embedded in the binary."
+          echo "Access the application at http://localhost:3000"
           ./peng-blog
           EOF
           chmod +x release/peng-blog/start.sh
@@ -114,6 +177,10 @@ jobs:
           cd release
           tar -czf peng-blog-linux-amd64.tar.gz peng-blog
           sha256sum peng-blog-linux-amd64.tar.gz > peng-blog-linux-amd64.tar.gz.sha256
+          
+          echo ""
+          echo "✅ Release package created:"
+          ls -lh peng-blog-linux-amd64.tar.gz*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -207,7 +274,19 @@ jobs:
             **Built with:**
             - Rust: stable
             - Target: Linux (x86_64)
-            - Features: Full async runtime, SQLite, JWT auth
+            - Features: Full async runtime, PostgreSQL, JWT auth
+            - Frontend: React + TypeScript + FluentUI (embedded in binary)
+            
+            ### ✨ Features
+            
+            - 📝 Full-featured blog with Markdown support
+            - 🔐 JWT-based authentication
+            - 📁 File upload and management
+            - 📊 Statistics and analytics
+            - 🏷️ Categories and tags
+            - 💬 Comments with GitHub OAuth
+            - 🎨 Modern responsive UI (FluentUI)
+            - ⚡ Single binary deployment (frontend embedded)
           files: |
             release-assets/*
           prerelease: true

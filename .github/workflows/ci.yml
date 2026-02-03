@@ -125,6 +125,13 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -138,6 +145,73 @@ jobs:
 
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }} --workspace
+
+      - name: Verify frontend build
+        run: |
+          echo "🔍 Verifying frontend build..."
+          
+          # Check if dist directory exists
+          if [ ! -d "dist" ]; then
+            echo "❌ dist directory not found!"
+            exit 1
+          fi
+          echo "✅ dist directory exists"
+          
+          # Check for essential frontend files
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ index.html not found in dist/"
+            exit 1
+          fi
+          echo "✅ index.html exists"
+          
+          # Check for JavaScript bundles (at least one should exist)
+          if ! find dist -name "*.js" -type f | grep -q .; then
+            echo "❌ No JavaScript files found in dist/"
+            exit 1
+          fi
+          echo "✅ JavaScript bundles exist"
+          
+          # Check for CSS files
+          if ! find dist -name "*.css" -type f | grep -q .; then
+            echo "⚠️  No CSS files found in dist/ (might be inline)"
+          else
+            echo "✅ CSS files exist"
+          fi
+          
+          # List dist contents for verification
+          echo ""
+          echo "📁 dist directory contents:"
+          ls -lh dist/
+          
+          echo ""
+          echo "✅ Frontend build verification passed!"
+
+      - name: Verify binary
+        run: |
+          echo "🔍 Verifying binary..."
+          
+          BINARY_PATH="target/${{ matrix.target }}/release/peng-blog"
+          
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "❌ Binary not found at $BINARY_PATH"
+            exit 1
+          fi
+          
+          echo "✅ Binary exists"
+          
+          # Show binary size
+          SIZE=$(ls -lh "$BINARY_PATH" | awk '{print $5}')
+          echo "📦 Binary size: $SIZE"
+          
+          # The binary should contain frontend assets
+          # A rough check: if frontend was built, binary should be at least 5MB
+          SIZE_BYTES=$(stat -f%z "$BINARY_PATH" 2>/dev/null || stat -c%s "$BINARY_PATH" 2>/dev/null)
+          if [ "$SIZE_BYTES" -lt 5000000 ]; then
+            echo "⚠️  Warning: Binary size is suspiciously small. Frontend might not be embedded."
+            echo "   Expected at least 5MB when frontend is embedded."
+          else
+            echo "✅ Binary size looks good (frontend likely embedded)"
+          fi
 
   frontend-lint:
     name: Frontend Lint
@@ -208,32 +282,11 @@ jobs:
       - name: Run TypeScript type check
         run: npm run type-check
 
-  frontend-build:
-    name: Frontend Build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ./frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: npm run build
 
   summary:
     name: CI Summary
-    needs: [check, test, clippy, fmt, build, frontend-lint, frontend-format, frontend-type-check, frontend-build]
+    needs: [check, test, clippy, fmt, build, frontend-lint, frontend-format, frontend-type-check]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -256,7 +309,7 @@ jobs:
           echo "| Lint | ${{ needs.frontend-lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Format | ${{ needs.frontend-format.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Type Check | ${{ needs.frontend-type-check.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | ${{ needs.frontend-build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build (Embedded) | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
           
           # Check if all backend jobs succeeded
           BACKEND_SUCCESS=true
@@ -272,8 +325,7 @@ jobs:
           FRONTEND_SUCCESS=true
           if [ "${{ needs.frontend-lint.result }}" != "success" ] || \
              [ "${{ needs.frontend-format.result }}" != "success" ] || \
-             [ "${{ needs.frontend-type-check.result }}" != "success" ] || \
-             [ "${{ needs.frontend-build.result }}" != "success" ]; then
+             [ "${{ needs.frontend-type-check.result }}" != "success" ]; then
             FRONTEND_SUCCESS=false
           fi
           

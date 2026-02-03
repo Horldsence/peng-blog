@@ -6,10 +6,10 @@ authors.workspace = true
 license.workspace = true
 
 [package.metadata.default-run]
-name = "peng-blog"
+name = "peng-blog-cli"
 
 [[bin]]
-name = "peng-blog"
+name = "peng-blog-cli"
 path = "src/main.rs"
 
 [dependencies]
