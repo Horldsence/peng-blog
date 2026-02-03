@@ -64,10 +64,5 @@ export const Mermaid = ({ chart }: MermaidProps) => {
     );
   }
 
-  return (
-    <div 
-      className={styles.container}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
+  return <div className={styles.container} dangerouslySetInnerHTML={{ __html: svg }} />;
 };

@@ -146,7 +146,7 @@ export function TagsPage() {
     );
   }
 
-  const currentTagName = tags.find(t => t.id === selectedTag)?.name;
+  const currentTagName = tags.find((t) => t.id === selectedTag)?.name;
 
   return (
     <div className={styles.container}>
@@ -190,18 +190,14 @@ export function TagsPage() {
         <div className={styles.mainContent}>
           <div className={styles.tagContentHeader}>
             <Title2>#{currentTagName}</Title2>
-            <div className={styles.subtitle}>
-              {posts.length} 篇文章
-            </div>
+            <div className={styles.subtitle}>{posts.length} 篇文章</div>
           </div>
-          
+
           <div className={styles.postsList}>
             {posts.length === 0 ? (
               <div className={styles.emptyText}>该标签下暂无文章</div>
             ) : (
-              posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
+              posts.map((post) => <PostCard key={post.id} post={post} />)
             )}
           </div>
         </div>

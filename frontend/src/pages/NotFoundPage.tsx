@@ -102,25 +102,25 @@ export function NotFoundPage() {
   return (
     <div className={styles.pageContainer}>
       <div className={styles.backgroundOverlay} />
-      
+
       {/* Decorative background elements */}
-      <motion.div 
+      <motion.div
         className={styles.decorativeCircle1}
-        animate={{ 
-          y: [0, -20, 0], 
+        animate={{
+          y: [0, -20, 0],
           x: [0, 20, 0],
-          scale: [1, 1.1, 1] 
+          scale: [1, 1.1, 1],
         }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
-      <motion.div 
+      <motion.div
         className={styles.decorativeCircle2}
-        animate={{ 
-          y: [0, 30, 0], 
+        animate={{
+          y: [0, 30, 0],
           x: [0, -30, 0],
-          scale: [1, 1.2, 1] 
+          scale: [1, 1.2, 1],
         }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       <motion.div
@@ -129,7 +129,7 @@ export function NotFoundPage() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={styles.contentContainer}
       >
-        <motion.h1 
+        <motion.h1
           className={styles.errorCode}
           initial={{ y: 20 }}
           animate={{ y: 0 }}
@@ -137,8 +137,8 @@ export function NotFoundPage() {
         >
           404
         </motion.h1>
-        
-        <motion.h2 
+
+        <motion.h2
           className={styles.errorMessage}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -146,8 +146,8 @@ export function NotFoundPage() {
         >
           页面未找到
         </motion.h2>
-        
-        <motion.p 
+
+        <motion.p
           className={styles.errorDescription}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -155,7 +155,7 @@ export function NotFoundPage() {
         >
           抱歉，您访问的页面不存在。它可能已被移动、删除或您输入的链接有误。
         </motion.p>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

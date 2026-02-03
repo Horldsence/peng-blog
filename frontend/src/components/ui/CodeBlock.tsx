@@ -39,25 +39,25 @@ const useStyles = makeStyles({
     border: 'none',
   },
   inline: {
-     backgroundColor: tokens.colorNeutralBackground1Hover,
-     padding: '2px 6px',
-     borderRadius: '4px',
-     fontSize: '14px',
-     fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
-     color: tokens.colorNeutralForeground1,
+    backgroundColor: tokens.colorNeutralBackground1Hover,
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '14px',
+    fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace',
+    color: tokens.colorNeutralForeground1,
   },
   copyButton: {
     color: '#8b949e',
     '&:hover': {
-        color: '#c9d1d9',
-        backgroundColor: 'rgba(177, 186, 196, 0.12)',
-    }
+      color: '#c9d1d9',
+      backgroundColor: 'rgba(177, 186, 196, 0.12)',
+    },
   },
   langLabel: {
     textTransform: 'uppercase',
     fontWeight: '600',
     color: '#8b949e',
-  }
+  },
 });
 
 // Helper to extract text from React children
@@ -74,12 +74,16 @@ export const CodeBlock = ({ inline, className, children, ...props }: any) => {
 
   const match = /language-(\w+)/.exec(className || '');
   const language = match ? match[1] : 'text';
-  
+
   // Extract raw text for copy/mermaid
   const rawContent = extractText(children).replace(/\n$/, '');
 
   if (inline) {
-    return <code className={styles.inline} {...props}>{children}</code>;
+    return (
+      <code className={styles.inline} {...props}>
+        {children}
+      </code>
+    );
   }
 
   if (language === 'mermaid') {

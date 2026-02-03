@@ -7,10 +7,15 @@
  * 将 RGB 转换为 Hex
  */
 export const rgbToHex = (r: number, g: number, b: number): string => {
-  return '#' + [r, g, b].map(x => {
-    const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+  return (
+    '#' +
+    [r, g, b]
+      .map((x) => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      })
+      .join('')
+  );
 };
 
 /**
@@ -41,7 +46,9 @@ export const getDominantColor = async (imageUrl: string): Promise<string> => {
 
       try {
         const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
-        let r = 0, g = 0, b = 0;
+        let r = 0,
+          g = 0,
+          b = 0;
         let count = 0;
 
         for (let i = 0; i < imageData.length; i += 4) {
@@ -88,17 +95,17 @@ export const getDominantColor = async (imageUrl: string): Promise<string> => {
 export const adjustColorBrightness = (hexColor: string, percent: number): string => {
   // 移除 # 号
   const hex = hexColor.replace('#', '');
-  
+
   // 解析 RGB
   const num = parseInt(hex, 16);
-  
+
   // 计算调整量
   const amt = Math.round(2.55 * percent);
-  
+
   // 分别调整 R, G, B，并确保在 0-255 范围内
   let R = (num >> 16) + amt;
-  let B = ((num >> 8) & 0x00FF) + amt;
-  let G = (num & 0x0000FF) + amt;
+  let B = ((num >> 8) & 0x00ff) + amt;
+  let G = (num & 0x0000ff) + amt;
 
   R = R < 255 ? (R < 1 ? 0 : R) : 255;
   G = G < 255 ? (G < 1 ? 0 : G) : 255;

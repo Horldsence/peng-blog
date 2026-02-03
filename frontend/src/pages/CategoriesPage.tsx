@@ -227,14 +227,12 @@ export function CategoriesPage() {
               {selectedCategory.description || `${posts.length} 篇文章`}
             </div>
           </div>
-          
+
           <div className={styles.postsList}>
             {posts.length === 0 ? (
               <div className={styles.emptyText}>该分类下暂无文章</div>
             ) : (
-              posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
+              posts.map((post) => <PostCard key={post.id} post={post} />)
             )}
           </div>
         </div>

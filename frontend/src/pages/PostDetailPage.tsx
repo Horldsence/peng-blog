@@ -191,9 +191,27 @@ const useStyles = makeStyles({
     padding: '48px',
   },
   // Markdown Styles
-  mdH1: { fontSize: '32px', fontWeight: '600', marginTop: '32px', marginBottom: '16px', scrollMarginTop: '80px' },
-  mdH2: { fontSize: '28px', fontWeight: '600', marginTop: '28px', marginBottom: '14px', scrollMarginTop: '80px' },
-  mdH3: { fontSize: '24px', fontWeight: '600', marginTop: '24px', marginBottom: '12px', scrollMarginTop: '80px' },
+  mdH1: {
+    fontSize: '32px',
+    fontWeight: '600',
+    marginTop: '32px',
+    marginBottom: '16px',
+    scrollMarginTop: '80px',
+  },
+  mdH2: {
+    fontSize: '28px',
+    fontWeight: '600',
+    marginTop: '28px',
+    marginBottom: '14px',
+    scrollMarginTop: '80px',
+  },
+  mdH3: {
+    fontSize: '24px',
+    fontWeight: '600',
+    marginTop: '24px',
+    marginBottom: '12px',
+    scrollMarginTop: '80px',
+  },
   mdP: { marginBottom: '16px' },
   mdInlineCode: {
     backgroundColor: tokens.colorNeutralBackground1Hover,
@@ -283,12 +301,7 @@ const MermaidDiagram = ({ chart, accentColor }: { chart: string; accentColor?: s
     renderChart();
   }, [chart]);
 
-  return (
-    <div
-      className={styles.mermaidContainer}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
+  return <div className={styles.mermaidContainer} dangerouslySetInnerHTML={{ __html: svg }} />;
 };
 
 export function PostDetailPage() {
@@ -494,9 +507,7 @@ export function PostDetailPage() {
                     </div>
                   )}
                 </div>
-                <div className={styles.license}>
-                  许可证：GPL v3.0 (GNU General Public License)
-                </div>
+                <div className={styles.license}>许可证：GPL v3.0 (GNU General Public License)</div>
               </div>
             }
           />
@@ -543,7 +554,12 @@ export function PostDetailPage() {
                 },
                 pre: ({ node, ...props }) => <pre className={styles.mdPre} {...props} />,
                 a: ({ node, ...props }) => (
-                  <a className={styles.mdLink} target="_blank" rel="noopener noreferrer" {...props} />
+                  <a
+                    className={styles.mdLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                  />
                 ),
                 ul: ({ node, ...props }) => <ul className={styles.mdList} {...props} />,
                 ol: ({ node, ...props }) => <ol className={styles.mdList} {...props} />,

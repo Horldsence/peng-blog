@@ -30,7 +30,7 @@ export function PostEditorPage() {
   const categoryId = useId('category-dropdown');
 
   const [currentUser] = useState(() => authApi.getCurrentUser());
-  const isAdmin = !!(currentUser?.permissions && (currentUser.permissions & 16)); // USER_MANAGE = 16
+  const isAdmin = !!(currentUser?.permissions && currentUser.permissions & 16); // USER_MANAGE = 16
 
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');

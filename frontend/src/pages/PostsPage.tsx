@@ -13,9 +13,7 @@ import {
   tokens,
   makeStyles,
 } from '@fluentui/react-components';
-import {
-  SearchRegular,
-} from '@fluentui/react-icons';
+import { SearchRegular } from '@fluentui/react-icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { postsApi, categoriesApi, tagsApi } from '../api';
 import type { Post, Category, Tag as TagModel } from '../types';
@@ -111,7 +109,6 @@ const useStyles = makeStyles({
     gap: '16px',
     marginTop: '48px',
   },
-
 });
 
 export function PostsPage() {
@@ -206,10 +203,6 @@ export function PostsPage() {
       setLoading(false);
     }
   };
-
-
-
-
 
   return (
     <div className={styles.pageContainer}>

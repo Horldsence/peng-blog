@@ -7,11 +7,7 @@ import {
   tokens,
   makeStyles,
 } from '@fluentui/react-components';
-import {
-  ArrowRightRegular,
-  CalendarRegular,
-  EyeRegular,
-} from '@fluentui/react-icons';
+import { ArrowRightRegular, CalendarRegular, EyeRegular } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Post } from '../../types';
@@ -90,8 +86,8 @@ export function PostCard({ post }: PostCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
       whileHover={{
         y: -4,
         boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
