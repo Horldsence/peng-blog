@@ -20,20 +20,21 @@ import {
 import { FolderRegular } from '@fluentui/react-icons';
 import { categoriesApi, postsApi } from '../api';
 import type { Category, Post } from '../types';
+import { PostCard } from '../components/features/PostCard';
 
 const useStyles = makeStyles({
   container: {
     display: 'flex',
-    gap: '24px',
+    gap: '48px',
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '32px',
+    padding: '48px 24px',
     ['@media (max-width: 768px)']: {
       flexDirection: 'column',
     },
   },
   sidebar: {
-    flex: '1',
+    flex: '0 0 300px',
   },
   header: {
     marginBottom: '24px',
@@ -45,6 +46,8 @@ const useStyles = makeStyles({
   categoriesCard: {
     padding: '16px',
     borderRadius: tokens.borderRadiusLarge,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    border: 'none',
   },
   accordionHeaderContent: {
     display: 'flex',
@@ -64,46 +67,21 @@ const useStyles = makeStyles({
     marginLeft: '16px',
   },
   mainContent: {
-    flex: '2',
+    flex: '1',
   },
-  postsCard: {
-    borderRadius: tokens.borderRadiusLarge,
+  postsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
-  postsHeader: {
-    fontWeight: tokens.fontWeightSemibold,
-    fontSize: '18px',
-  },
-  postsHeaderDesc: {
-    color: tokens.colorNeutralForeground2,
+  categoryHeader: {
+    marginBottom: '32px',
   },
   emptyText: {
     color: tokens.colorNeutralForeground3,
-    padding: '24px',
-  },
-  postItem: {
-    padding: '16px',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-    cursor: 'pointer',
-    ':hover': {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-    },
-    ':last-child': {
-      borderBottom: 'none',
-    },
-  },
-  postTitle: {
-    fontWeight: tokens.fontWeightSemibold,
-    marginBottom: '8px',
-    display: 'block',
-  },
-  postExcerpt: {
-    color: tokens.colorNeutralForeground2,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    lineHeight: '1.5',
+    textAlign: 'center',
+    padding: '48px',
+    fontSize: tokens.fontSizeBase400,
   },
   loadingContainer: {
     display: 'flex',
@@ -243,36 +221,22 @@ export function CategoriesPage() {
       {/* 右侧文章列表 */}
       {selectedCategory && (
         <div className={styles.mainContent}>
-          <Card className={styles.postsCard}>
-            <CardHeader
-              header={<Body1 className={styles.postsHeader}>{selectedCategory.name}</Body1>}
-              description={
-                selectedCategory.description ? (
-                  <Body1 className={styles.postsHeaderDesc}>{selectedCategory.description}</Body1>
-                ) : (
-                  <Body1>{posts.length} 篇文章</Body1>
-                )
-              }
-            />
-            <div>
-              {posts.length === 0 ? (
-                <Body1 className={styles.emptyText}>该分类下暂无文章</Body1>
-              ) : (
-                posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className={styles.postItem}
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  >
-                    <Body1 className={styles.postTitle}>{post.title}</Body1>
-                    <Body1 className={styles.postExcerpt}>
-                      {post.content.substring(0, 100)}...
-                    </Body1>
-                  </div>
-                ))
-              )}
+          <div className={styles.categoryHeader}>
+            <Title2>{selectedCategory.name}</Title2>
+            <div className={styles.subtitle}>
+              {selectedCategory.description || `${posts.length} 篇文章`}
             </div>
-          </Card>
+          </div>
+          
+          <div className={styles.postsList}>
+            {posts.length === 0 ? (
+              <div className={styles.emptyText}>该分类下暂无文章</div>
+            ) : (
+              posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -4,9 +4,6 @@
 
 import { useEffect, useState } from 'react';
 import {
-  Card,
-  CardHeader,
-  Caption1,
   Text,
   Button,
   Input,
@@ -17,16 +14,12 @@ import {
   makeStyles,
 } from '@fluentui/react-components';
 import {
-  ArrowRightRegular,
-  CalendarRegular,
-  EyeRegular,
   SearchRegular,
 } from '@fluentui/react-icons';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { postsApi, categoriesApi, tagsApi } from '../api';
 import type { Post, Category, Tag as TagModel } from '../types';
-import { getPostExcerpt } from '../utils/markdown';
+import { PostCard } from '../components/features/PostCard';
 
 const useStyles = makeStyles({
   pageContainer: {},
@@ -44,14 +37,16 @@ const useStyles = makeStyles({
   },
   sectionHeader: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: '40px',
+    textAlign: 'center',
   },
   sectionTitleGroup: {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    alignItems: 'center',
   },
   sectionTitle: {
     fontSize: tokens.fontSizeBase600,
@@ -70,6 +65,7 @@ const useStyles = makeStyles({
     gap: '12px',
     alignItems: 'center',
     marginBottom: '32px',
+    justifyContent: 'center',
   },
   searchInput: {
     width: '300px',
@@ -79,64 +75,22 @@ const useStyles = makeStyles({
     gap: '12px',
     flexWrap: 'wrap',
     marginBottom: '40px',
+    maxWidth: '800px',
+    margin: '0 auto 40px auto',
   },
   filterBadge: {
     cursor: 'pointer',
   },
   postsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-    gap: '28px',
-  },
-  postCard: {
-    cursor: 'pointer',
-    borderRadius: tokens.borderRadiusLarge,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    height: '100%', // Ensure card fills the motion wrapper
     display: 'flex',
     flexDirection: 'column',
-    ':hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    },
+    gap: '24px',
+    maxWidth: '800px',
+    margin: '0 auto',
   },
-  cardHeader: {
-    padding: '24px',
-    flexGrow: 1,
-  },
-  cardTitle: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    marginBottom: '12px',
-  },
-  cardDescription: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    display: '-webkit-box',
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: 'vertical',
-    color: tokens.colorNeutralForeground2,
-    lineHeight: '1.6',
-  },
-  cardFooter: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    padding: '16px 24px',
-    borderTop: `1px solid ${tokens.colorNeutralStroke1}`,
-  },
-  metaItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    color: tokens.colorNeutralForeground2,
-  },
+
   loadingCard: {
-    height: '300px',
+    height: '200px',
     borderRadius: tokens.borderRadiusLarge,
     background: `linear-gradient(90deg, ${tokens.colorNeutralBackground2} 25%, ${tokens.colorNeutralBackground1} 50%, ${tokens.colorNeutralBackground2} 75%)`,
     backgroundSize: '1000px 100%',
@@ -157,17 +111,16 @@ const useStyles = makeStyles({
     gap: '16px',
     marginTop: '48px',
   },
-  viewButtonContainer: {
-    marginLeft: 'auto',
-  },
+
 });
 
 export function PostsPage() {
   const styles = useStyles();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<TagModel[]>([]);
@@ -191,9 +144,12 @@ export function PostsPage() {
   }, []);
 
   useEffect(() => {
-    if (!searchQuery) {
+    if (searchQuery) {
+      handleSearch();
+    } else {
       fetchPosts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategoryId, selectedTagIds]);
 
   const fetchPosts = async () => {
@@ -222,6 +178,12 @@ export function PostsPage() {
   };
 
   const handleSearch = async () => {
+    if (searchQuery.trim()) {
+      setSearchParams({ q: searchQuery });
+    } else {
+      setSearchParams({});
+    }
+
     if (!searchQuery.trim()) {
       fetchPosts();
       return;
@@ -245,14 +207,7 @@ export function PostsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+
 
 
 
@@ -291,6 +246,7 @@ export function PostsPage() {
                 selectedValue={selectedCategoryId}
                 onTabSelect={(_, data) => {
                   setSearchQuery('');
+                  setSearchParams({});
                   setSelectedCategoryId(String(data.value));
                 }}
               >
@@ -321,6 +277,7 @@ export function PostsPage() {
                     }}
                     onClick={() => {
                       setSearchQuery('');
+                      setSearchParams({});
                       if (isSelected) {
                         setSelectedTagIds(selectedTagIds.filter((id) => id !== t.id));
                       } else {
@@ -349,58 +306,7 @@ export function PostsPage() {
           ) : (
             <div className={styles.postsGrid}>
               {posts.map((post) => (
-                <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  whileHover={{
-                    y: -8,
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    transition: { duration: 0.2, ease: 'easeOut' },
-                  }}
-                  onClick={() => navigate(`/post/${post.id}`)}
-                >
-                  <Card className={styles.postCard}>
-                    <CardHeader
-                      className={styles.cardHeader}
-                      header={
-                        <Text weight="semibold" size={500} className={styles.cardTitle}>
-                          {post.title}
-                        </Text>
-                      }
-                      description={
-                        <Caption1 className={styles.cardDescription}>
-                          {getPostExcerpt(post.content, 180)}
-                        </Caption1>
-                      }
-                    />
-
-                    <div className={styles.cardFooter}>
-                      <div className={styles.metaItem}>
-                        <CalendarRegular fontSize={14} />
-                        <Caption1>{formatDate(post.created_at)}</Caption1>
-                      </div>
-                      <div className={styles.metaItem}>
-                        <EyeRegular fontSize={14} />
-                        <Caption1>{post.views}</Caption1>
-                      </div>
-                      <div className={styles.viewButtonContainer}>
-                        <Button
-                          appearance="transparent"
-                          icon={<ArrowRightRegular />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/post/${post.id}`);
-                          }}
-                        >
-                          阅读
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
           )}

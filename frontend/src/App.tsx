@@ -7,11 +7,11 @@ import { PostsPage } from './pages/PostsPage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { TagsPage } from './pages/TagsPage';
 import { CategoriesPage } from './pages/CategoriesPage';
-import { SearchPage } from './pages/SearchPage';
 import { LoginForm } from './components/ui/LoginForm';
 import { RegisterPage } from './pages/RegisterPage';
 import { PostEditorPage } from './pages/PostEditorPage';
 import { AdminPage } from './pages/AdminPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import './App.css';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -71,15 +71,6 @@ function App() {
                 </MainLayout>
               }
             />
-            <Route
-              path="/search"
-              element={
-                <MainLayout>
-                  <SearchPage />
-                </MainLayout>
-              }
-            />
-
             {/* 认证路由（不带布局） */}
             <Route
               path="/login"
@@ -132,8 +123,15 @@ function App() {
               }
             />
 
-            {/* 404 重定向 */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* 404 */}
+            <Route
+              path="*"
+              element={
+                <MainLayout>
+                  <NotFoundPage />
+                </MainLayout>
+              }
+            />
           </Routes>
         </ToastProvider>
       </Router>

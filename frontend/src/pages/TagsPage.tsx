@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Card,
-  CardHeader,
   Body1,
   Title2,
   Spinner,
@@ -17,24 +16,37 @@ import {
 import { TagRegular } from '@fluentui/react-icons';
 import { tagsApi, postsApi } from '../api';
 import type { Tag, Post } from '../types';
+import { PostCard } from '../components/features/PostCard';
 
 const useStyles = makeStyles({
   container: {
-    padding: '32px',
+    display: 'flex',
+    gap: '48px',
     maxWidth: '1200px',
     margin: '0 auto',
+    padding: '48px 24px',
+    ['@media (max-width: 768px)']: {
+      flexDirection: 'column',
+    },
+  },
+  sidebar: {
+    flex: '0 0 300px',
+  },
+  mainContent: {
+    flex: '1',
   },
   header: {
-    marginBottom: '32px',
+    marginBottom: '24px',
   },
   subtitle: {
     color: tokens.colorNeutralForeground2,
     marginTop: '8px',
   },
   tagCloudCard: {
-    marginBottom: '32px',
     padding: '24px',
     borderRadius: tokens.borderRadiusLarge,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    border: 'none',
   },
   tagHeader: {
     marginBottom: '16px',
@@ -48,49 +60,29 @@ const useStyles = makeStyles({
   tagsContainer: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '12px',
-  },
-  emptyText: {
-    color: tokens.colorNeutralForeground3,
+    gap: '8px',
   },
   tagBadge: {
     cursor: 'pointer',
-    padding: '8px 16px',
-  },
-  postsCard: {
-    borderRadius: tokens.borderRadiusLarge,
-  },
-  postsHeader: {
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  emptyPosts: {
-    color: tokens.colorNeutralForeground3,
-    padding: '24px',
-  },
-  postItem: {
-    padding: '16px',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-    cursor: 'pointer',
+    padding: '6px 12px',
+    transition: 'all 0.2s',
     ':hover': {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-    },
-    ':last-child': {
-      borderBottom: 'none',
+      transform: 'scale(1.05)',
     },
   },
-  postTitle: {
-    fontWeight: tokens.fontWeightSemibold,
-    marginBottom: '8px',
-    display: 'block',
+  postsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
-  postExcerpt: {
-    color: tokens.colorNeutralForeground2,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    lineHeight: '1.5',
+  tagContentHeader: {
+    marginBottom: '32px',
+  },
+  emptyText: {
+    color: tokens.colorNeutralForeground3,
+    textAlign: 'center',
+    padding: '48px',
+    fontSize: tokens.fontSizeBase400,
   },
   loadingContainer: {
     display: 'flex',
@@ -154,65 +146,65 @@ export function TagsPage() {
     );
   }
 
+  const currentTagName = tags.find(t => t.id === selectedTag)?.name;
+
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <Title2>标签</Title2>
-        <div className={styles.subtitle}>
-          <Body1>按标签浏览文章</Body1>
+      {/* 左侧标签云 */}
+      <div className={styles.sidebar}>
+        <div className={styles.header}>
+          <Title2>标签</Title2>
+          <div className={styles.subtitle}>
+            <Body1>按标签浏览文章</Body1>
+          </div>
         </div>
-      </div>
 
-      {/* 标签云 */}
-      <Card className={styles.tagCloudCard}>
-        <div className={styles.tagHeader}>
-          <TagRegular />
-          <Body1 className={styles.tagTitle}>标签云</Body1>
-        </div>
-        <div className={styles.tagsContainer}>
-          {tags.length === 0 ? (
-            <Body1 className={styles.emptyText}>暂无标签</Body1>
-          ) : (
-            tags.map((tag) => (
-              <Badge
-                key={tag.id}
-                size="large"
-                color={selectedTag === tag.id ? 'brand' : 'success'}
-                appearance={selectedTag === tag.id ? 'filled' : 'ghost'}
-                className={styles.tagBadge}
-                onClick={() => handleTagClick(tag)}
-              >
-                {tag.name}
-              </Badge>
-            ))
-          )}
-        </div>
-      </Card>
-
-      {/* 该标签的文章 */}
-      {selectedTag && (
-        <Card className={styles.postsCard}>
-          <CardHeader
-            header={<Body1 className={styles.postsHeader}>该标签下的文章</Body1>}
-            description={<Body1>{posts.length} 篇文章</Body1>}
-          />
-          <div>
-            {posts.length === 0 ? (
-              <Body1 className={styles.emptyPosts}>该标签下暂无文章</Body1>
+        <Card className={styles.tagCloudCard}>
+          <div className={styles.tagHeader}>
+            <TagRegular />
+            <Body1 className={styles.tagTitle}>所有标签</Body1>
+          </div>
+          <div className={styles.tagsContainer}>
+            {tags.length === 0 ? (
+              <Body1 className={styles.emptyText}>暂无标签</Body1>
             ) : (
-              posts.map((post) => (
-                <div
-                  key={post.id}
-                  className={styles.postItem}
-                  onClick={() => navigate(`/post/${post.id}`)}
+              tags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  size="large"
+                  color={selectedTag === tag.id ? 'brand' : 'success'}
+                  appearance={selectedTag === tag.id ? 'filled' : 'ghost'}
+                  className={styles.tagBadge}
+                  onClick={() => handleTagClick(tag)}
                 >
-                  <Body1 className={styles.postTitle}>{post.title}</Body1>
-                  <Body1 className={styles.postExcerpt}>{post.content.substring(0, 100)}...</Body1>
-                </div>
+                  {tag.name}
+                </Badge>
               ))
             )}
           </div>
         </Card>
+      </div>
+
+      {/* 右侧文章列表 */}
+      {selectedTag && (
+        <div className={styles.mainContent}>
+          <div className={styles.tagContentHeader}>
+            <Title2>#{currentTagName}</Title2>
+            <div className={styles.subtitle}>
+              {posts.length} 篇文章
+            </div>
+          </div>
+          
+          <div className={styles.postsList}>
+            {posts.length === 0 ? (
+              <div className={styles.emptyText}>该标签下暂无文章</div>
+            ) : (
+              posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

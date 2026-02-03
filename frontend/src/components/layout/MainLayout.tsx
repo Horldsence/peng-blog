@@ -26,7 +26,6 @@ import {
   DocumentRegular,
   TagRegular,
   FolderRegular,
-  SearchRegular,
   SettingsRegular,
   WeatherMoonRegular,
   WeatherSunnyFilled,
@@ -336,7 +335,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {renderNavItem('文章', <DocumentRegular />, '/posts')}
           {renderNavItem('分类', <FolderRegular />, '/categories')}
           {renderNavItem('标签', <TagRegular />, '/tags')}
-          {renderNavItem('搜索', <SearchRegular />, '/search')}
 
           {hasAdminPermission && (
             <>
