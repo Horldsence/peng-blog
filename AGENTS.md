@@ -17,10 +17,11 @@
 peng-blog/
 ├── crates/
 │   ├── app/             # 应用入口 - 依赖注入
-│   ├── api/             # HTTP路由 - 51个端点
+│   ├── api/             # HTTP路由 - 处理器
 │   ├── service/         # 业务逻辑 - Repository Traits
 │   ├── domain/          # 核心类型 - 零依赖
 │   ├── infrastructure/  # 数据访问 - SeaORM实现
+│   ├── config/          # 配置管理
 │   └── cli/             # CLI工具
 ├── frontend/            # React前端
 └── docs/api/            # API文档
@@ -34,10 +35,10 @@ App → API → Service → Domain
 ```
 
 **关键原则:**
-- Domain: 不依赖任何其他层
-- Service: 定义接口，依赖Domain
-- Infrastructure: 实现接口，依赖Domain
-- API: 依赖Service+Domain
+- Domain: 不依赖任何其他层（除了serde/chrono/uuid/async-trait）
+- Service: 定义Repository Trait，依赖Domain
+- Infrastructure: 实现Repository，依赖Domain
+- API: 依赖Service+Domain，不直接访问Infrastructure
 
 ## 构建命令
 
@@ -55,15 +56,17 @@ cargo run --release            # 生产模式
 # 测试
 cargo test                     # 所有测试
 cargo test -p service          # 单个crate
-cargo test test_name           # 单个测试
+cargo test test_name           # 单个测试（模糊匹配）
 cargo test test_name -- --exact  # 精确匹配
-cargo test -- --nocapture      # 显示输出
-cargo test -- --test-threads=1 # 单线程
+cargo test -- --nocapture      # 显示测试输出
+cargo test -- --test-threads=1 # 单线程运行
+cargo test service::tests::test_name  # 特定测试
 
-# 检查
-cargo fmt                      # 格式化
-cargo clippy                   # Lint
-cargo check                    # 快速类型检查
+# 快速检查
+cargo check                    # 类型检查（不构建）
+cargo clippy                   # Lint检查
+cargo fmt                      # 格式化代码
+cargo fmt --check              # 检查格式（不修改）
 ```
 
 ### 前端 (TypeScript)
@@ -88,32 +91,39 @@ cargo run -- db reset --force
 
 ## 代码风格
 
-### Rust规范
+### Rust命名规范
 
-**命名:**
 ```rust
-struct PostService;            // PascalCase
-enum Error { NotFound }        // PascalCase
-fn create_post() {}            // snake_case
-const MAX_SIZE: u64 = 100;     // SCREAMING_SNAKE_CASE
-mod post_service;              // snake_case
+struct PostService;            // PascalCase - 结构体
+enum Error { NotFound }        // PascalCase - 枚举
+fn create_post() {}            // snake_case - 函数
+const MAX_SIZE: u64 = 100;     // SCREAMING_SNAKE_CASE - 常量
+mod post_service;              // snake_case - 模块
+type Result<T> = ...;          // PascalCase - 类型别名
 ```
 
-**导入顺序:**
+### Rust导入顺序
+
 ```rust
 // 1. 标准库
 use std::sync::Arc;
 
-// 2. 第三方库
+// 2. 第三方库（按字母顺序）
 use async_trait::async_trait;
 use uuid::Uuid;
 
-// 3. 本地crate
-use domain::{Error, Result};
+// 3. 本地crate（按字母顺序）
+use domain::{Error, Result, User};
+use service::UserService;
+
+// 4. 同crate内
+use crate::error::ApiError;
 use crate::models::Post;
 ```
 
-**错误处理:**
+### 错误处理模式
+
+**Domain层错误:**
 ```rust
 use domain::{Error, Result};
 
@@ -122,111 +132,183 @@ if input.is_empty() {
     return Err(Error::Validation("输入不能为空".to_string()));
 }
 
-// 传播错误
+// 资源未找到
+Err(Error::NotFound("User not found".to_string()))
+
+// 传播错误（使用?操作符）
 let user = self.repo.get_user(id).await?;
 
-// 转换错误
+// 转换错误类型
 self.repo.create(post).await
     .map_err(|e| Error::Internal(e.to_string()))?;
 ```
 
-**Service层模式:**
+**API层错误转换:**
 ```rust
-pub struct PostService<R: PostRepository> {
-    repo: Arc<R>,
-}
+// Domain错误自动转换为API错误
+let user = self.user_service.get(id).await
+    .map_err(ApiError::Domain)?;
+```
 
-impl<R: PostRepository> PostService<R> {
-    pub fn new(repo: Arc<R>) -> Self {
-        Self { repo }
-    }
+### Repository Trait定义（在Service层）
 
-    pub async fn create(&self, request: CreatePost) -> Result<Post> {
-        // 1. 验证
-        self.validate(&request)?;
+```rust
+use async_trait::async_trait;
+use domain::{Result, User};
 
-        // 2. 业务逻辑
-        let post = self.build_post(request);
-
-        // 3. 持久化
-        self.repo.create(post).await
-    }
+#[async_trait]
+pub trait UserRepository: Send + Sync {
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>>;
+    async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User>;
+    async fn find_by_username(&self, username: &str) -> Result<Option<User>>;
 }
 ```
 
-### TypeScript规范
+### Service层模式
 
-**组件结构:**
-```tsx
-// 1. React导入
-import { useState, useEffect } from 'react';
+```rust
+use domain::{Result, User, DEFAULT_USER_PERMISSIONS};
+use std::sync::Arc;
 
-// 2. 第三方库
-import { Button } from '@fluentui/react-components';
+pub struct UserService {
+    repo: Arc<dyn UserRepository>,
+    allow_registration: bool,
+}
 
-// 3. 本地模块
-import { api } from '../api';
-import type { Post } from '../types';
+impl UserService {
+    pub fn new(repo: Arc<dyn UserRepository>, allow_registration: bool) -> Self {
+        Self { repo, allow_registration }
+    }
 
-// 4. 样式
-import './styles.css';
+    pub async fn register(&self, username: String, password: String) -> Result<User> {
+        // 1. 业务规则验证
+        if !self.allow_registration {
+            return Err(Error::Validation("Registration is disabled".to_string()));
+        }
+        self.validate_username(&username)?;
+        self.validate_password(&password)?;
+
+        // 2. 检查唯一性
+        if self.repo.find_by_username(&username).await?.is_some() {
+            return Err(Error::Validation("Username already exists".to_string()));
+        }
+
+        // 3. 业务逻辑（如：第一个用户是管理员）
+        let is_first_user = self.repo.list_users(1).await?.is_empty();
+        let permissions = if is_first_user {
+            domain::ADMIN_PERMISSIONS
+        } else {
+            DEFAULT_USER_PERMISSIONS
+        };
+
+        // 4. 持久化
+        self.repo.create_user(username, password, permissions).await
+    }
+}
 ```
 
-**命名:**
-```tsx
-const [isLoading, setIsLoading] = useState(false);  // camelCase
-function PostList() {}                              // PascalCase
-const MAX_POSTS = 10;                              // SCREAMING_SNAKE_CASE
-interface PostData {}                              // PascalCase
+### API层处理器模式
+
+```rust
+use axum::{extract::State, response::IntoResponse, Json};
+use crate::{error::ApiError, state::AppState};
+
+/// GET /users/{id}
+async fn get_user(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let user = state.user_service.get(id).await
+        .map_err(ApiError::Domain)?;
+
+    Ok(resp::ok(user))
+}
 ```
 
-**错误处理:**
-```tsx
-try {
-  const response = await api.getPost(id);
-  setPost(response.data);
-} catch (error) {
-  console.error('Failed to fetch post:', error);
-  // 显示用户友好的错误消息
+### Infrastructure层Repository实现
+
+```rust
+use domain::UserRepository;
+use sea_orm::DatabaseConnection;
+
+pub struct UserRepositoryImpl {
+    db: Arc<DatabaseConnection>,
+}
+
+impl UserRepositoryImpl {
+    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+        Self { db }
+    }
+}
+
+#[async_trait]
+impl UserRepository for UserRepositoryImpl {
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>> {
+        // SeaORM查询实现
+        let result = users::Entity::find_by_id(id)
+            .one(&*self.db)
+            .await
+            .map_err(|e| Error::Internal(e.to_string()))?;
+
+        Ok(result.map(|entity| entity.into()))
+    }
 }
 ```
 
 ## 测试规范
 
-**Service层测试 (mockall):**
+### Service层测试（使用mockall）
+
 ```rust
 #[cfg(test)]
 mod tests {
     use super::*;
     use mockall::*;
+    use domain::User;
 
     mock! {
-        PostRepo {}
+        UserRepo {}
         #[async_trait]
-        impl PostRepository for PostRepo {
-            async fn create(&self, post: Post) -> Result<Post>;
+        impl UserRepository for UserRepo {
+            async fn find_by_username(&self, username: &str) -> Result<Option<User>>;
+            async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User>;
         }
     }
 
     #[tokio::test]
-    async fn test_create_post_validates() {
-        let mock = MockPostRepo::new();
-        let service = PostService::new(Arc::new(mock));
+    async fn test_register_validates_username() {
+        let mut mock = MockUserRepo::new();
+        mock.expect_find_by_username()
+            .returning(|_| Ok(None));
 
-        let result = service.create(CreatePost {
-            title: "".to_string(),
-            content: "test".to_string(),
-        }).await;
+        let service = UserService::new(Arc::new(mock), true);
+
+        let result = service.register("".to_string(), "password123".to_string()).await;
 
         assert!(matches!(result, Err(Error::Validation(_))));
     }
 }
 ```
 
+### Infrastructure层测试
+
+```rust
+#[tokio::test]
+async fn test_user_repository_impl() {
+    // 使用测试数据库
+    let db = establish_test_connection().await;
+    let repo = UserRepositoryImpl::new(db);
+
+    // 测试CRUD操作
+    let user = repo.create_user("test".to_string(), "pass".to_string(), 0).await;
+    assert!(user.is_ok());
+}
+```
+
 ## 权限系统
 
 ```rust
-// 位标志权限
+// 位标志权限常量
 pub const POST_CREATE: u64 = 1 << 0;   // 1
 pub const POST_UPDATE: u64 = 1 << 1;   // 2
 pub const POST_DELETE: u64 = 1 << 2;   // 4
@@ -245,14 +327,53 @@ domain::check_ownership_or_admin(
 )?;
 ```
 
+## TypeScript规范
+
+**导入顺序:**
+```tsx
+// 1. React导入
+import { useState, useEffect } from 'react';
+
+// 2. 第三方库
+import { Button } from '@fluentui/react-components';
+
+// 3. 本地模块
+import { api } from '../api';
+import type { Post } from '../types';
+
+// 4. 样式
+import './styles.css';
+```
+
+**命名:**
+```tsx
+const [isLoading, setIsLoading] = useState(false);  // camelCase - 变量
+function PostList() {}                              // PascalCase - 组件
+const MAX_POSTS = 10;                              // SCREAMING_SNAKE_CASE - 常量
+interface PostData {}                              // PascalCase - 接口/类型
+```
+
+**错误处理:**
+```tsx
+try {
+  const response = await api.getPost(id);
+  setPost(response.data);
+} catch (error) {
+  console.error('Failed to fetch post:', error);
+  // 显示用户友好的错误消息
+}
+```
+
 ## 重要规则
 
 **DO:**
-- ✅ Domain层保持零外部依赖（除了serde/chrono/uuid）
+- ✅ Domain层保持零外部依赖（除了serde/chrono/uuid/async-trait）
 - ✅ Service层定义Repository Trait
 - ✅ Infrastructure层实现Repository
 - ✅ 使用Domain层的Error类型
 - ✅ 为所有新功能写测试
+- ✅ 使用`#[async_trait]`为trait添加async支持
+- ✅ 使用`Arc<dyn Trait>`进行依赖注入
 
 **DON'T:**
 - ❌ 绕过Repository直接操作数据库
@@ -260,6 +381,15 @@ domain::check_ownership_or_admin(
 - ❌ 在Service层直接I/O操作
 - ❌ 违反依赖方向（Domain不能依赖其他层）
 - ❌ 硬编码配置（使用环境变量）
+- ❌ 使用`Rc<RefCell<>>`（在async环境用Arc）
+- ❌ 使用阻塞I/O（用tokio::task::spawn_blocking包装）
+
+## Workspace配置
+
+- **Edition:** 2021
+- **Resolver:** 2
+- **依赖管理:** workspace.dependencies统一管理版本
+- **编译优化:** release启用lto和codegen-units=1
 
 ## 环境变量
 
@@ -281,4 +411,4 @@ RUST_LOG=debug
 
 ---
 
-*Last updated: 2026-02-02*
+*Last updated: 2026-02-03*

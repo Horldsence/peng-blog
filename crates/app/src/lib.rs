@@ -7,15 +7,15 @@ use axum::{
 };
 use config::load_config;
 use infrastructure::{
-    establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, FileRepositoryImpl,
-    Migrator, MigratorTrait, PostRepositoryImpl, SessionRepositoryImpl, StatsRepositoryImpl,
-    TagRepositoryImpl, UserRepositoryImpl,
+    establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, ConfigRepositoryImpl,
+    FileRepositoryImpl, Migrator, MigratorTrait, PostRepositoryImpl, SessionRepositoryImpl,
+    StatsRepositoryImpl, TagRepositoryImpl, UserRepositoryImpl,
 };
 #[cfg(not(debug_assertions))]
 use rust_embed::RustEmbed;
 use service::{
-    CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
-    TagService, UserService,
+    CategoryService, CommentService, ConfigService, FileService, PostService, SessionService,
+    StatsService, TagService, UserService,
 };
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -71,10 +71,13 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let stats_service = StatsService::new(stats_repo);
     let category_service = CategoryService::new(category_repo);
     let tag_service = TagService::new(tag_repo);
+    let config_repo = Arc::new(ConfigRepositoryImpl::new());
+    let config_service = ConfigService::new(config_repo);
     let auth_state = AuthState::new(&config.auth.jwt_secret);
 
     let state = AppState::builder()
         .config(config.clone())
+        .config_service(config_service)
         .post_service(post_service)
         .user_service(user_service)
         .session_service(session_service)
@@ -183,14 +186,30 @@ async fn frontend_handler(req: Request) -> impl IntoResponse {
 }
 
 /// Fallback handler to serve from filesystem during development
-async fn serve_from_filesystem(_path: &str, is_route: bool) -> Response<Body> {
+async fn serve_from_filesystem(path: &str, is_route: bool) -> Response<Body> {
+    let dist_path = std::path::Path::new("dist");
+
     if is_route {
         // Serve index.html for SPA routes
-        let index_path = std::path::Path::new("dist").join("index.html");
+        let index_path = dist_path.join("index.html");
         if let Ok(content) = tokio::fs::read_to_string(&index_path).await {
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("content-type", "text/html; charset=utf-8")
+                .body(Body::from(content))
+                .unwrap();
+        }
+    } else {
+        // Serve static file
+        let file_path = dist_path.join(path);
+        if let Ok(content) = tokio::fs::read(&file_path).await {
+            let mime = mime_guess::from_path(path)
+                .first_or_octet_stream()
+                .to_string();
+
+            return Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", mime)
                 .body(Body::from(content))
                 .unwrap();
         }

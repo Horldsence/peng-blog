@@ -292,6 +292,53 @@ export interface RecordVisitRequest {
   post_id?: UUID;
 }
 
+// ===== 配置相关类型 =====
+
+export interface DatabaseConfig {
+  url: string;
+}
+
+export interface ServerConfig {
+  host: string;
+  port: number;
+}
+
+export interface AuthConfig {
+  jwt_secret: string;
+}
+
+export interface StorageConfig {
+  upload_dir: string;
+  cache_dir: string;
+}
+
+export interface GitHubConfig {
+  client_id: string;
+  client_secret: string;
+}
+
+export interface SiteConfig {
+  allow_registration: boolean;
+}
+
+export interface Config {
+  database: DatabaseConfig;
+  server: ServerConfig;
+  auth: AuthConfig;
+  storage: StorageConfig;
+  github: GitHubConfig;
+  site: SiteConfig;
+}
+
+export interface UpdateConfigRequest {
+  database?: Partial<DatabaseConfig>;
+  server?: Partial<ServerConfig>;
+  auth?: Partial<AuthConfig>;
+  storage?: Partial<StorageConfig>;
+  github?: Partial<GitHubConfig>;
+  site?: Partial<SiteConfig>;
+}
+
 // ===== 权限位标志 =====
 
 export enum Permission {

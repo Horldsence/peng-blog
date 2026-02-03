@@ -6,8 +6,8 @@
 
 use config::AppConfig;
 use service::{
-    CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
-    TagService, UserService,
+    CategoryService, CommentService, ConfigService, FileService, PostService, SessionService,
+    StatsService, TagService, UserService,
 };
 use std::sync::Arc;
 
@@ -23,6 +23,9 @@ use crate::middleware::auth::AuthState;
 pub struct AppState {
     /// Application configuration
     pub config: AppConfig,
+
+    /// Config service with business logic for configuration operations
+    pub config_service: Arc<ConfigService>,
 
     /// Post service with business logic for post operations
     pub post_service: Arc<PostService>,
@@ -116,6 +119,7 @@ impl AppState {
 #[derive(Default)]
 pub struct AppStateBuilder {
     config: Option<AppConfig>,
+    config_service: Option<ConfigService>,
     post_service: Option<PostService>,
     user_service: Option<UserService>,
     session_service: Option<SessionService>,
@@ -132,6 +136,11 @@ pub struct AppStateBuilder {
 impl AppStateBuilder {
     pub fn config(mut self, config: AppConfig) -> Self {
         self.config = Some(config);
+        self
+    }
+
+    pub fn config_service(mut self, service: ConfigService) -> Self {
+        self.config_service = Some(service);
         self
     }
 
@@ -198,6 +207,7 @@ impl AppStateBuilder {
     pub fn build(self) -> AppState {
         AppState {
             config: self.config.expect("config must be set"),
+            config_service: Arc::new(self.config_service.expect("config_service must be set")),
             post_service: Arc::new(self.post_service.expect("post_service must be set")),
             user_service: Arc::new(self.user_service.expect("user_service must be set")),
             session_service: Arc::new(self.session_service.expect("session_service must be set")),

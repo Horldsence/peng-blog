@@ -1,61 +1,72 @@
 //! Configuration types for the blog application.
 //!
 //! This module defines types for configuration management,
-//! including response types and update requests.
+//! including domain types and update requests.
 
+use crate::Result;
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-/// Configuration response type
+/// Configuration domain type
 ///
 /// This type represents the full configuration structure
 /// that can be returned via API.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigResponse {
-    pub database: DatabaseConfigResponse,
-    pub server: ServerConfigResponse,
-    pub auth: AuthConfigResponse,
-    pub storage: StorageConfigResponse,
-    pub github: GitHubConfigResponse,
-    pub site: SiteConfigResponse,
+pub struct Config {
+    pub database: DatabaseConfig,
+    pub server: ServerConfig,
+    pub auth: AuthConfig,
+    pub storage: StorageConfig,
+    pub github: GitHubConfig,
+    pub site: SiteConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DatabaseConfigResponse {
+pub struct DatabaseConfig {
     pub url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServerConfigResponse {
+pub struct ServerConfig {
     pub host: String,
     pub port: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthConfigResponse {
+pub struct AuthConfig {
     pub jwt_secret: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StorageConfigResponse {
+pub struct StorageConfig {
     pub upload_dir: String,
     pub cache_dir: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GitHubConfigResponse {
+pub struct GitHubConfig {
     pub client_id: String,
     pub client_secret: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SiteConfigResponse {
+pub struct SiteConfig {
     pub allow_registration: bool,
+}
+
+/// Repository for configuration persistence operations
+#[async_trait]
+pub trait ConfigRepository: Send + Sync {
+    /// Get the current configuration
+    async fn get_config(&self) -> Result<Config>;
+
+    /// Save configuration
+    async fn save_config(&self, config: &Config) -> Result<()>;
 }
 
 /// Configuration update request
 ///
 /// All fields are optional to support partial updates.
-/// Only the fields that are present will be updated.
 #[derive(Debug, Clone, Deserialize)]
 pub struct UpdateConfigRequest {
     pub database: Option<UpdateDatabaseConfig>,
@@ -99,29 +110,57 @@ pub struct UpdateSiteConfig {
     pub allow_registration: Option<bool>,
 }
 
-impl From<config::AppConfig> for ConfigResponse {
-    fn from(config: config::AppConfig) -> Self {
+impl From<config::AppConfig> for Config {
+    fn from(app_config: config::AppConfig) -> Self {
         Self {
-            database: DatabaseConfigResponse {
-                url: config.database.url,
+            database: DatabaseConfig {
+                url: app_config.database.url,
             },
-            server: ServerConfigResponse {
-                host: config.server.host,
-                port: config.server.port,
+            server: ServerConfig {
+                host: app_config.server.host,
+                port: app_config.server.port,
             },
-            auth: AuthConfigResponse {
-                jwt_secret: config.auth.jwt_secret,
+            auth: AuthConfig {
+                jwt_secret: app_config.auth.jwt_secret,
             },
-            storage: StorageConfigResponse {
-                upload_dir: config.storage.upload_dir,
-                cache_dir: config.storage.cache_dir,
+            storage: StorageConfig {
+                upload_dir: app_config.storage.upload_dir,
+                cache_dir: app_config.storage.cache_dir,
             },
-            github: GitHubConfigResponse {
-                client_id: config.github.client_id,
-                client_secret: config.github.client_secret,
+            github: GitHubConfig {
+                client_id: app_config.github.client_id,
+                client_secret: app_config.github.client_secret,
             },
-            site: SiteConfigResponse {
-                allow_registration: config.site.allow_registration,
+            site: SiteConfig {
+                allow_registration: app_config.site.allow_registration,
+            },
+        }
+    }
+}
+
+impl From<Config> for config::AppConfig {
+    fn from(domain_config: Config) -> Self {
+        Self {
+            database: config::DatabaseConfig {
+                url: domain_config.database.url,
+            },
+            server: config::ServerConfig {
+                host: domain_config.server.host,
+                port: domain_config.server.port,
+            },
+            auth: config::AuthConfig {
+                jwt_secret: domain_config.auth.jwt_secret,
+            },
+            storage: config::StorageConfig {
+                upload_dir: domain_config.storage.upload_dir,
+                cache_dir: domain_config.storage.cache_dir,
+            },
+            github: config::GitHubConfig {
+                client_id: domain_config.github.client_id,
+                client_secret: domain_config.github.client_secret,
+            },
+            site: config::SiteConfig {
+                allow_registration: domain_config.site.allow_registration,
             },
         }
     }

@@ -18,6 +18,7 @@
 
 pub mod category;
 pub mod comment;
+pub mod config;
 pub mod file;
 pub mod post;
 pub mod session;
@@ -27,6 +28,7 @@ pub mod user;
 
 pub use category::CategoryService;
 pub use comment::CommentService;
+pub use config::ConfigService;
 pub use file::FileService;
 pub use post::PostService;
 pub use session::SessionService;
@@ -35,6 +37,6 @@ pub use tag::TagService;
 pub use user::UserService;
 
 pub use domain::{
-    CategoryRepository, CommentRepository, Error, FileRepository, PostRepository, Result,
-    SessionRepository, StatsRepository, TagRepository, UserRepository,
+    CategoryRepository, CommentRepository, ConfigRepository, Error, FileRepository, PostRepository,
+    Result, SessionRepository, StatsRepository, TagRepository, UserRepository,
 };

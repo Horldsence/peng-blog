@@ -1,5 +1,5 @@
 [database]
-url = "postgresql://postgres:postgres@localhost:5432/peng_blog"
+url = "postgresql://peng@localhost:5432/peng_blog"
 
 [server]
 host = "0.0.0.0"
@@ -17,4 +17,4 @@ client_id = ""
 client_secret = ""
 
 [site]
-allow_registration = true
+allow_registration = false

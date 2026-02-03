@@ -14,6 +14,8 @@ import {
   TabList,
   Divider,
   makeStyles,
+  Input,
+  Switch,
 } from '@fluentui/react-components';
 import {
   HomeRegular,
@@ -27,9 +29,9 @@ import {
   EyeOffRegular,
   AddRegular,
 } from '@fluentui/react-icons';
-import { authApi, postsApi, usersApi, statsApi } from '../api';
+import { authApi, postsApi, usersApi, statsApi, configApi } from '../api';
 import { useToast } from '../components/ui/Toast';
-import type { Post, User, AdminStats } from '../types';
+import type { Post, User, AdminStats, Config, UpdateConfigRequest } from '../types';
 import { Permission } from '../types';
 
 const useStyles = makeStyles({
@@ -154,8 +156,34 @@ const useStyles = makeStyles({
     gap: '8px',
   },
   emptyState: {
-    padding: '48px',
+    padding: '48px 0',
     textAlign: 'center',
+  },
+  settingsSection: {
+    marginBottom: '32px',
+  },
+  settingsGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    marginBottom: '24px',
+  },
+  settingsRow: {
+    display: 'grid',
+    gridTemplateColumns: '200px 1fr',
+    gap: '24px',
+    alignItems: 'start',
+    '@media (max-width: 768px)': {
+      gridTemplateColumns: '1fr',
+      gap: '8px',
+    },
+  },
+  settingsActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '24px',
+    paddingTop: '24px',
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
 });
 
@@ -170,6 +198,8 @@ export function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [config, setConfig] = useState<Config | null>(null);
+  const [pendingConfig, setPendingConfig] = useState<UpdateConfigRequest>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
@@ -221,6 +251,10 @@ export function AdminPage() {
       } else if (activeTab === 'users') {
         const usersResponse = await usersApi.getUsers({ page: 1, per_page: 50 });
         setUsers(usersResponse.data);
+      } else if (activeTab === 'settings') {
+        const configResponse = await configApi.getConfig();
+        setConfig(configResponse.data);
+        setPendingConfig({});
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '获取数据失败';
@@ -285,6 +319,47 @@ export function AdminPage() {
       month: '2-digit',
       day: '2-digit',
     });
+  };
+
+  const handleSaveConfig = async () => {
+    if (Object.keys(pendingConfig).length === 0) {
+      toast.showSuccess('没有更改需要保存');
+      return;
+    }
+
+    try {
+      await configApi.updateConfig(pendingConfig);
+      toast.showSuccess('配置更新成功');
+      setPendingConfig({});
+      void fetchData();
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : '配置更新失败');
+    }
+  };
+
+  const handleConfigChange = (
+    section: keyof UpdateConfigRequest,
+    field: string,
+    value: string | number | boolean
+  ) => {
+    setPendingConfig((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+
+    // Optimistically update local config for display
+    if (config) {
+      setConfig({
+        ...config,
+        [section]: {
+          ...config[section as keyof Config],
+          [field]: value,
+        },
+      } as Config);
+    }
   };
 
   if (!hasAdminPermission(currentUser)) {
@@ -522,11 +597,130 @@ export function AdminPage() {
             )}
 
             {/* 设置 */}
-            {!loading && activeTab === 'settings' && (
+            {!loading && activeTab === 'settings' && config && (
               <div>
-                <Title2 style={{ marginBottom: '24px' }}>设置</Title2>
+                <Title2 style={{ marginBottom: '24px' }}>系统设置</Title2>
                 <Card style={{ borderRadius: tokens.borderRadiusLarge, padding: '32px' }}>
-                  <Body1 className={styles.metaText}>设置功能开发中...</Body1>
+                  {/* 站点设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>站点设置</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>允许注册</Body1>
+                        <Switch
+                          checked={config.site.allow_registration}
+                          onChange={(_, data) =>
+                            handleConfigChange('site', 'allow_registration', data.checked)
+                          }
+                          label={config.site.allow_registration ? '开启' : '关闭'}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: '24px 0' }} />
+
+                  {/* 服务器设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>服务器设置</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>主机地址</Body1>
+                        <Input
+                          value={config.server.host}
+                          onChange={(e) => handleConfigChange('server', 'host', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>端口</Body1>
+                        <Input
+                          type="number"
+                          value={config.server.port.toString()}
+                          onChange={(e) =>
+                            handleConfigChange('server', 'port', parseInt(e.target.value, 10))
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: '24px 0' }} />
+
+                  {/* 数据库设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>数据库设置</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>连接 URL</Body1>
+                        <Input
+                          value={config.database.url}
+                          onChange={(e) => handleConfigChange('database', 'url', e.target.value)}
+                          type="password"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: '24px 0' }} />
+
+                  {/* 存储设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>存储设置</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>上传目录</Body1>
+                        <Input
+                          value={config.storage.upload_dir}
+                          onChange={(e) =>
+                            handleConfigChange('storage', 'upload_dir', e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>缓存目录</Body1>
+                        <Input
+                          value={config.storage.cache_dir}
+                          onChange={(e) =>
+                            handleConfigChange('storage', 'cache_dir', e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: '24px 0' }} />
+
+                  {/* GitHub 设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>GitHub 集成</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>Client ID</Body1>
+                        <Input
+                          value={config.github.client_id}
+                          onChange={(e) =>
+                            handleConfigChange('github', 'client_id', e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>Client Secret</Body1>
+                        <Input
+                          value={config.github.client_secret}
+                          onChange={(e) =>
+                            handleConfigChange('github', 'client_secret', e.target.value)
+                          }
+                          type="password"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.settingsActions}>
+                    <Button appearance="primary" onClick={() => void handleSaveConfig()}>
+                      保存更改
+                    </Button>
+                  </div>
                 </Card>
               </div>
             )}

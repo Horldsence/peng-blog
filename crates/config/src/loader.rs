@@ -21,6 +21,9 @@ cache_dir = "./cache"
 [github]
 client_id = ""
 client_secret = ""
+
+[site]
+allow_registration = true
 "#;
 
 pub fn load_config() -> Result<Config, ConfigError> {
