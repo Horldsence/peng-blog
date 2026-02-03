@@ -24,7 +24,7 @@ export const rgbToHex = (r: number, g: number, b: number): string => {
  * 注意：图片必须支持跨域访问 (CORS)，否则画布会被污染导致无法读取数据
  */
 export const getDominantColor = async (imageUrl: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     // 启用跨域，Bing 图片通常支持
     img.crossOrigin = 'Anonymous';

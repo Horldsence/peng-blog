@@ -14,9 +14,9 @@ import {
   makeStyles,
 } from '@fluentui/react-components';
 import { SearchRegular } from '@fluentui/react-icons';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { postsApi, categoriesApi, tagsApi } from '../api';
-import type { Post, Category, Tag as TagModel } from '../types';
+import type { Post, Category, Tag as TagModel, PostListParams } from '../types';
 import { PostCard } from '../components/features/PostCard';
 
 const useStyles = makeStyles({
@@ -113,11 +113,10 @@ const useStyles = makeStyles({
 
 export function PostsPage() {
   const styles = useStyles();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<TagModel[]>([]);
@@ -137,14 +136,14 @@ export function PostsPage() {
         console.error('加载筛选选项失败:', err);
       }
     };
-    loadFilters();
+    void loadFilters();
   }, []);
 
   useEffect(() => {
     if (searchQuery) {
-      handleSearch();
+      void handleSearch();
     } else {
-      fetchPosts();
+      void fetchPosts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategoryId, selectedTagIds]);
@@ -152,7 +151,7 @@ export function PostsPage() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: PostListParams = {
         page: 1,
         per_page: 50,
       };
@@ -182,7 +181,7 @@ export function PostsPage() {
     }
 
     if (!searchQuery.trim()) {
-      fetchPosts();
+      void fetchPosts();
       return;
     }
 
@@ -222,12 +221,22 @@ export function PostsPage() {
               placeholder="搜索文章..."
               value={searchQuery}
               onChange={(_, data) => setSearchQuery(data.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  void handleSearch();
+                }
+              }}
               className={styles.searchInput}
               contentBefore={<SearchRegular />}
               size="large"
             />
-            <Button appearance="primary" onClick={handleSearch} size="large">
+            <Button
+              appearance="primary"
+              onClick={() => {
+                void handleSearch();
+              }}
+              size="large"
+            >
               搜索
             </Button>
           </div>

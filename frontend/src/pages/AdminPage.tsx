@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -163,7 +163,7 @@ export function AdminPage() {
   const styles = useStyles();
   const navigate = useNavigate();
   const toast = useToast();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'posts' | 'users' | 'settings'>(
     'dashboard'
   );
@@ -207,13 +207,7 @@ export function AdminPage() {
     checkAuth();
   }, [navigate, toast]);
 
-  useEffect(() => {
-    if (hasAdminPermission(currentUser)) {
-      fetchData();
-    }
-  }, [currentUser, activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError('');
 
@@ -228,24 +222,31 @@ export function AdminPage() {
         const usersResponse = await usersApi.getUsers({ page: 1, per_page: 50 });
         setUsers(usersResponse.data);
       }
-    } catch (err: any) {
-      const errorMessage = err.message || '获取数据失败';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '获取数据失败';
       setError(errorMessage);
       console.error('获取数据失败:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (hasAdminPermission(currentUser)) {
+      void fetchData();
+    }
+  }, [currentUser, activeTab, fetchData]);
 
   const handleDeletePost = async (postId: string) => {
+    // eslint-disable-next-line no-alert
     if (!confirm('确定要删除这篇文章吗?')) return;
 
     try {
       await postsApi.deletePost(postId);
       setPosts(posts.filter((p) => p.id !== postId));
       toast.showSuccess('文章删除成功');
-    } catch (err: any) {
-      toast.showError(err.message || '删除失败');
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : '删除失败');
     }
   };
 
@@ -258,21 +259,22 @@ export function AdminPage() {
         await postsApi.publishPost(post.id);
         toast.showSuccess('文章发布成功');
       }
-      fetchData();
-    } catch (err: any) {
-      toast.showError(err.message || '操作失败');
+      void fetchData();
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : '操作失败');
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
+    // eslint-disable-next-line no-alert
     if (!confirm('确定要删除这个用户吗?')) return;
 
     try {
       await usersApi.deleteUser(userId);
       setUsers(users.filter((u) => u.id !== userId));
       toast.showSuccess('用户删除成功');
-    } catch (err: any) {
-      toast.showError(err.message || '删除失败');
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : '删除失败');
     }
   };
 
@@ -294,12 +296,12 @@ export function AdminPage() {
   }
 
   const statCards = [
-    { icon: '📝', label: '文章总数', value: stats?.total_posts || 0, color: 'brand' },
-    { icon: '👥', label: '用户总数', value: stats?.total_users || 0, color: 'success' },
-    { icon: '💬', label: '评论总数', value: stats?.total_comments || 0, color: 'warning' },
-    { icon: '📁', label: '文件总数', value: stats?.total_files || 0, color: 'important' },
-    { icon: '👁', label: '总访问量', value: stats?.total_visits || 0, color: 'severe' },
-    { icon: '📅', label: '今日访问', value: stats?.today_visits || 0, color: 'success' },
+    { icon: '📝', label: '文章总数', value: stats?.total_posts ?? 0, color: 'brand' },
+    { icon: '👥', label: '用户总数', value: stats?.total_users ?? 0, color: 'success' },
+    { icon: '💬', label: '评论总数', value: stats?.total_comments ?? 0, color: 'warning' },
+    { icon: '📁', label: '文件总数', value: stats?.total_files ?? 0, color: 'important' },
+    { icon: '👁', label: '总访问量', value: stats?.total_visits ?? 0, color: 'severe' },
+    { icon: '📅', label: '今日访问', value: stats?.today_visits ?? 0, color: 'success' },
   ];
 
   return (
@@ -315,7 +317,9 @@ export function AdminPage() {
             <TabList
               vertical
               selectedValue={activeTab}
-              onTabSelect={(_, data) => setActiveTab(data.value as any)}
+              onTabSelect={(_, data) =>
+                setActiveTab(data.value as 'dashboard' | 'posts' | 'users' | 'settings')
+              }
             >
               <Tab icon={<HomeRegular />} value="dashboard">
                 仪表板
@@ -439,7 +443,9 @@ export function AdminPage() {
                               appearance="transparent"
                               icon={post.published_at ? <EyeOffRegular /> : <EyeRegular />}
                               size="small"
-                              onClick={() => handleTogglePublish(post)}
+                              onClick={() => {
+                                void handleTogglePublish(post);
+                              }}
                             >
                               {post.published_at ? '取消发布' : '发布'}
                             </Button>
@@ -447,7 +453,9 @@ export function AdminPage() {
                               appearance="transparent"
                               icon={<DeleteRegular />}
                               size="small"
-                              onClick={() => handleDeletePost(post.id)}
+                              onClick={() => {
+                                void handleDeletePost(post.id);
+                              }}
                             >
                               删除
                             </Button>
@@ -498,8 +506,10 @@ export function AdminPage() {
                             appearance="transparent"
                             icon={<DeleteRegular />}
                             size="small"
-                            disabled={user.id === currentUser.id}
-                            onClick={() => handleDeleteUser(user.id)}
+                            disabled={user.id === currentUser?.id}
+                            onClick={() => {
+                              void handleDeleteUser(user.id);
+                            }}
                           >
                             删除
                           </Button>

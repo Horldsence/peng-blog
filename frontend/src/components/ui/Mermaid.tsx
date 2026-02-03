@@ -52,7 +52,7 @@ export const Mermaid = ({ chart }: MermaidProps) => {
       }
     };
 
-    renderChart();
+    void renderChart();
   }, [chart]);
 
   if (error) {

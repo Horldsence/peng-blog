@@ -226,9 +226,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const result = await response.json();
+        const result = (await response.json()) as { data?: { url?: string } };
 
-        if (result && result.data && result.data.url) {
+        if (result?.data?.url) {
           setBingImage(result.data.url);
         } else {
           throw new Error('Invalid API response format');
@@ -238,7 +238,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         setBingImage('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');
       }
     };
-    fetchBingImage();
+    void fetchBingImage();
   }, []);
 
   // Helper to determine active value, handling sub-routes
@@ -256,15 +256,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     : 0;
   const hasAdminPermission = (permissions & 16) !== 0;
 
-  const handleNavClick = (e: any, value: any) => {
-    // Value might be the event if not passed correctly, but we set 'value' on NavItem
-    // To ensure clickability, we'll use the 'value' prop directly if passed,
-    // otherwise rely on the second arg which NavDrawer provides
-    if (typeof value === 'string') {
-      navigate(value);
-    } else if (e && e.currentTarget && e.currentTarget.getAttribute('value')) {
-      navigate(e.currentTarget.getAttribute('value'));
-    }
+  const handleNavClick = (_e: unknown, data: { value: string }) => {
+    navigate(data.value);
   };
 
   const handleLogout = () => {

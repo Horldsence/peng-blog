@@ -6,7 +6,7 @@ export const tagsApi = {
    * 获取标签列表
    */
   getTags: (params?: { page?: number; per_page?: number }) => {
-    return http.get<ApiListResponseV2<Tag>>('/tags', { params } as any);
+    return http.get<ApiListResponseV2<Tag>>('/tags', { params });
   },
 
   /**
@@ -36,7 +36,7 @@ export const tagsApi = {
    * 获取标签下的文章列表
    */
   getTagPosts: (id: string, params?: { page?: number; per_page?: number }) => {
-    return http.get<ApiListResponseV2<Post>>(`/tags/${id}/posts`, { params } as any);
+    return http.get<ApiListResponseV2<Post>>(`/tags/${id}/posts`, { params });
   },
 };
 

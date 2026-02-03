@@ -9,7 +9,7 @@ export type Timestamp = string;
 /**
  * API v2 统一响应格式（单个资源）
  */
-export interface ApiResponseV2<T = any> {
+export interface ApiResponseV2<T = unknown> {
   code: number;
   message: string;
   data: T;
@@ -18,7 +18,7 @@ export interface ApiResponseV2<T = any> {
 /**
  * API v2 统一响应格式（列表）
  */
-export interface ApiListResponseV2<T = any> {
+export interface ApiListResponseV2<T = unknown> {
   code: number;
   message: string;
   data: T[];

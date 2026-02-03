@@ -3,7 +3,6 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Card,
@@ -93,19 +92,18 @@ const useStyles = makeStyles({
 
 export function TagsPage() {
   const styles = useStyles();
-  const navigate = useNavigate();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    fetchTags();
+    void fetchTags();
   }, []);
 
   useEffect(() => {
     if (selectedTag) {
-      fetchPostsByTag(selectedTag);
+      void fetchPostsByTag(selectedTag);
     }
   }, [selectedTag]);
 

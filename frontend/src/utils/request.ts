@@ -32,6 +32,7 @@ const createAxiosInstance = (): AxiosInstance => {
     (response: AxiosResponse) => {
       // API v2 响应格式: { code, message, data, pagination? }
       // 直接返回 data，让调用方处理 code 和 data 字段
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return response.data;
     },
     (error: AxiosError<ApiErrorV2>) => {
@@ -92,24 +93,32 @@ export const request = createAxiosInstance();
 
 // 导出常用的请求方法封装
 export const http = {
-  get: <T = any>(url: string, config?: InternalAxiosRequestConfig) => {
-    return request.get<any, T>(url, config);
+  get: <T = unknown>(url: string, config?: Partial<InternalAxiosRequestConfig>) => {
+    return request.get<unknown, T>(url, config);
   },
 
-  post: <T = any>(url: string, data?: any, config?: any) => {
-    return request.post<any, T>(url, data, config);
+  post: <T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: Partial<InternalAxiosRequestConfig>
+  ) => {
+    return request.post<unknown, T>(url, data, config);
   },
 
-  put: <T = any>(url: string, data?: any, config?: any) => {
-    return request.put<any, T>(url, data, config);
+  put: <T = unknown>(url: string, data?: unknown, config?: Partial<InternalAxiosRequestConfig>) => {
+    return request.put<unknown, T>(url, data, config);
   },
 
-  patch: <T = any>(url: string, data?: any, config?: any) => {
-    return request.patch<any, T>(url, data, config);
+  patch: <T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: Partial<InternalAxiosRequestConfig>
+  ) => {
+    return request.patch<unknown, T>(url, data, config);
   },
 
-  delete: <T = any>(url: string, config?: any) => {
-    return request.delete<any, T>(url, config);
+  delete: <T = unknown>(url: string, config?: Partial<InternalAxiosRequestConfig>) => {
+    return request.delete<unknown, T>(url, config);
   },
 };
 

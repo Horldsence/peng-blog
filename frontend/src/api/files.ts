@@ -21,11 +21,7 @@ export const filesApi = {
     const formData = new FormData();
     formData.append('file', params.file);
 
-    return http.post<FileInfo>('/files', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      } as any,
-    });
+    return http.post<FileInfo>('/files', formData);
   },
 
   /**
@@ -45,7 +41,7 @@ export const filesApi = {
   downloadFile: (id: string) => {
     return http.get<Blob>(`/files/${id}/download`, {
       responseType: 'blob',
-    } as any);
+    });
   },
 
   /**
@@ -55,7 +51,7 @@ export const filesApi = {
    * @returns 文件列表
    */
   getFiles: (params?: PaginationParams) => {
-    return http.get<PaginatedResponse<FileInfo>>('/files', { params } as any);
+    return http.get<PaginatedResponse<FileInfo>>('/files', { params });
   },
 
   /**

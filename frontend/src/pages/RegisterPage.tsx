@@ -123,10 +123,11 @@ export function RegisterPage() {
 
     try {
       await authApi.register(formData);
+      // eslint-disable-next-line no-alert
       alert('注册成功！请登录');
       navigate('/login');
-    } catch (err: any) {
-      const errorMessage = err.message || '注册失败';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '注册失败';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -156,7 +157,12 @@ export function RegisterPage() {
         )}
 
         {/* 注册表单 */}
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className={styles.form}
+        >
           <div>
             <label className={styles.fieldLabel}>用户名</label>
             <Input

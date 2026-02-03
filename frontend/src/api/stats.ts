@@ -13,7 +13,7 @@ export const statsApi = {
    * 记录访问
    */
   recordVisit: (data?: RecordVisitRequest) => {
-    return http.post<ApiResponseV2<{ message: string }>>('/stats/visits', data || {});
+    return http.post<ApiResponseV2<{ message: string }>>('/stats/visits', data ?? {});
   },
 
   /**

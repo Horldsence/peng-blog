@@ -18,7 +18,7 @@ export const postsApi = {
    * API v2: 支持按 author, category, tag, status 过滤
    */
   getPosts: (params?: PostListParams) => {
-    return http.get<ApiListResponseV2<Post>>('/posts', { params } as any);
+    return http.get<ApiListResponseV2<Post>>('/posts', { params });
   },
 
   /**
@@ -26,7 +26,7 @@ export const postsApi = {
    * API v2 新增端点
    */
   searchPosts: (params: PostSearchParams) => {
-    return http.get<ApiListResponseV2<Post>>('/posts/search', { params } as any);
+    return http.get<ApiListResponseV2<Post>>('/posts/search', { params });
   },
 
   /**
@@ -89,7 +89,7 @@ export const postsApi = {
    * API v2: 端点从 /comments 改为 /posts/{id}/comments
    */
   getPostComments: (postId: string, params?: { page?: number; per_page?: number }) => {
-    return http.get<ApiListResponseV2<Comment>>(`/posts/${postId}/comments`, { params } as any);
+    return http.get<ApiListResponseV2<Comment>>(`/posts/${postId}/comments`, { params });
   },
 
   /**

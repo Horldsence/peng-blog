@@ -64,8 +64,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   );
 }
 
+/* eslint-disable react-refresh/only-export-components */
 /**
- * 使用主题 Context */
+ * 使用主题 Context
+ */
 export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
   if (!context) {

@@ -2,7 +2,7 @@
  * 文章详情页 - Markdown 渲染和代码高亮
  */
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -298,8 +298,8 @@ const MermaidDiagram = ({ chart, accentColor }: { chart: string; accentColor?: s
         setSvg('<div style="color:red">Diagram render failed</div>');
       }
     };
-    renderChart();
-  }, [chart]);
+    void renderChart();
+  }, [chart, accentColor]);
 
   return <div className={styles.mermaidContainer} dangerouslySetInnerHTML={{ __html: svg }} />;
 };
@@ -326,19 +326,11 @@ export function PostDetailPage() {
         console.error('Failed to fetch Bing color:', error);
       }
     };
-    fetchBingColor();
+    void fetchBingColor();
   }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    setIsAuthenticated(authApi.isAuthenticated());
-    if (id) {
-      fetchPost();
-      fetchComments();
-    }
-  }, [id]);
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -357,9 +349,9 @@ export function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -368,12 +360,21 @@ export function PostDetailPage() {
     } catch (error) {
       console.error('Failed to fetch comments:', error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    setIsAuthenticated(authApi.isAuthenticated());
+    if (id) {
+      void fetchPost();
+      void fetchComments();
+    }
+  }, [id, fetchPost, fetchComments]);
 
   const handleCommentSubmit = async () => {
     if (!id || !commentContent.trim()) return;
 
     if (!isAuthenticated) {
+      // eslint-disable-next-line no-alert
       alert('请先登录');
       navigate('/login');
       return;
@@ -384,9 +385,10 @@ export function PostDetailPage() {
         content: commentContent,
       });
       setCommentContent('');
-      fetchComments();
+      void fetchComments();
     } catch (error) {
       console.error('Failed to create comment:', error);
+      // eslint-disable-next-line no-alert
       alert('评论失败，请重试');
     }
   };
@@ -520,21 +522,25 @@ export function PostDetailPage() {
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
               components={{
-                h1: ({ node, ...props }) => {
+                h1: ({ ...props }) => {
                   const id = slugify(String(props.children));
                   return <h1 id={id} className={styles.mdH1} {...props} />;
                 },
-                h2: ({ node, ...props }) => {
+                h2: ({ ...props }) => {
                   const id = slugify(String(props.children));
                   return <h2 id={id} className={styles.mdH2} {...props} />;
                 },
-                h3: ({ node, ...props }) => {
+                h3: ({ ...props }) => {
                   const id = slugify(String(props.children));
                   return <h3 id={id} className={styles.mdH3} {...props} />;
                 },
-                p: ({ node, ...props }) => <p className={styles.mdP} {...props} />,
-                code: ({ node, inline, className, children, ...props }: any) => {
-                  const match = /language-(\w+)/.exec(className || '');
+                p: ({ ...props }) => <p className={styles.mdP} {...props} />,
+                code: ({
+                  className,
+                  children,
+                  ...props
+                }: React.HTMLAttributes<HTMLElement> & { inline?: boolean }) => {
+                  const match = /language-(\w+)/.exec(className ?? '');
                   const isMermaid = match && match[1] === 'mermaid';
 
                   if (isMermaid) {
@@ -547,13 +553,13 @@ export function PostDetailPage() {
                   }
 
                   return (
-                    <code className={`${styles.mdInlineCode} ${className || ''}`} {...props}>
+                    <code className={`${styles.mdInlineCode} ${className ?? ''}`} {...props}>
                       {children}
                     </code>
                   );
                 },
-                pre: ({ node, ...props }) => <pre className={styles.mdPre} {...props} />,
-                a: ({ node, ...props }) => (
+                pre: ({ ...props }) => <pre className={styles.mdPre} {...props} />,
+                a: ({ ...props }) => (
                   <a
                     className={styles.mdLink}
                     target="_blank"
@@ -561,9 +567,9 @@ export function PostDetailPage() {
                     {...props}
                   />
                 ),
-                ul: ({ node, ...props }) => <ul className={styles.mdList} {...props} />,
-                ol: ({ node, ...props }) => <ol className={styles.mdList} {...props} />,
-                blockquote: ({ node, ...props }) => (
+                ul: ({ ...props }) => <ul className={styles.mdList} {...props} />,
+                ol: ({ ...props }) => <ol className={styles.mdList} {...props} />,
+                blockquote: ({ ...props }) => (
                   <blockquote className={styles.mdBlockquote} {...props} />
                 ),
               }}
@@ -591,7 +597,9 @@ export function PostDetailPage() {
               />
               <Button
                 appearance="primary"
-                onClick={handleCommentSubmit}
+                onClick={() => {
+                  void handleCommentSubmit();
+                }}
                 disabled={!commentContent.trim()}
               >
                 发表评论
@@ -622,7 +630,7 @@ export function PostDetailPage() {
                 <div key={comment.id} className={styles.commentItem}>
                   <div className={styles.commentHeader}>
                     <strong className={styles.commentUser}>
-                      {comment.github_username || '用户'}
+                      {comment.github_username ?? '用户'}
                     </strong>
                     <Caption1 className={styles.commentDate}>
                       {formatDate(comment.created_at)}

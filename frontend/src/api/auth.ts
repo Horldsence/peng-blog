@@ -70,7 +70,7 @@ export const authApi = {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
-        const user = JSON.parse(userStr);
+        const user = JSON.parse(userStr) as User;
         // 确保 permissions 是数字类型
         if (user && typeof user.permissions === 'string') {
           user.permissions = parseInt(user.permissions, 10);

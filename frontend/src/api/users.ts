@@ -21,7 +21,7 @@ export const usersApi = {
    * 需要管理员权限 (USER_MANAGE)
    */
   getUsers: (params?: PaginationParams) => {
-    return http.get<ApiListResponseV2<User>>('/users', { params } as any);
+    return http.get<ApiListResponseV2<User>>('/users', { params });
   },
 
   /**
@@ -51,7 +51,7 @@ export const usersApi = {
    * API v2 新增端点
    */
   getUserPosts: (id: string, params?: PaginationParams) => {
-    return http.get<ApiListResponseV2<Post>>(`/users/${id}/posts`, { params } as any);
+    return http.get<ApiListResponseV2<Post>>(`/users/${id}/posts`, { params });
   },
 };
 

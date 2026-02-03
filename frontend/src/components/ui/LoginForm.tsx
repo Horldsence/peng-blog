@@ -86,7 +86,7 @@ const useStyles = makeStyles({
 
 interface LoginFormProps {
   onLoginSuccess?: () => void;
-  onLoginError?: (error: any) => void;
+  onLoginError?: (error: Error) => void;
 }
 
 export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
@@ -117,13 +117,11 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-
-      console.log('登录成功:', response.user);
-    } catch (err: any) {
-      const errorMessage = err.message || '登录失败，请检查用户名和密码';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '登录失败，请检查用户名和密码';
       setError(errorMessage);
 
-      if (onLoginError) {
+      if (onLoginError && err instanceof Error) {
         onLoginError(err);
       }
     } finally {
@@ -154,7 +152,13 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         )}
 
         {/* 登录表单 */}
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSubmit(e);
+          }}
+          className={styles.form}
+        >
           <div>
             <label className={styles.fieldLabel}>用户名</label>
             <Input
@@ -162,7 +166,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
               placeholder="请输入用户名"
               value={formData.username}
               onChange={(_, data) => {
-                setFormData((prev: UserLoginRequest) => ({
+                setFormData((prev) => ({
                   ...prev,
                   username: data.value,
                 }));
@@ -184,7 +188,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
               placeholder="请输入密码"
               value={formData.password}
               onChange={(_, data) => {
-                setFormData((prev: UserLoginRequest) => ({
+                setFormData((prev) => ({
                   ...prev,
                   password: data.value,
                 }));

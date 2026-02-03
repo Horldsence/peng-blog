@@ -61,18 +61,40 @@ const useStyles = makeStyles({
 });
 
 // Helper to extract text from React children
-const extractText = (children: any): string => {
+interface ReactElementWithChildren {
+  props: {
+    children?: React.ReactNode;
+  };
+}
+
+const extractText = (children: React.ReactNode): string => {
   if (typeof children === 'string') return children;
   if (Array.isArray(children)) return children.map(extractText).join('');
-  if (children?.props?.children) return extractText(children.props.children);
+  if (
+    children &&
+    typeof children === 'object' &&
+    'props' in children &&
+    children.props &&
+    typeof children.props === 'object' &&
+    'children' in children.props
+  ) {
+    const element = children as ReactElementWithChildren;
+    return extractText(element.props.children);
+  }
   return '';
 };
 
-export const CodeBlock = ({ inline, className, children, ...props }: any) => {
+interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
+  inline?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}
+
+export const CodeBlock = ({ inline, className, children, ...props }: CodeBlockProps) => {
   const styles = useStyles();
   const [copied, setCopied] = useState(false);
 
-  const match = /language-(\w+)/.exec(className || '');
+  const match = /language-(\w+)/.exec(className ?? '');
   const language = match ? match[1] : 'text';
 
   // Extract raw text for copy/mermaid
@@ -90,14 +112,16 @@ export const CodeBlock = ({ inline, className, children, ...props }: any) => {
     return <Mermaid chart={rawContent} />;
   }
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(rawContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
+  const handleCopy = () => {
+    void (async () => {
+      try {
+        await navigator.clipboard.writeText(rawContent);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    })();
   };
 
   return (

@@ -161,7 +161,7 @@ export function HomePage() {
       }
     };
 
-    fetchPostsCount();
+    void fetchPostsCount();
   }, []);
 
   const handleSearch = () => {

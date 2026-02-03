@@ -69,7 +69,7 @@ export function PostEditorPage() {
         setIsLoadingOptions(false);
       }
     };
-    fetchOptions();
+    void fetchOptions();
   }, []);
 
   // 加载文章数据（编辑模式）
@@ -87,12 +87,12 @@ export function PostEditorPage() {
         setTitle(post.title);
         setContent(post.content);
         setPublished(!!post.published_at);
-        setSelectedCategoryId(post.category_id || undefined);
+        setSelectedCategoryId(post.category_id ?? undefined);
         // 加载文章现有标签
         const postTags = tagsRes.data;
         setSelectedTags(postTags.map((t: TagModel) => t.id));
-      } catch (err: any) {
-        const errorMessage = err.message || '获取文章失败';
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : '获取文章失败';
         setError(errorMessage);
         console.error('获取文章失败:', err);
       } finally {
@@ -101,7 +101,7 @@ export function PostEditorPage() {
     };
 
     if (isEditing) {
-      fetchPost();
+      void fetchPost();
     }
   }, [id, isEditing]);
 
@@ -118,6 +118,7 @@ export function PostEditorPage() {
 
   // 创建新分类
   const createNewCategory = async () => {
+    // eslint-disable-next-line no-alert
     const name = window.prompt('请输入新分类名称:');
     if (!name) return;
 
@@ -128,6 +129,7 @@ export function PostEditorPage() {
       setSelectedCategoryId(newCategory.id);
     } catch (e) {
       console.error('创建分类失败', e);
+      // eslint-disable-next-line no-alert
       alert('创建分类失败');
     }
   };
@@ -145,12 +147,16 @@ export function PostEditorPage() {
       setTagQuery('');
     } catch (e) {
       console.error('创建标签失败', e);
+      // eslint-disable-next-line no-alert
       alert('创建标签失败: 可能已存在');
     }
   };
 
   // 处理标签选择
-  const onTagSelect = async (_: any, data: any) => {
+  const onTagSelect = async (
+    _: unknown,
+    data: { optionValue?: string; selectedOptions?: string[] }
+  ) => {
     if (data.optionValue === 'create-new') {
       await createNewTag();
       return;
@@ -185,7 +191,7 @@ export function PostEditorPage() {
         await postsApi.patchPost(id, {
           title: title.trim(),
           content: content.trim(),
-          category_id: selectedCategoryId || null,
+          category_id: selectedCategoryId ?? null,
         });
 
         // 同步标签
@@ -222,16 +228,18 @@ export function PostEditorPage() {
       }
 
       if (shouldPublish) {
+        // eslint-disable-next-line no-alert
         alert(isEditing ? '更新并发布成功！' : '发布成功！');
       } else {
+        // eslint-disable-next-line no-alert
         alert(isEditing ? '保存成功！' : '草稿保存成功！');
       }
 
       if (isEditing) {
         navigate(`/post/${id}`);
       }
-    } catch (err: any) {
-      const errorMessage = err.message || '保存失败';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '保存失败';
       setError(errorMessage);
       console.error('保存失败:', err);
     } finally {
@@ -329,7 +337,13 @@ export function PostEditorPage() {
                   分类
                 </label>
                 {isAdmin && (
-                  <Button size="small" appearance="subtle" onClick={createNewCategory}>
+                  <Button
+                    size="small"
+                    appearance="subtle"
+                    onClick={() => {
+                      void createNewCategory();
+                    }}
+                  >
                     新建
                   </Button>
                 )}
@@ -337,7 +351,7 @@ export function PostEditorPage() {
               <Dropdown
                 aria-labelledby={categoryId}
                 placeholder="选择分类"
-                value={categories.find((c) => c.id === selectedCategoryId)?.name || ''}
+                value={categories.find((c) => c.id === selectedCategoryId)?.name ?? ''}
                 selectedOptions={selectedCategoryId ? [selectedCategoryId] : []}
                 onOptionSelect={(_, data) => {
                   if (data.optionValue) setSelectedCategoryId(data.optionValue);
@@ -365,7 +379,9 @@ export function PostEditorPage() {
                     onChange={(ev) => setTagQuery(ev.target.value)}
                     value={tagQuery}
                     selectedOptions={selectedTags}
-                    onOptionSelect={onTagSelect}
+                    onOptionSelect={(_, data) => {
+                      void onTagSelect(_, data);
+                    }}
                     disabled={loading || isLoadingOptions}
                     freeform
                     multiselect
@@ -445,7 +461,7 @@ export function PostEditorPage() {
             <Button
               appearance="secondary"
               icon={<SaveRegular />}
-              onClick={() => handleSubmit(false)}
+              onClick={() => void handleSubmit(false)}
               disabled={loading}
             >
               {loading ? '保存中...' : '保存草稿'}
@@ -453,7 +469,9 @@ export function PostEditorPage() {
             <Button
               appearance="primary"
               icon={<SendRegular />}
-              onClick={() => handleSubmit(true)}
+              onClick={() => {
+                void handleSubmit(true);
+              }}
               disabled={loading}
             >
               {loading ? '发布中...' : isEditing && published ? '更新发布' : '发布'}

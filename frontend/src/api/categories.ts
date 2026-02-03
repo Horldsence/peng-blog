@@ -13,7 +13,7 @@ export const categoriesApi = {
    * 获取分类列表
    */
   getCategories: (params?: { page?: number; per_page?: number }) => {
-    return http.get<ApiListResponseV2<Category>>('/categories', { params } as any);
+    return http.get<ApiListResponseV2<Category>>('/categories', { params });
   },
 
   /**
@@ -51,7 +51,7 @@ export const categoriesApi = {
    * 获取分类下的文章列表
    */
   getCategoryPosts: (id: string, params?: { page?: number; per_page?: number }) => {
-    return http.get<ApiListResponseV2<Post>>(`/categories/${id}/posts`, { params } as any);
+    return http.get<ApiListResponseV2<Post>>(`/categories/${id}/posts`, { params });
   },
 };
 

@@ -3,14 +3,12 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Accordion,
   AccordionHeader,
   AccordionItem,
   AccordionPanel,
   Card,
-  CardHeader,
   Body1,
   Title2,
   Spinner,
@@ -21,6 +19,10 @@ import { FolderRegular } from '@fluentui/react-icons';
 import { categoriesApi, postsApi } from '../api';
 import type { Category, Post } from '../types';
 import { PostCard } from '../components/features/PostCard';
+
+interface TreeNode extends Category {
+  children: TreeNode[];
+}
 
 const useStyles = makeStyles({
   container: {
@@ -92,19 +94,18 @@ const useStyles = makeStyles({
 
 export function CategoriesPage() {
   const styles = useStyles();
-  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    fetchCategories();
+    void fetchCategories();
   }, []);
 
   useEffect(() => {
     if (selectedCategory) {
-      fetchPostsByCategory(selectedCategory.id);
+      void fetchPostsByCategory(selectedCategory.id);
     }
   }, [selectedCategory]);
 
@@ -138,13 +139,15 @@ export function CategoriesPage() {
   };
 
   // 构建分类树
-  const buildCategoryTree = (categories: Category[]): any[] => {
-    const map = new Map<string, any>();
+  const buildCategoryTree = (categories: Category[]): TreeNode[] => {
+    const map = new Map<string, TreeNode>();
     categories.forEach((cat) => map.set(cat.id, { ...cat, children: [] }));
 
-    const root: Category[] = [];
+    const root: TreeNode[] = [];
     categories.forEach((cat) => {
-      const node = map.get(cat.id)!;
+      const node = map.get(cat.id);
+      if (!node) return;
+
       if (cat.parent_id) {
         const parent = map.get(cat.parent_id);
         if (parent) {
@@ -159,7 +162,7 @@ export function CategoriesPage() {
     return root;
   };
 
-  const renderCategory = (category: any, level: number = 0) => (
+  const renderCategory = (category: TreeNode, level: number = 0) => (
     <AccordionItem key={category.id} value={category.id}>
       <AccordionHeader expandIconPosition="end" style={{ paddingLeft: `${level * 16}px` }}>
         <div
@@ -179,7 +182,7 @@ export function CategoriesPage() {
       {category.children && category.children.length > 0 && (
         <AccordionPanel>
           <div className={styles.accordionPanelContent}>
-            {category.children.map((child: any) => renderCategory(child, level + 1))}
+            {category.children.map((child) => renderCategory(child, level + 1))}
           </div>
         </AccordionPanel>
       )}
@@ -224,7 +227,7 @@ export function CategoriesPage() {
           <div className={styles.categoryHeader}>
             <Title2>{selectedCategory.name}</Title2>
             <div className={styles.subtitle}>
-              {selectedCategory.description || `${posts.length} 篇文章`}
+              {selectedCategory.description ?? `${posts.length} 篇文章`}
             </div>
           </div>
 
