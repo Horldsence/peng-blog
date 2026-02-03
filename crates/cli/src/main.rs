@@ -8,6 +8,8 @@ use infrastructure::{establish_connection, Migrator, MigratorTrait, UserReposito
 use std::sync::Arc;
 use uuid::Uuid;
 
+mod update;
+
 /// CLI tool for managing peng-blog
 #[derive(Parser)]
 #[command(name = "peng-blog")]
@@ -29,6 +31,12 @@ enum Commands {
     Db {
         #[command(subcommand)]
         db_command: DbCommands,
+    },
+    /// Update peng-blog to latest version
+    Update {
+        /// Skip confirmation
+        #[arg(short, long)]
+        force: bool,
     },
 }
 
@@ -138,6 +146,7 @@ async fn main() -> anyhow::Result<()> {
                 Commands::Db { db_command } => {
                     handle_db_command(db_command, &config.database.url).await
                 }
+                Commands::Update { force } => handle_update_command(force).await,
             }
         }
     }
@@ -505,4 +514,18 @@ fn format_permissions(permissions: u64) -> String {
     } else {
         flags.join(" | ")
     }
+}
+
+async fn handle_update_command(force: bool) -> anyhow::Result<()> {
+    if !force
+        && !confirm_action(
+            "This will download and install the latest version. Continue?",
+            false,
+        )?
+    {
+        println!("{}", style("Operation cancelled").yellow());
+        return Ok(());
+    }
+
+    update::perform_update(force).await
 }

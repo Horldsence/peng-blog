@@ -296,29 +296,38 @@ export interface RecordVisitRequest {
 
 export interface DatabaseConfig {
   url: string;
+  url_env_override?: boolean;
 }
 
 export interface ServerConfig {
   host: string;
+  host_env_override?: boolean;
   port: number;
+  port_env_override?: boolean;
 }
 
 export interface AuthConfig {
   jwt_secret: string;
+  jwt_secret_env_override?: boolean;
 }
 
 export interface StorageConfig {
   upload_dir: string;
+  upload_dir_env_override?: boolean;
   cache_dir: string;
+  cache_dir_env_override?: boolean;
 }
 
 export interface GitHubConfig {
   client_id: string;
+  client_id_env_override?: boolean;
   client_secret: string;
+  client_secret_env_override?: boolean;
 }
 
 export interface SiteConfig {
   allow_registration: boolean;
+  allow_registration_env_override?: boolean;
 }
 
 export interface Config {

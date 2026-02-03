@@ -24,34 +24,52 @@ pub struct Config {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
     pub url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url_env_override: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub host: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host_env_override: Option<bool>,
     pub port: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port_env_override: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
     pub jwt_secret: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jwt_secret_env_override: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageConfig {
     pub upload_dir: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub upload_dir_env_override: Option<bool>,
     pub cache_dir: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cache_dir_env_override: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitHubConfig {
     pub client_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_id_env_override: Option<bool>,
     pub client_secret: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_secret_env_override: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SiteConfig {
     pub allow_registration: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_registration_env_override: Option<bool>,
 }
 
 /// Repository for configuration persistence operations
@@ -115,24 +133,33 @@ impl From<config::AppConfig> for Config {
         Self {
             database: DatabaseConfig {
                 url: app_config.database.url,
+                url_env_override: app_config.database.url_env_override,
             },
             server: ServerConfig {
                 host: app_config.server.host,
+                host_env_override: app_config.server.host_env_override,
                 port: app_config.server.port,
+                port_env_override: app_config.server.port_env_override,
             },
             auth: AuthConfig {
                 jwt_secret: app_config.auth.jwt_secret,
+                jwt_secret_env_override: app_config.auth.jwt_secret_env_override,
             },
             storage: StorageConfig {
                 upload_dir: app_config.storage.upload_dir,
+                upload_dir_env_override: app_config.storage.upload_dir_env_override,
                 cache_dir: app_config.storage.cache_dir,
+                cache_dir_env_override: app_config.storage.cache_dir_env_override,
             },
             github: GitHubConfig {
                 client_id: app_config.github.client_id,
+                client_id_env_override: app_config.github.client_id_env_override,
                 client_secret: app_config.github.client_secret,
+                client_secret_env_override: app_config.github.client_secret_env_override,
             },
             site: SiteConfig {
                 allow_registration: app_config.site.allow_registration,
+                allow_registration_env_override: app_config.site.allow_registration_env_override,
             },
         }
     }
@@ -143,24 +170,33 @@ impl From<Config> for config::AppConfig {
         Self {
             database: config::DatabaseConfig {
                 url: domain_config.database.url,
+                url_env_override: domain_config.database.url_env_override,
             },
             server: config::ServerConfig {
                 host: domain_config.server.host,
+                host_env_override: domain_config.server.host_env_override,
                 port: domain_config.server.port,
+                port_env_override: domain_config.server.port_env_override,
             },
             auth: config::AuthConfig {
                 jwt_secret: domain_config.auth.jwt_secret,
+                jwt_secret_env_override: domain_config.auth.jwt_secret_env_override,
             },
             storage: config::StorageConfig {
                 upload_dir: domain_config.storage.upload_dir,
+                upload_dir_env_override: domain_config.storage.upload_dir_env_override,
                 cache_dir: domain_config.storage.cache_dir,
+                cache_dir_env_override: domain_config.storage.cache_dir_env_override,
             },
             github: config::GitHubConfig {
                 client_id: domain_config.github.client_id,
+                client_id_env_override: domain_config.github.client_id_env_override,
                 client_secret: domain_config.github.client_secret,
+                client_secret_env_override: domain_config.github.client_secret_env_override,
             },
             site: config::SiteConfig {
                 allow_registration: domain_config.site.allow_registration,
+                allow_registration_env_override: domain_config.site.allow_registration_env_override,
             },
         }
     }

@@ -27,7 +27,10 @@ allow_registration = true
 "#;
 
 pub fn load_config() -> Result<Config, ConfigError> {
-    load_config_from_path("config/config.toml")
+    let mut config = load_config_from_path("config/config.toml")?;
+    load_from_env(&mut config)?;
+    config.validate()?;
+    Ok(config)
 }
 
 pub fn load_config_from_path<P: AsRef<Path>>(path: P) -> Result<Config, ConfigError> {
@@ -88,34 +91,38 @@ fn merge_config(base: &mut Config, overlay: Config) {
     if !overlay.github.client_secret.is_empty() {
         base.github.client_secret = overlay.github.client_secret;
     }
+    base.site.allow_registration = overlay.site.allow_registration;
 }
 
 fn load_from_env(config: &mut Config) -> Result<(), ConfigError> {
-    if let Ok(url) = std::env::var("DATABASE_URL") {
-        config.database.url = url;
+    // Check for env vars and mark them as overridden, but keep config file values
+    // This allows the UI to show config file values while indicating env override status
+    if std::env::var("DATABASE_URL").is_ok() {
+        config.database.url_env_override = Some(true);
     }
-    if let Ok(host) = std::env::var("HOST") {
-        config.server.host = host;
+    if std::env::var("HOST").is_ok() {
+        config.server.host_env_override = Some(true);
     }
-    if let Ok(port) = std::env::var("PORT") {
-        config.server.port = port
-            .parse()
-            .map_err(|_| ConfigError::Validation(format!("Invalid PORT value: {}", port)))?;
+    if std::env::var("PORT").is_ok() {
+        config.server.port_env_override = Some(true);
     }
-    if let Ok(secret) = std::env::var("JWT_SECRET") {
-        config.auth.jwt_secret = secret;
+    if std::env::var("JWT_SECRET").is_ok() {
+        config.auth.jwt_secret_env_override = Some(true);
     }
-    if let Ok(dir) = std::env::var("UPLOAD_DIR") {
-        config.storage.upload_dir = dir;
+    if std::env::var("UPLOAD_DIR").is_ok() {
+        config.storage.upload_dir_env_override = Some(true);
     }
-    if let Ok(dir) = std::env::var("CACHE_DIR") {
-        config.storage.cache_dir = dir;
+    if std::env::var("CACHE_DIR").is_ok() {
+        config.storage.cache_dir_env_override = Some(true);
     }
-    if let Ok(id) = std::env::var("GITHUB_CLIENT_ID") {
-        config.github.client_id = id;
+    if std::env::var("GITHUB_CLIENT_ID").is_ok() {
+        config.github.client_id_env_override = Some(true);
     }
-    if let Ok(secret) = std::env::var("GITHUB_CLIENT_SECRET") {
-        config.github.client_secret = secret;
+    if std::env::var("GITHUB_CLIENT_SECRET").is_ok() {
+        config.github.client_secret_env_override = Some(true);
+    }
+    if std::env::var("ALLOW_REGISTRATION").is_ok() {
+        config.site.allow_registration_env_override = Some(true);
     }
 
     Ok(())

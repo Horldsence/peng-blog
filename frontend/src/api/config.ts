@@ -1,9 +1,5 @@
 import { http } from '../utils/request';
-import type {
-  Config,
-  UpdateConfigRequest,
-  ApiResponseV2,
-} from '../types';
+import type { Config, UpdateConfigRequest, ApiResponseV2 } from '../types';
 
 export const configApi = {
   /**

@@ -9,6 +9,7 @@ import {
   Caption1,
   Spinner,
   Badge,
+  Tooltip,
   tokens,
   Tab,
   TabList,
@@ -202,6 +203,23 @@ export function AdminPage() {
   const [pendingConfig, setPendingConfig] = useState<UpdateConfigRequest>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+
+  const EnvOverrideBadge = ({ message }: { message?: string }) => (
+    <Tooltip
+      content={
+        <div style={{ fontSize: '12px' }}>
+          此值由环境变量设置{message ? `: ${message}` : ''}
+          <br />
+          修改配置文件不会生效
+        </div>
+      }
+      relationship="label"
+    >
+      <Badge size="small" color="warning" style={{ marginLeft: '8px' }}>
+        ENV
+      </Badge>
+    </Tooltip>
+  );
 
   const hasAdminPermission = (user: User | null) => {
     if (!user) return false;
@@ -606,13 +624,19 @@ export function AdminPage() {
                     <Title3 style={{ marginBottom: '16px' }}>站点设置</Title3>
                     <div className={styles.settingsGroup}>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>允许注册</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          允许注册
+                          {config.site.allow_registration_env_override && (
+                            <EnvOverrideBadge message="ALLOW_REGISTRATION" />
+                          )}
+                        </Body1>
                         <Switch
                           checked={config.site.allow_registration}
                           onChange={(_, data) =>
                             handleConfigChange('site', 'allow_registration', data.checked)
                           }
                           label={config.site.allow_registration ? '开启' : '关闭'}
+                          disabled={!!config.site.allow_registration_env_override}
                         />
                       </div>
                     </div>
@@ -625,20 +649,28 @@ export function AdminPage() {
                     <Title3 style={{ marginBottom: '16px' }}>服务器设置</Title3>
                     <div className={styles.settingsGroup}>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>主机地址</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          主机地址
+                          {config.server.host_env_override && <EnvOverrideBadge message="HOST" />}
+                        </Body1>
                         <Input
                           value={config.server.host}
                           onChange={(e) => handleConfigChange('server', 'host', e.target.value)}
+                          disabled={!!config.server.host_env_override}
                         />
                       </div>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>端口</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          端口
+                          {config.server.port_env_override && <EnvOverrideBadge message="PORT" />}
+                        </Body1>
                         <Input
                           type="number"
                           value={config.server.port.toString()}
                           onChange={(e) =>
                             handleConfigChange('server', 'port', parseInt(e.target.value, 10))
                           }
+                          disabled={!!config.server.port_env_override}
                         />
                       </div>
                     </div>
@@ -651,11 +683,40 @@ export function AdminPage() {
                     <Title3 style={{ marginBottom: '16px' }}>数据库设置</Title3>
                     <div className={styles.settingsGroup}>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>连接 URL</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          连接 URL
+                          {config.database.url_env_override && (
+                            <EnvOverrideBadge message="DATABASE_URL" />
+                          )}
+                        </Body1>
                         <Input
                           value={config.database.url}
                           onChange={(e) => handleConfigChange('database', 'url', e.target.value)}
                           type="password"
+                          disabled={!!config.database.url_env_override}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: '24px 0' }} />
+
+                  {/* 认证设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>认证设置</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          JWT 密钥
+                          {config.auth.jwt_secret_env_override && (
+                            <EnvOverrideBadge message="JWT_SECRET" />
+                          )}
+                        </Body1>
+                        <Input
+                          value={config.auth.jwt_secret}
+                          onChange={(e) => handleConfigChange('auth', 'jwt_secret', e.target.value)}
+                          type="password"
+                          disabled={!!config.auth.jwt_secret_env_override}
                         />
                       </div>
                     </div>
@@ -668,21 +729,33 @@ export function AdminPage() {
                     <Title3 style={{ marginBottom: '16px' }}>存储设置</Title3>
                     <div className={styles.settingsGroup}>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>上传目录</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          上传目录
+                          {config.storage.upload_dir_env_override && (
+                            <EnvOverrideBadge message="UPLOAD_DIR" />
+                          )}
+                        </Body1>
                         <Input
                           value={config.storage.upload_dir}
                           onChange={(e) =>
                             handleConfigChange('storage', 'upload_dir', e.target.value)
                           }
+                          disabled={!!config.storage.upload_dir_env_override}
                         />
                       </div>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>缓存目录</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          缓存目录
+                          {config.storage.cache_dir_env_override && (
+                            <EnvOverrideBadge message="CACHE_DIR" />
+                          )}
+                        </Body1>
                         <Input
                           value={config.storage.cache_dir}
                           onChange={(e) =>
                             handleConfigChange('storage', 'cache_dir', e.target.value)
                           }
+                          disabled={!!config.storage.cache_dir_env_override}
                         />
                       </div>
                     </div>
@@ -695,22 +768,34 @@ export function AdminPage() {
                     <Title3 style={{ marginBottom: '16px' }}>GitHub 集成</Title3>
                     <div className={styles.settingsGroup}>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>Client ID</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          Client ID
+                          {config.github.client_id_env_override && (
+                            <EnvOverrideBadge message="GITHUB_CLIENT_ID" />
+                          )}
+                        </Body1>
                         <Input
                           value={config.github.client_id}
                           onChange={(e) =>
                             handleConfigChange('github', 'client_id', e.target.value)
                           }
+                          disabled={!!config.github.client_id_env_override}
                         />
                       </div>
                       <div className={styles.settingsRow}>
-                        <Body1 style={{ fontWeight: '600' }}>Client Secret</Body1>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          Client Secret
+                          {config.github.client_secret_env_override && (
+                            <EnvOverrideBadge message="GITHUB_CLIENT_SECRET" />
+                          )}
+                        </Body1>
                         <Input
                           value={config.github.client_secret}
                           onChange={(e) =>
                             handleConfigChange('github', 'client_secret', e.target.value)
                           }
                           type="password"
+                          disabled={!!config.github.client_secret_env_override}
                         />
                       </div>
                     </div>
