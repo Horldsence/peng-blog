@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use config::load_config;
 use console::style;
 use dialoguer::{Confirm, Input, Password};
 use domain::UserRepository;
@@ -119,10 +120,10 @@ async fn main() -> anyhow::Result<()> {
                 .map_err(|e| anyhow::anyhow!("{}", e))
         }
         Some(command) => {
-            // Load environment variables for CLI commands
             dotenvy::dotenv().ok();
 
-            // Initialize logging only for CLI commands (server handles its own logging)
+            let config = load_config()?;
+
             tracing_subscriber::fmt()
                 .with_env_filter(
                     tracing_subscriber::EnvFilter::try_from_default_env()
@@ -130,16 +131,13 @@ async fn main() -> anyhow::Result<()> {
                 )
                 .init();
 
-            // Get database URL
-            let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-                "postgresql://postgres:postgres@localhost/peng_blog".to_string()
-            });
-
             match command {
                 Commands::User { user_command } => {
-                    handle_user_command(user_command, &database_url).await
+                    handle_user_command(user_command, &config.database.url).await
                 }
-                Commands::Db { db_command } => handle_db_command(db_command, &database_url).await,
+                Commands::Db { db_command } => {
+                    handle_db_command(db_command, &config.database.url).await
+                }
             }
         }
     }

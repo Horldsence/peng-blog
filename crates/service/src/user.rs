@@ -24,12 +24,16 @@ const ADMIN_COUNT_CHECK_LIMIT: u64 = 1000;
 /// It uses dependency injection for repositories, making it testable.
 pub struct UserService {
     repo: Arc<dyn UserRepository>,
+    allow_registration: bool,
 }
 
 impl UserService {
-    /// Create a new UserService with given repository
-    pub fn new(repo: Arc<dyn UserRepository>) -> Self {
-        Self { repo }
+    /// Create a new UserService with given repository and config
+    pub fn new(repo: Arc<dyn UserRepository>, allow_registration: bool) -> Self {
+        Self {
+            repo,
+            allow_registration,
+        }
     }
 
     /// Register a new user with validation
@@ -37,6 +41,10 @@ impl UserService {
     /// This method validates username and password, checks if username is unique,
     /// and assigns appropriate permissions.
     pub async fn register(&self, username: String, password: String) -> Result<User> {
+        if !self.allow_registration {
+            return Err(Error::Validation("Registration is disabled".to_string()));
+        }
+
         self.validate_username(&username)?;
         self.validate_password(&password)?;
 
@@ -288,7 +296,6 @@ mod tests {
     use domain::{ADMIN_PERMISSIONS, DEFAULT_USER_PERMISSIONS};
     use mockall::mock;
 
-    // Mock repository for testing
     mock! {
         UserRepo {}
 
@@ -305,10 +312,14 @@ mod tests {
         }
     }
 
+    fn setup_service() -> UserService {
+        let mock_repo = Arc::new(MockUserRepo::new());
+        UserService::new(mock_repo, true)
+    }
+
     #[tokio::test]
     async fn test_register_validates_empty_username() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         let result = service
             .register("".to_string(), "password123".to_string())
@@ -323,8 +334,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_short_username() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         let result = service
             .register("ab".to_string(), "password123".to_string())
@@ -339,8 +349,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_long_username() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         let long_username = "a".repeat(31);
         let result = service
@@ -356,8 +365,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_short_password() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         let result = service
             .register("username".to_string(), "short".to_string())
@@ -372,8 +380,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_validates_password_requirements() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         // Password without number
         let result = service
@@ -400,8 +407,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_permissions_requires_admin() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         let user_id = Uuid::new_v4();
         let target_id = Uuid::new_v4();
@@ -436,7 +442,7 @@ mod tests {
                 )))
             });
 
-        let service = UserService::new(Arc::new(mock_repo));
+        let service = UserService::new(Arc::new(mock_repo), true);
 
         let no_admin = DEFAULT_USER_PERMISSIONS;
 
@@ -453,8 +459,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_requires_admin() {
-        let mock_repo = Arc::new(MockUserRepo::new());
-        let service = UserService::new(mock_repo);
+        let service = setup_service();
 
         let no_permissions = 0;
 

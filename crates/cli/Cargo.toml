@@ -12,12 +12,13 @@ name = "peng-blog-cli"
 name = "peng-blog-cli"
 path = "src/main.rs"
 
-[dependencies]
-# Domain and infrastructure
-domain = { path = "../domain" }
-service = { path = "../service" }
-infrastructure = { path = "../infrastructure" }
-app = { path = "../app" }
+ [dependencies]
+ # Domain and infrastructure
+ domain = { path = "../domain" }
+ service = { path = "../service" }
+ infrastructure = { path = "../infrastructure" }
+ app = { path = "../app" }
+ config = { path = "../config" }
 
 # Async runtime
 tokio = { workspace = true }

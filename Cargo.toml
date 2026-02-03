@@ -1,13 +1,14 @@
-[workspace]
-resolver = "2"
-members = [
-    "crates/app",
-    "crates/api",
-    "crates/infrastructure",
-    "crates/domain",
-    "crates/service",
-    "crates/cli",
-]
+ [workspace]
+ resolver = "2"
+ members = [
+     "crates/app",
+     "crates/api",
+     "crates/infrastructure",
+     "crates/domain",
+     "crates/service",
+     "crates/cli",
+     "crates/config",
+ ]
 
 [workspace.package]
 version = "0.1.0"

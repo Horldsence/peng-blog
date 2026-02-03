@@ -1,0 +1,20 @@
+[package]
+name = "config"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+ [dependencies]
+ # Serialization
+ serde = { workspace = true, features = ["derive"] }
+ toml = "0.8"
+
+ # Error handling
+ thiserror = { workspace = true }
+
+ # Logging
+ tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
