@@ -31,10 +31,7 @@ pub async fn check_update() -> Result<Option<GitHubRelease>> {
         .timeout(Duration::from_secs(30))
         .build()?;
 
-    let url = format!(
-        "{}/repos/{}/releases/latest",
-        GITHUB_API_BASE, GITHUB_REPO
-    );
+    let url = format!("{}/repos/{}/releases/latest", GITHUB_API_BASE, GITHUB_REPO);
 
     println!("{}", style("Checking for updates...").cyan());
 
@@ -45,10 +42,7 @@ pub async fn check_update() -> Result<Option<GitHubRelease>> {
         .context("Failed to fetch release information")?;
 
     if !response.status().is_success() {
-        return Err(anyhow!(
-            "GitHub API returned error: {}",
-            response.status()
-        ));
+        return Err(anyhow!("GitHub API returned error: {}", response.status()));
     }
 
     let release: GitHubRelease = response.json().await?;
@@ -68,11 +62,7 @@ pub async fn download_update(url: &str, dest_path: &Path) -> Result<()> {
         .timeout(Duration::from_secs(600))
         .build()?;
 
-    println!(
-        "{} {}",
-        style("Downloading from:").cyan(),
-        style(url).dim()
-    );
+    println!("{} {}", style("Downloading from:").cyan(), style(url).dim());
 
     let response = client
         .get(url)
@@ -81,7 +71,10 @@ pub async fn download_update(url: &str, dest_path: &Path) -> Result<()> {
         .context("Failed to download update")?;
 
     if !response.status().is_success() {
-        return Err(anyhow!("Download failed with status: {}", response.status()));
+        return Err(anyhow!(
+            "Download failed with status: {}",
+            response.status()
+        ));
     }
 
     let total_size = response.content_length().unwrap_or(0);
@@ -91,10 +84,7 @@ pub async fn download_update(url: &str, dest_path: &Path) -> Result<()> {
         .await
         .context("Failed to create download file")?;
 
-    let bytes = response
-        .bytes()
-        .await
-        .context("Failed to download bytes")?;
+    let bytes = response.bytes().await.context("Failed to download bytes")?;
 
     let chunk_len = bytes.len();
     file.write_all(&bytes)
@@ -138,11 +128,7 @@ pub fn extract_archive(archive_path: &Path, dest_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn replace_files(
-    extract_dir: &Path,
-    target_dir: &Path,
-    preserve_files: &[&str],
-) -> Result<()> {
+pub fn replace_files(extract_dir: &Path, target_dir: &Path, preserve_files: &[&str]) -> Result<()> {
     println!(
         "{} {} -> {}",
         style("Installing files:").cyan(),
@@ -182,8 +168,7 @@ pub fn replace_files(
                 .parent()
                 .ok_or_else(|| anyhow!("No parent directory"))?;
 
-            fs::create_dir_all(dest_parent)
-                .context("Failed to create destination directory")?;
+            fs::create_dir_all(dest_parent).context("Failed to create destination directory")?;
 
             fs::copy(src_path, &dest_path).context("Failed to copy file")?;
 

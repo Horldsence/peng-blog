@@ -35,9 +35,18 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("DATABASE_URL: {}", config.database.url);
     tracing::info!("ALLOW_REGISTRATION: {}", config.site.allow_registration);
-    tracing::info!("DATABASE_URL env override: {:?}", config.database.url_env_override);
-    tracing::info!("UPLOAD_DIR env override: {:?}", config.storage.upload_dir_env_override);
-    tracing::info!("JWT_SECRET env override: {:?}", config.auth.jwt_secret_env_override);
+    tracing::info!(
+        "DATABASE_URL env override: {:?}",
+        config.database.url_env_override
+    );
+    tracing::info!(
+        "UPLOAD_DIR env override: {:?}",
+        config.storage.upload_dir_env_override
+    );
+    tracing::info!(
+        "JWT_SECRET env override: {:?}",
+        config.auth.jwt_secret_env_override
+    );
 
     if let Some(true) = config.site.allow_registration_env_override {
         tracing::warn!("ALLOW_REGISTRATION is overridden by environment variable");
