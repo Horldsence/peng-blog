@@ -2,7 +2,7 @@
  * 文章详情页 - Markdown 渲染和代码高亮
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -16,94 +16,90 @@ import {
   Textarea,
   makeStyles,
   tokens,
+  shorthands,
 } from '@fluentui/react-components';
 import {
   ArrowLeftRegular,
   EditRegular,
   CalendarRegular,
   EyeRegular,
-  ClockRegular,
-  CertificateRegular,
-  TextBulletListLtrRegular,
+  TimerRegular,
+  BookRegular,
 } from '@fluentui/react-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import mermaid from 'mermaid';
 import { postsApi, authApi, statsApi } from '../api';
 import type { Post, Comment } from '../types';
-import { extractTOC, calculateReadingTime, slugify, type TOCItem } from '../utils/markdown';
 import 'highlight.js/styles/github-dark.css';
 
+// Initialize mermaid
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+});
+
 const useStyles = makeStyles({
-  container: {
-    maxWidth: '800px',
+  wrapper: {
+    maxWidth: '1200px',
     margin: '0 auto',
-    padding: '32px 0',
+    padding: '32px 16px',
+    display: 'flex',
+    gap: '32px',
+    alignItems: 'flex-start',
   },
-  progressBar: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    height: '4px',
-    backgroundColor: tokens.colorBrandBackground,
-    zIndex: 1000,
-    transition: 'width 0.2s',
+  mainContent: {
+    flex: 1,
+    minWidth: 0, // Fix for flex child overflow
+    maxWidth: '800px', // Maintain readable line length
+    margin: '0 auto', // Center if sidebar is hidden
   },
-  tocContainer: {
-    position: 'fixed',
-    top: '120px',
-    left: 'calc(50% + 440px)', // 800px / 2 + 40px gap
-    width: '240px',
-    maxHeight: 'calc(100vh - 160px)',
-    overflowY: 'auto',
-    '@media (max-width: 1400px)': {
-      display: 'none',
+  sidebar: {
+    width: '260px',
+    position: 'sticky',
+    top: '24px',
+    display: 'none',
+    '@media (min-width: 1100px)': {
+      display: 'block',
     },
   },
-  tocHeader: {
+  tocCard: {
+    maxHeight: 'calc(100vh - 48px)',
+    overflowY: 'auto',
+  },
+  tocTitle: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: tokens.colorNeutralForeground1,
+    marginBottom: '16px',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    fontWeight: '600',
-    marginBottom: '12px',
-    color: tokens.colorNeutralForeground2,
   },
   tocList: {
-    listStyle: 'none',
+    listStyleType: 'none',
     padding: 0,
     margin: 0,
   },
   tocItem: {
-    marginBottom: '8px',
-    fontSize: '13px',
-    lineHeight: '1.4',
-    color: tokens.colorNeutralForeground3,
-    textDecoration: 'none',
-    display: 'block',
-    transition: 'color 0.2s',
+    marginBottom: '10px',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    color: tokens.colorNeutralForeground2,
     ':hover': {
       color: tokens.colorBrandForeground1,
     },
   },
-  activeTocItem: {
-    color: tokens.colorBrandForeground1,
-    fontWeight: '600',
-  },
-  licenseBlock: {
-    marginTop: '48px',
-    padding: '16px',
-    backgroundColor: tokens.colorNeutralBackground2,
-    borderRadius: '8px',
-    fontSize: '14px',
-    color: tokens.colorNeutralForeground2,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-  },
-  licenseTitle: {
-    fontWeight: '600',
-    marginBottom: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
+  tocLink: {
+    textDecoration: 'none',
+    color: 'inherit',
+    display: 'block',
+    ...shorthands.overflow('hidden'),
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
   },
   backButton: {
     marginBottom: '16px',
@@ -118,6 +114,7 @@ const useStyles = makeStyles({
   },
   metaContainer: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '16px',
     marginTop: '16px',
   },
@@ -130,6 +127,15 @@ const useStyles = makeStyles({
     marginLeft: 'auto',
     display: 'flex',
     gap: '8px',
+  },
+  license: {
+    marginTop: '8px',
+    padding: '8px 12px',
+    backgroundColor: tokens.colorNeutralBackground2,
+    borderRadius: '4px',
+    fontSize: '12px',
+    color: tokens.colorNeutralForeground2,
+    display: 'inline-block',
   },
   content: {
     padding: '24px 0',
@@ -184,9 +190,9 @@ const useStyles = makeStyles({
     padding: '48px',
   },
   // Markdown Styles
-  mdH1: { fontSize: '32px', fontWeight: '600', marginTop: '32px', marginBottom: '16px' },
-  mdH2: { fontSize: '28px', fontWeight: '600', marginTop: '28px', marginBottom: '14px' },
-  mdH3: { fontSize: '24px', fontWeight: '600', marginTop: '24px', marginBottom: '12px' },
+  mdH1: { fontSize: '32px', fontWeight: '600', marginTop: '32px', marginBottom: '16px', scrollMarginTop: '80px' },
+  mdH2: { fontSize: '28px', fontWeight: '600', marginTop: '28px', marginBottom: '14px', scrollMarginTop: '80px' },
+  mdH3: { fontSize: '24px', fontWeight: '600', marginTop: '24px', marginBottom: '12px', scrollMarginTop: '80px' },
   mdP: { marginBottom: '16px' },
   mdInlineCode: {
     backgroundColor: tokens.colorNeutralBackground1Hover,
@@ -196,22 +202,24 @@ const useStyles = makeStyles({
     fontFamily: 'monospace',
   },
   mdBlockCode: {
-    display: 'block',
-    backgroundColor: '#0d1117',
-    color: '#c9d1d9',
-    padding: '16px',
-    borderRadius: '8px',
-    overflow: 'auto',
-    fontSize: '14px',
-    fontFamily: 'monospace',
-    marginBottom: '16px',
+    // Legacy style, now handled by mdPre & > code
   },
   mdPre: {
-    backgroundColor: '#0d1117',
-    padding: '16px',
-    borderRadius: '8px',
-    overflow: 'auto',
+    backgroundColor: 'transparent',
+    padding: 0,
+    borderRadius: 0,
+    overflow: 'visible',
     marginBottom: '16px',
+    '& > code': {
+      display: 'block',
+      backgroundColor: '#0d1117',
+      color: '#c9d1d9',
+      padding: '16px',
+      borderRadius: '8px',
+      overflow: 'auto',
+      fontSize: '14px',
+      fontFamily: 'monospace',
+    },
   },
   mdLink: {
     color: tokens.colorBrandForeground1,
@@ -229,7 +237,43 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground2,
     marginBottom: '16px',
   },
+  mermaidContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '16px',
+    backgroundColor: tokens.colorNeutralBackground1,
+    borderRadius: '8px',
+    marginBottom: '16px',
+    overflowX: 'auto',
+  },
 });
+
+const MermaidDiagram = ({ chart }: { chart: string }) => {
+  const styles = useStyles();
+  const [svg, setSvg] = useState<string>('');
+
+  useEffect(() => {
+    const renderChart = async () => {
+      if (!chart) return;
+      try {
+        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        const { svg } = await mermaid.render(id, chart);
+        setSvg(svg);
+      } catch (error) {
+        console.error('Mermaid render error:', error);
+        setSvg('<div style="color:red">Diagram render failed</div>');
+      }
+    };
+    renderChart();
+  }, [chart]);
+
+  return (
+    <div
+      className={styles.mermaidContainer}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+};
 
 export function PostDetailPage() {
   const styles = useStyles();
@@ -240,32 +284,6 @@ export function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [commentContent, setCommentContent] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [toc, setToc] = useState<TOCItem[]>([]);
-  const [readingTime, setReadingTime] = useState(0);
-  const [readingProgress, setReadingProgress] = useState(0);
-  const [activeHeaderId, setActiveHeaderId] = useState<string>('');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      // Calculate progress
-      const totalHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
-      setReadingProgress(progress);
-
-      // Determine active header
-      const headings = Array.from(document.querySelectorAll('h1, h2, h3'));
-      for (const heading of headings) {
-        const rect = heading.getBoundingClientRect();
-        if (rect.top >= 0 && rect.top <= 150) {
-          setActiveHeaderId(heading.id);
-          break;
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     setIsAuthenticated(authApi.isAuthenticated());
@@ -282,8 +300,6 @@ export function PostDetailPage() {
       setLoading(true);
       const response = await postsApi.getPost(id);
       setPost(response.data);
-      setToc(extractTOC(response.data.content));
-      setReadingTime(calculateReadingTime(response.data.content));
 
       // 记录阅读量
       await statsApi.recordPostView(id);
@@ -341,11 +357,44 @@ export function PostDetailPage() {
     });
   };
 
-  const getTextFromChildren = (children: any): string => {
-    if (typeof children === 'string') return children;
-    if (Array.isArray(children)) return children.map(getTextFromChildren).join('');
-    if (children?.props?.children) return getTextFromChildren(children.props.children);
-    return '';
+  // Helper to slugify text for IDs
+  const slugify = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\u4e00-\u9fa5]+/g, '-') // Support Chinese characters
+      .replace(/^-+|-+$/g, '');
+  };
+
+  // Extract headings for TOC
+  const headings = useMemo(() => {
+    if (!post?.content) return [];
+    const lines = post.content.split('\n');
+    const extracted = [];
+    for (const line of lines) {
+      const match = line.match(/^(#{1,3})\s+(.+)$/);
+      if (match) {
+        extracted.push({
+          level: match[1].length,
+          text: match[2].trim(),
+          id: slugify(match[2].trim()),
+        });
+      }
+    }
+    return extracted;
+  }, [post?.content]);
+
+  // Calculate reading time
+  const readingTime = useMemo(() => {
+    if (!post?.content) return 0;
+    const words = post.content.length; // Simple char count for Chinese context
+    return Math.ceil(words / 400); // Assume 400 chars per minute
+  }, [post?.content]);
+
+  const scrollToHeading = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   if (loading) {
@@ -368,211 +417,202 @@ export function PostDetailPage() {
   }
 
   return (
-    <div className={styles.container}>
-      {/* 进度条 */}
-      <div className={styles.progressBar} style={{ width: `${readingProgress}%` }} />
+    <div className={styles.wrapper}>
+      {/* Main Content Area */}
+      <div className={styles.mainContent}>
+        {/* 返回按钮 */}
+        <Button
+          appearance="transparent"
+          icon={<ArrowLeftRegular />}
+          onClick={() => navigate(-1)}
+          className={styles.backButton}
+        >
+          返回
+        </Button>
 
-      {/* 目录 (桌面端) */}
-      {toc.length > 0 && (
-        <div className={styles.tocContainer}>
-          <div className={styles.tocHeader}>
-            <TextBulletListLtrRegular />
-            <span>目录</span>
-          </div>
-          <ul className={styles.tocList}>
-            {toc.map((item) => (
-              <li key={item.id} style={{ paddingLeft: `${(item.level - 1) * 12}px` }}>
-                <a
-                  href={`#${item.id}`}
-                  className={`${styles.tocItem} ${
-                    activeHeaderId === item.id ? styles.activeTocItem : ''
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
-                    setActiveHeaderId(item.id);
-                  }}
-                >
-                  {item.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* 返回按钮 */}
-      <Button
-        appearance="transparent"
-        icon={<ArrowLeftRegular />}
-        onClick={() => navigate(-1)}
-        className={styles.backButton}
-      >
-        返回
-      </Button>
-
-      {/* 文章卡片 */}
-      <Card className={styles.postCard}>
-        <CardHeader
-          header={<Title1 className={styles.title}>{post.title}</Title1>}
-          description={
-            <div className={styles.metaContainer}>
-              <div className={styles.metaItem}>
-                <CalendarRegular fontSize={14} />
-                <Caption1>{formatDate(post.created_at)}</Caption1>
-              </div>
-              <div className={styles.metaItem}>
-                <EyeRegular fontSize={14} />
-                <Caption1>{post.views} 次阅读</Caption1>
-              </div>
-              <div className={styles.metaItem}>
-                <ClockRegular fontSize={14} />
-                <Caption1>预计阅读 {readingTime} 分钟</Caption1>
-              </div>
-              <div className={styles.metaItem}>
-                <CertificateRegular fontSize={14} />
-                <Caption1>CC BY-SA 4.0</Caption1>
-              </div>
-              {isAuthenticated && (
-                <div className={styles.editContainer}>
-                  <Button
-                    size="small"
-                    appearance="transparent"
-                    icon={<EditRegular />}
-                    onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
-                  >
-                    编辑
-                  </Button>
+        {/* 文章卡片 */}
+        <Card className={styles.postCard}>
+          <CardHeader
+            header={<Title1 className={styles.title}>{post.title}</Title1>}
+            description={
+              <div>
+                <div className={styles.metaContainer}>
+                  <div className={styles.metaItem}>
+                    <CalendarRegular fontSize={14} />
+                    <Caption1>{formatDate(post.created_at)}</Caption1>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <EyeRegular fontSize={14} />
+                    <Caption1>{post.views} 次阅读</Caption1>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <TimerRegular fontSize={14} />
+                    <Caption1>阅读时长 {readingTime} 分钟</Caption1>
+                  </div>
+                  {isAuthenticated && (
+                    <div className={styles.editContainer}>
+                      <Button
+                        size="small"
+                        appearance="transparent"
+                        icon={<EditRegular />}
+                        onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
+                      >
+                        编辑
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          }
-        />
+                <div className={styles.license}>
+                  许可证：GPL v3.0 (GNU General Public License)
+                </div>
+              </div>
+            }
+          />
 
-        <Divider />
+          <Divider />
 
-        {/* Markdown 内容 */}
-        <div className={styles.content}>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
-            components={{
-              h1: ({ node, ...props }) => {
-                const text = getTextFromChildren(props.children);
-                return <h1 id={slugify(text)} className={styles.mdH1} {...props} />;
-              },
-              h2: ({ node, ...props }) => {
-                const text = getTextFromChildren(props.children);
-                return <h2 id={slugify(text)} className={styles.mdH2} {...props} />;
-              },
-              h3: ({ node, ...props }) => {
-                const text = getTextFromChildren(props.children);
-                return <h3 id={slugify(text)} className={styles.mdH3} {...props} />;
-              },
-              p: ({ node, ...props }) => <p className={styles.mdP} {...props} />,
-              code: ({ node, inline, ...props }: any) =>
-                inline ? (
-                  <code className={styles.mdInlineCode} {...props} />
-                ) : (
-                  <code className={styles.mdBlockCode} {...props} />
+          {/* Markdown 内容 */}
+          <div className={styles.content}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                h1: ({ node, ...props }) => {
+                  const id = slugify(String(props.children));
+                  return <h1 id={id} className={styles.mdH1} {...props} />;
+                },
+                h2: ({ node, ...props }) => {
+                  const id = slugify(String(props.children));
+                  return <h2 id={id} className={styles.mdH2} {...props} />;
+                },
+                h3: ({ node, ...props }) => {
+                  const id = slugify(String(props.children));
+                  return <h3 id={id} className={styles.mdH3} {...props} />;
+                },
+                p: ({ node, ...props }) => <p className={styles.mdP} {...props} />,
+                code: ({ node, inline, className, children, ...props }: any) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  const isMermaid = match && match[1] === 'mermaid';
+
+                  if (isMermaid) {
+                    return <MermaidDiagram chart={String(children).replace(/\n$/, '')} />;
+                  }
+
+                  return (
+                    <code className={`${styles.mdInlineCode} ${className || ''}`} {...props}>
+                      {children}
+                    </code>
+                  );
+                },
+                pre: ({ node, ...props }) => <pre className={styles.mdPre} {...props} />,
+                a: ({ node, ...props }) => (
+                  <a className={styles.mdLink} target="_blank" rel="noopener noreferrer" {...props} />
                 ),
-              pre: ({ node, ...props }) => <pre className={styles.mdPre} {...props} />,
-              a: ({ node, ...props }) => (
-                <a className={styles.mdLink} target="_blank" rel="noopener noreferrer" {...props} />
-              ),
-              ul: ({ node, ...props }) => <ul className={styles.mdList} {...props} />,
-              ol: ({ node, ...props }) => <ol className={styles.mdList} {...props} />,
-              blockquote: ({ node, ...props }) => (
-                <blockquote className={styles.mdBlockquote} {...props} />
-              ),
-            }}
-          >
-            {post.content}
-          </ReactMarkdown>
-
-          {/* 授权许可 */}
-          <div className={styles.licenseBlock}>
-            <div className={styles.licenseTitle}>
-              <CertificateRegular />
-              <span>许可协议</span>
-            </div>
-            <div>
-              本文采用{' '}
-              <a
-                href="https://creativecommons.org/licenses/by-sa/4.0/"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: tokens.colorBrandForeground1, textDecoration: 'underline' }}
-              >
-                CC BY-SA 4.0 (GPL Compatible)
-              </a>{' '}
-              许可协议。转载请注明出处。
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* 评论区 */}
-      <Card className={styles.postCard}>
-        <CardHeader
-          header={<Body1 style={{ fontSize: '20px', fontWeight: '600' }}>评论</Body1>}
-          description={<Caption1>{comments.length} 条评论</Caption1>}
-        />
-
-        {/* 评论输入 */}
-        {isAuthenticated ? (
-          <div className={styles.commentInputContainer}>
-            <Textarea
-              placeholder="写下你的评论..."
-              value={commentContent}
-              onChange={(_, data) => setCommentContent(data.value)}
-              className={styles.commentTextarea}
-            />
-            <Button
-              appearance="primary"
-              onClick={handleCommentSubmit}
-              disabled={!commentContent.trim()}
+                ul: ({ node, ...props }) => <ul className={styles.mdList} {...props} />,
+                ol: ({ node, ...props }) => <ol className={styles.mdList} {...props} />,
+                blockquote: ({ node, ...props }) => (
+                  <blockquote className={styles.mdBlockquote} {...props} />
+                ),
+              }}
             >
-              发表评论
-            </Button>
+              {post.content}
+            </ReactMarkdown>
           </div>
-        ) : (
-          <div className={styles.loginPrompt}>
-            <Body1 style={{ marginBottom: '8px' }}>登录后发表评论</Body1>
-            <Button appearance="primary" onClick={() => navigate('/login')}>
-              登录
-            </Button>
-            <Button appearance="transparent" onClick={() => navigate('/register')}>
-              注册
-            </Button>
-          </div>
-        )}
+        </Card>
 
-        <Divider />
+        {/* 评论区 */}
+        <Card className={styles.postCard}>
+          <CardHeader
+            header={<Body1 style={{ fontSize: '20px', fontWeight: '600' }}>评论</Body1>}
+            description={<Caption1>{comments.length} 条评论</Caption1>}
+          />
 
-        {/* 评论列表 */}
-        <div className={styles.commentList}>
-          {comments.length === 0 ? (
-            <div className={styles.emptyComments}>
-              <Caption1>暂无评论，快来发表第一条评论吧！</Caption1>
+          {/* 评论输入 */}
+          {isAuthenticated ? (
+            <div className={styles.commentInputContainer}>
+              <Textarea
+                placeholder="写下你的评论..."
+                value={commentContent}
+                onChange={(_, data) => setCommentContent(data.value)}
+                className={styles.commentTextarea}
+              />
+              <Button
+                appearance="primary"
+                onClick={handleCommentSubmit}
+                disabled={!commentContent.trim()}
+              >
+                发表评论
+              </Button>
             </div>
           ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className={styles.commentItem}>
-                <div className={styles.commentHeader}>
-                  <strong className={styles.commentUser}>
-                    {comment.github_username || '用户'}
-                  </strong>
-                  <Caption1 className={styles.commentDate}>
-                    {formatDate(comment.created_at)}
-                  </Caption1>
-                </div>
-                <Body1 className={styles.commentContent}>{comment.content}</Body1>
+            <div className={styles.loginPrompt}>
+              <Body1 style={{ marginBottom: '8px' }}>登录后发表评论</Body1>
+              <Button appearance="primary" onClick={() => navigate('/login')}>
+                登录
+              </Button>
+              <Button appearance="transparent" onClick={() => navigate('/register')}>
+                注册
+              </Button>
+            </div>
+          )}
+
+          <Divider />
+
+          {/* 评论列表 */}
+          <div className={styles.commentList}>
+            {comments.length === 0 ? (
+              <div className={styles.emptyComments}>
+                <Caption1>暂无评论，快来发表第一条评论吧！</Caption1>
               </div>
-            ))
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className={styles.commentItem}>
+                  <div className={styles.commentHeader}>
+                    <strong className={styles.commentUser}>
+                      {comment.github_username || '用户'}
+                    </strong>
+                    <Caption1 className={styles.commentDate}>
+                      {formatDate(comment.created_at)}
+                    </Caption1>
+                  </div>
+                  <Body1 className={styles.commentContent}>{comment.content}</Body1>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Sidebar Table of Contents - Only visible on desktop */}
+      <aside className={styles.sidebar}>
+        <div className={styles.tocCard}>
+          <div className={styles.tocTitle}>
+            <BookRegular />
+            <span>目录</span>
+          </div>
+          {headings.length > 0 ? (
+            <ul className={styles.tocList}>
+              {headings.map((heading, index) => (
+                <li
+                  key={`${heading.id}-${index}`}
+                  className={styles.tocItem}
+                  style={{ paddingLeft: `${(heading.level - 1) * 12}px` }}
+                >
+                  <div
+                    className={styles.tocLink}
+                    onClick={() => scrollToHeading(heading.id)}
+                    title={heading.text}
+                  >
+                    {heading.text}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Caption1>本文无目录</Caption1>
           )}
         </div>
-      </Card>
+      </aside>
     </div>
   );
 }
