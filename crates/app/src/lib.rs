@@ -10,6 +10,7 @@ use infrastructure::{
     Migrator, MigratorTrait, PostRepositoryImpl, SessionRepositoryImpl, StatsRepositoryImpl,
     TagRepositoryImpl, UserRepositoryImpl,
 };
+#[cfg(not(debug_assertions))]
 use rust_embed::RustEmbed;
 use service::{
     CategoryService, CommentService, FileService, PostService, SessionService, StatsService,
@@ -127,7 +128,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Embedded frontend static files
+/// Embedded frontend static files (only in release builds)
+#[cfg(not(debug_assertions))]
 #[derive(RustEmbed)]
 #[folder = "../../dist/"]
 struct FrontendAssets;
@@ -152,43 +154,49 @@ async fn frontend_handler(req: Request) -> impl IntoResponse {
         asset_path
     };
 
-    // Try to serve the embedded asset
-    match FrontendAssets::get(asset_path) {
-        Some(content) => {
-            let mime = mime_guess::from_path(asset_path)
-                .first_or_octet_stream()
-                .to_string();
+    #[cfg(not(debug_assertions))]
+    {
+        // Try to serve the embedded asset in release mode
+        match FrontendAssets::get(asset_path) {
+            Some(content) => {
+                let mime = mime_guess::from_path(asset_path)
+                    .first_or_octet_stream()
+                    .to_string();
 
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", mime)
-                .body(Body::from(content.data.to_vec()))
-                .unwrap()
-        }
-        None => {
-            // If asset not found and it's not a file request (no extension or is a route),
-            // serve index.html for SPA routing
-            let has_extension = path.contains('.') && !path.ends_with('/');
+                return Response::builder()
+                    .status(StatusCode::OK)
+                    .header("content-type", mime)
+                    .body(Body::from(content.data.to_vec()))
+                    .unwrap();
+            }
+            None => {
+                // If asset not found and it's not a file request (no extension or is a route),
+                // serve index.html for SPA routing
+                let has_extension = path.contains('.') && !path.ends_with('/');
 
-            if !has_extension {
-                // Serve index.html for SPA routes
-                match FrontendAssets::get("index.html") {
-                    Some(content) => Response::builder()
-                        .status(StatusCode::OK)
-                        .header("content-type", "text/html; charset=utf-8")
-                        .body(Body::from(content.data.to_vec()))
-                        .unwrap(),
-                    None => {
-                        // Fallback to file system for development
-                        serve_from_filesystem(asset_path, true).await
+                if !has_extension {
+                    // Serve index.html for SPA routes
+                    match FrontendAssets::get("index.html") {
+                        Some(content) => {
+                            return Response::builder()
+                                .status(StatusCode::OK)
+                                .header("content-type", "text/html; charset=utf-8")
+                                .body(Body::from(content.data.to_vec()))
+                                .unwrap();
+                        }
+                        None => {
+                            // This shouldn't happen in release mode, but fallback just in case
+                            return serve_from_filesystem(asset_path, true).await;
+                        }
                     }
                 }
-            } else {
-                // Fallback to file system for development
-                serve_from_filesystem(asset_path, false).await
             }
         }
     }
+
+    // Debug mode or fallback: serve from filesystem
+    let has_extension = path.contains('.') && !path.ends_with('/');
+    serve_from_filesystem(asset_path, !has_extension).await
 }
 
 /// Fallback handler to serve from filesystem during development
