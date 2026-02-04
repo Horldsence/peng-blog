@@ -11,8 +11,9 @@ import {
   Spinner,
   tokens,
   makeStyles,
+  Button,
 } from '@fluentui/react-components';
-import { TagRegular } from '@fluentui/react-icons';
+import { TagRegular, DismissRegular } from '@fluentui/react-icons';
 import { tagsApi, postsApi } from '../api';
 import type { Tag, Post } from '../types';
 import { PostCard } from '../components/features/PostCard';
@@ -44,7 +45,7 @@ const useStyles = makeStyles({
   tagCloudCard: {
     padding: '24px',
     borderRadius: tokens.borderRadiusLarge,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: tokens.colorNeutralBackground1,
     border: 'none',
   },
   tagHeader: {
@@ -88,24 +89,44 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     padding: '48px',
   },
+  selectedTagsHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '24px',
+  },
+  clearButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  selectedTagsList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginBottom: '16px',
+  },
 });
 
 export function TagsPage() {
   const styles = useStyles();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   useEffect(() => {
     void fetchTags();
   }, []);
 
   useEffect(() => {
-    if (selectedTag) {
-      void fetchPostsByTag(selectedTag);
+    if (selectedTags.length > 0) {
+      void fetchPostsByTags(selectedTags);
+    } else {
+      setPosts([]);
     }
-  }, [selectedTag]);
+  }, [selectedTags]);
 
   const fetchTags = async () => {
     try {
@@ -119,21 +140,46 @@ export function TagsPage() {
     }
   };
 
-  const fetchPostsByTag = async (tagId: string) => {
+  const fetchPostsByTags = async (tagIds: string[]) => {
     try {
-      const response = await postsApi.getPosts({
-        tag: tagId,
-        page: 1,
-        per_page: 10,
+      setLoadingPosts(true);
+
+      const allPosts = await Promise.all(
+        tagIds.map((tagId) =>
+          postsApi.getPosts({
+            tag: tagId,
+            page: 1,
+            per_page: 50,
+          })
+        )
+      );
+
+      const postsMap = new Map<string, Post>();
+      allPosts.forEach((response) => {
+        response.data.forEach((post) => {
+          postsMap.set(post.id, post);
+        });
       });
-      setPosts(response.data);
+
+      setPosts(Array.from(postsMap.values()));
     } catch (error) {
       console.error('Failed to fetch posts:', error);
+    } finally {
+      setLoadingPosts(false);
     }
   };
 
   const handleTagClick = (tag: Tag) => {
-    setSelectedTag(tag.id);
+    setSelectedTags((prev) => {
+      if (prev.includes(tag.id)) {
+        return prev.filter((id) => id !== tag.id);
+      }
+      return [...prev, tag.id];
+    });
+  };
+
+  const handleClearSelection = () => {
+    setSelectedTags([]);
   };
 
   if (loading) {
@@ -143,8 +189,6 @@ export function TagsPage() {
       </div>
     );
   }
-
-  const currentTagName = tags.find((t) => t.id === selectedTag)?.name;
 
   return (
     <div className={styles.container}>
@@ -170,8 +214,8 @@ export function TagsPage() {
                 <Badge
                   key={tag.id}
                   size="large"
-                  color={selectedTag === tag.id ? 'brand' : 'success'}
-                  appearance={selectedTag === tag.id ? 'filled' : 'ghost'}
+                  color={selectedTags.includes(tag.id) ? 'brand' : 'success'}
+                  appearance={selectedTags.includes(tag.id) ? 'filled' : 'ghost'}
                   className={styles.tagBadge}
                   onClick={() => handleTagClick(tag)}
                 >
@@ -184,20 +228,46 @@ export function TagsPage() {
       </div>
 
       {/* 右侧文章列表 */}
-      {selectedTag && (
+      {selectedTags.length > 0 && (
         <div className={styles.mainContent}>
-          <div className={styles.tagContentHeader}>
-            <Title2>#{currentTagName}</Title2>
-            <div className={styles.subtitle}>{posts.length} 篇文章</div>
+          <div className={styles.selectedTagsHeader}>
+            <div>
+              <Title2>已选择的标签</Title2>
+              <div className={styles.selectedTagsList}>
+                {selectedTags.map((tagId) => {
+                  const tag = tags.find((t) => t.id === tagId);
+                  return tag ? (
+                    <Badge key={tag.id} size="large" color="brand" appearance="filled">
+                      #{tag.name}
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            </div>
+            <Button
+              appearance="subtle"
+              icon={<DismissRegular />}
+              onClick={handleClearSelection}
+              className={styles.clearButton}
+            >
+              清除选择
+            </Button>
           </div>
+          <div className={styles.subtitle}>{posts.length} 篇文章</div>
 
-          <div className={styles.postsList}>
-            {posts.length === 0 ? (
-              <div className={styles.emptyText}>该标签下暂无文章</div>
-            ) : (
-              posts.map((post) => <PostCard key={post.id} post={post} />)
-            )}
-          </div>
+          {loadingPosts ? (
+            <div className={styles.loadingContainer}>
+              <Spinner size="large" />
+            </div>
+          ) : (
+            <div className={styles.postsList}>
+              {posts.length === 0 ? (
+                <div className={styles.emptyText}>该标签下暂无文章</div>
+              ) : (
+                posts.map((post) => <PostCard key={post.id} post={post} />)
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

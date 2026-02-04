@@ -14,8 +14,9 @@ import {
   Spinner,
   tokens,
   makeStyles,
+  Button,
 } from '@fluentui/react-components';
-import { FolderRegular } from '@fluentui/react-icons';
+import { FolderRegular, DismissRegular } from '@fluentui/react-icons';
 import { categoriesApi, postsApi } from '../api';
 import type { Category, Post } from '../types';
 import { PostCard } from '../components/features/PostCard';
@@ -48,15 +49,13 @@ const useStyles = makeStyles({
   categoriesCard: {
     padding: '16px',
     borderRadius: tokens.borderRadiusLarge,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: tokens.colorNeutralBackground1,
     border: 'none',
   },
   accordionHeaderContent: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    flex: '1',
-    cursor: 'pointer',
   },
   categoryName: {
     fontWeight: tokens.fontWeightMedium,
@@ -77,6 +76,9 @@ const useStyles = makeStyles({
     gap: '24px',
   },
   categoryHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: '32px',
   },
   emptyText: {
@@ -90,12 +92,23 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     padding: '48px',
   },
+  errorText: {
+    color: tokens.colorPaletteRedForeground1,
+    textAlign: 'center',
+    padding: '48px',
+    fontSize: tokens.fontSizeBase400,
+  },
+  clearButton: {
+    flexShrink: 0,
+  },
 });
 
 export function CategoriesPage() {
   const styles = useStyles();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
 
@@ -123,19 +136,33 @@ export function CategoriesPage() {
 
   const fetchPostsByCategory = async (categoryId: string) => {
     try {
+      setPostsLoading(true);
+      setPostsError(null);
+
       const response = await postsApi.getPosts({
         category: categoryId,
         page: 1,
-        per_page: 10,
+        per_page: 50,
       });
+
       setPosts(response.data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
+      setPostsError('加载文章失败，请稍后重试');
+      setPosts([]);
+    } finally {
+      setPostsLoading(false);
     }
   };
 
   const handleCategoryClick = (category: Category) => {
     setSelectedCategory(category);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedCategory(null);
+    setPosts([]);
+    setPostsError(null);
   };
 
   // 构建分类树
@@ -164,14 +191,12 @@ export function CategoriesPage() {
 
   const renderCategory = (category: TreeNode, level: number = 0) => (
     <AccordionItem key={category.id} value={category.id}>
-      <AccordionHeader expandIconPosition="end" style={{ paddingLeft: `${level * 16}px` }}>
-        <div
-          className={styles.accordionHeaderContent}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCategoryClick(category);
-          }}
-        >
+      <AccordionHeader
+        expandIconPosition="end"
+        style={{ paddingLeft: `${level * 16}px` }}
+        onClick={() => handleCategoryClick(category)}
+      >
+        <div className={styles.accordionHeaderContent}>
           <FolderRegular />
           <span className={styles.categoryName}>{category.name}</span>
           {category.description && (
@@ -225,19 +250,38 @@ export function CategoriesPage() {
       {selectedCategory && (
         <div className={styles.mainContent}>
           <div className={styles.categoryHeader}>
-            <Title2>{selectedCategory.name}</Title2>
-            <div className={styles.subtitle}>
-              {selectedCategory.description ?? `${posts.length} 篇文章`}
+            <div>
+              <Title2>{selectedCategory.name}</Title2>
+              <div className={styles.subtitle}>
+                {selectedCategory.description && <Body1>{selectedCategory.description}</Body1>}
+                <Body1>{posts.length} 篇文章</Body1>
+              </div>
             </div>
+            <Button
+              appearance="subtle"
+              icon={<DismissRegular />}
+              onClick={handleClearSelection}
+              className={styles.clearButton}
+            >
+              清除选择
+            </Button>
           </div>
 
-          <div className={styles.postsList}>
-            {posts.length === 0 ? (
-              <div className={styles.emptyText}>该分类下暂无文章</div>
-            ) : (
-              posts.map((post) => <PostCard key={post.id} post={post} />)
-            )}
-          </div>
+          {postsLoading ? (
+            <div className={styles.loadingContainer}>
+              <Spinner size="large" />
+            </div>
+          ) : postsError ? (
+            <div className={styles.errorText}>{postsError}</div>
+          ) : (
+            <div className={styles.postsList}>
+              {posts.length === 0 ? (
+                <div className={styles.emptyText}>该分类下暂无文章</div>
+              ) : (
+                posts.map((post) => <PostCard key={post.id} post={post} />)
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

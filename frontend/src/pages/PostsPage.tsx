@@ -243,7 +243,10 @@ export function PostsPage() {
 
           {/* 快速过滤 */}
           <div className={styles.filtersContainer} style={{ flexDirection: 'column', gap: '16px' }}>
-            <div style={{ width: '100%' }}>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Text weight="semibold" style={{ whiteSpace: 'nowrap' }}>
+                分类
+              </Text>
               <TabList
                 selectedValue={selectedCategoryId}
                 onTabSelect={(_, data) => {
@@ -261,7 +264,10 @@ export function PostsPage() {
               </TabList>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <Text weight="semibold" style={{ whiteSpace: 'nowrap' }}>
+                标签
+              </Text>
               {tags.map((t) => {
                 const isSelected = selectedTagIds.includes(t.id);
                 return (

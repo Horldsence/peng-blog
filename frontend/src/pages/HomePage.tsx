@@ -146,16 +146,50 @@ export function HomePage() {
   const { mode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [postsCount, setPostsCount] = useState<number>(0);
+  const [lastUpdate, setLastUpdate] = useState<string>('-');
 
-  // 获取文章数量统计
   useEffect(() => {
     const fetchPostsCount = async () => {
       try {
         const response = await postsApi.getPosts({
           page: 1,
           per_page: 1,
+          status: 'published',
         });
         setPostsCount(response.pagination?.total || 0);
+
+        if (response.data && response.data.length > 0) {
+          const latestPost = response.data[0];
+          const updateDate = new Date(
+            latestPost.updated_at ?? latestPost.published_at ?? latestPost.created_at
+          );
+          const now = new Date();
+          const diffMs = now.getTime() - updateDate.getTime();
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 0) {
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            if (diffHours === 0) {
+              const diffMins = Math.floor(diffMs / (1000 * 60));
+              setLastUpdate(diffMins <= 1 ? '刚刚' : `${diffMins}分钟前`);
+            } else {
+              setLastUpdate(`${diffHours}小时前`);
+            }
+          } else if (diffDays === 1) {
+            setLastUpdate('昨天');
+          } else if (diffDays < 7) {
+            setLastUpdate(`${diffDays}天前`);
+          } else if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7);
+            setLastUpdate(`${weeks}周前`);
+          } else if (diffDays < 365) {
+            const months = Math.floor(diffDays / 30);
+            setLastUpdate(`${months}个月前`);
+          } else {
+            const years = Math.floor(diffDays / 365);
+            setLastUpdate(`${years}年前`);
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch posts count:', error);
       }
@@ -241,7 +275,7 @@ export function HomePage() {
                 <span className={styles.statLabel}>灵感</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statNumber}>24/7</span>
+                <span className={styles.statNumber}>{lastUpdate}</span>
                 <span className={styles.statLabel}>更新</span>
               </div>
             </motion.div>
