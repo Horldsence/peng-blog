@@ -14,8 +14,8 @@ use axum::{
     response::{IntoResponse, Json, Redirect},
     Router,
 };
-use serde::Deserialize;
 use domain::{CreateComment, CreateCommentGitHub};
+use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{error::ApiError, middleware::auth::Claims, state::AppState};
@@ -56,9 +56,7 @@ pub fn routes() -> Router<AppState> {
 /// - redirect_uri: OAuth callback URL
 ///
 /// This endpoint is public - no authentication required.
-pub async fn github_auth_url(
-    State(state): State<AppState>,
-) -> Result<impl IntoResponse, ApiError> {
+pub async fn github_auth_url(State(state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
     // Generate random state for CSRF protection
     let state_param = uuid::Uuid::new_v4().to_string();
 
