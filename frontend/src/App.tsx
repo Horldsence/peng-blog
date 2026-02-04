@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ConfigProvider } from './contexts';
 import { ToastProvider } from './components/ui/Toast';
 import { MainLayout } from './components/layout/MainLayout';
 import { HomePage } from './pages/HomePage';
@@ -29,110 +30,112 @@ function App() {
     <ThemeProvider>
       <Router>
         <ToastProvider>
-          <Routes>
-            {/* 主应用路由（带布局） */}
-            <Route
-              path="/"
-              element={
-                <MainLayout>
-                  <HomePage />
-                </MainLayout>
-              }
-            />
-            <Route
-              path="/posts"
-              element={
-                <MainLayout>
-                  <PostsPage />
-                </MainLayout>
-              }
-            />
-            <Route
-              path="/post/:id"
-              element={
-                <MainLayout>
-                  <PostDetailPage />
-                </MainLayout>
-              }
-            />
-            <Route
-              path="/tags"
-              element={
-                <MainLayout>
-                  <TagsPage />
-                </MainLayout>
-              }
-            />
-            <Route
-              path="/categories"
-              element={
-                <MainLayout>
-                  <CategoriesPage />
-                </MainLayout>
-              }
-            />
-            {/* 认证路由（不带布局） */}
-            <Route
-              path="/login"
-              element={<LoginForm onLoginSuccess={() => (window.location.href = '/')} />}
-            />
-            <Route path="/register" element={<RegisterPage />} />
-
-            {/* 管理员路由 */}
-            <Route
-              path="/admin/posts/new"
-              element={
-                <ProtectedRoute>
+          <ConfigProvider>
+            <Routes>
+              {/* 主应用路由（带布局） */}
+              <Route
+                path="/"
+                element={
                   <MainLayout>
-                    <PostEditorPage />
+                    <HomePage />
                   </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/posts/edit/:id"
-              element={
-                <ProtectedRoute>
+                }
+              />
+              <Route
+                path="/posts"
+                element={
                   <MainLayout>
-                    <PostEditorPage />
+                    <PostsPage />
                   </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post/:id"
+                element={
                   <MainLayout>
-                    <AdminPage />
+                    <PostDetailPage />
                   </MainLayout>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
+              <Route
+                path="/tags"
+                element={
+                  <MainLayout>
+                    <TagsPage />
+                  </MainLayout>
+                }
+              />
+              <Route
+                path="/categories"
+                element={
+                  <MainLayout>
+                    <CategoriesPage />
+                  </MainLayout>
+                }
+              />
+              {/* 认证路由（不带布局） */}
+              <Route
+                path="/login"
+                element={<LoginForm onLoginSuccess={() => (window.location.href = '/')} />}
+              />
+              <Route path="/register" element={<RegisterPage />} />
 
-            {/* 关于页面 */}
-            <Route
-              path="/about"
-              element={
-                <MainLayout>
-                  <div style={{ padding: '32px' }}>
-                    <h2>关于 Peng Blog</h2>
-                    <p>基于 Rust + Fluent UI 2 构建的现代化博客系统</p>
-                  </div>
-                </MainLayout>
-              }
-            />
+              {/* 管理员路由 */}
+              <Route
+                path="/admin/posts/new"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PostEditorPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/posts/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PostEditorPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <AdminPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* 404 */}
-            <Route
-              path="*"
-              element={
-                <MainLayout>
-                  <NotFoundPage />
-                </MainLayout>
-              }
-            />
-          </Routes>
+              {/* 关于页面 */}
+              <Route
+                path="/about"
+                element={
+                  <MainLayout>
+                    <div style={{ padding: '32px' }}>
+                      <h2>关于 Peng Blog</h2>
+                      <p>基于 Rust + Fluent UI 2 构建的现代化博客系统</p>
+                    </div>
+                  </MainLayout>
+                }
+              />
+
+              {/* 404 */}
+              <Route
+                path="*"
+                element={
+                  <MainLayout>
+                    <NotFoundPage />
+                  </MainLayout>
+                }
+              />
+            </Routes>
+          </ConfigProvider>
         </ToastProvider>
       </Router>
     </ThemeProvider>

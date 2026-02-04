@@ -21,6 +21,20 @@ pub struct Config {
     pub site: SiteConfig,
 }
 
+/// Public configuration exposed to frontend without authentication
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PublicConfig {
+    pub allow_registration: bool,
+}
+
+impl From<&Config> for PublicConfig {
+    fn from(config: &Config) -> Self {
+        Self {
+            allow_registration: config.site.allow_registration,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
     pub url: String,

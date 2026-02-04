@@ -29,6 +29,9 @@ const useStyles = makeStyles({
   cardHeader: {
     padding: '24px',
     flexGrow: 1,
+    '@media (max-width: 768px)': {
+      padding: '16px',
+    },
   },
   cardTitle: {
     overflow: 'hidden',
@@ -53,6 +56,10 @@ const useStyles = makeStyles({
     gap: '20px',
     padding: '16px 24px',
     borderTop: `1px solid ${tokens.colorNeutralStroke1}`,
+    '@media (max-width: 768px)': {
+      padding: '12px 16px',
+      gap: '12px',
+    },
   },
   metaItem: {
     display: 'flex',

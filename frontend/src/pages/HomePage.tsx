@@ -38,15 +38,26 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     padding: '32px 42px',
     boxSizing: 'border-box',
+    '@media (max-width: 768px)': {
+      padding: '24px 20px',
+    },
   },
   searchContainer: {
     display: 'flex',
     gap: '12px',
     alignItems: 'center',
     alignSelf: 'flex-end',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      justifyContent: 'center',
+    },
   },
   searchInput: {
     width: '300px',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      flex: 1,
+    },
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: tokens.borderRadiusCircular,
     border: '1px solid rgba(255,255,255,0.3)',
@@ -82,6 +93,9 @@ const useStyles = makeStyles({
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
     filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.1))',
+    '@media (max-width: 768px)': {
+      fontSize: '42px',
+    },
   },
   welcomeSubtitle: {
     fontSize: tokens.fontSizeBase500,
@@ -94,6 +108,9 @@ const useStyles = makeStyles({
   statsRow: {
     display: 'flex',
     gap: '32px',
+    '@media (max-width: 768px)': {
+      gap: '24px',
+    },
   },
   statItem: {
     display: 'flex',

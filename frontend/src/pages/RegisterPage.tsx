@@ -12,6 +12,8 @@ import {
 } from '@fluentui/react-components';
 import { ArrowLeftRegular, PersonRegular, LockClosedRegular } from '@fluentui/react-icons';
 import { authApi } from '../api';
+import { useToast } from '../components/ui/Toast';
+import { useConfig } from '../contexts';
 import type { UserCreateRequest } from '../types';
 
 const useStyles = makeStyles({
@@ -87,6 +89,8 @@ const useStyles = makeStyles({
 export function RegisterPage() {
   const styles = useStyles();
   const navigate = useNavigate();
+  const toast = useToast();
+  const { publicConfig, loading: configLoading } = useConfig();
   const [formData, setFormData] = useState<UserCreateRequest>({
     username: '',
     password: '',
@@ -123,8 +127,7 @@ export function RegisterPage() {
 
     try {
       await authApi.register(formData);
-      // eslint-disable-next-line no-alert
-      alert('注册成功！请登录');
+      toast.showSuccess('注册成功！请登录');
       navigate('/login');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '注册失败';
@@ -146,95 +149,105 @@ export function RegisterPage() {
           }
         />
 
-        {/* 错误提示 */}
-        {error && (
-          <div className={styles.errorBox}>
-            <Body1>{error}</Body1>
-            <Button appearance="transparent" size="small" onClick={() => setError('')}>
-              ×
-            </Button>
+        {!configLoading && !publicConfig?.allow_registration ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div className={styles.errorBox} style={{ justifyContent: 'center' }}>
+              <Body1>当前系统未开放注册功能</Body1>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* 错误提示 */}
+            {error && (
+              <div className={styles.errorBox}>
+                <Body1>{error}</Body1>
+                <Button appearance="transparent" size="small" onClick={() => setError('')}>
+                  ×
+                </Button>
+              </div>
+            )}
+
+            {/* 注册表单 */}
+            <form
+              onSubmit={(e) => {
+                void handleSubmit(e);
+              }}
+              className={styles.form}
+            >
+              <div>
+                <label className={styles.fieldLabel}>用户名</label>
+                <Input
+                  name="username"
+                  placeholder="至少3个字符"
+                  value={formData.username}
+                  onChange={(_, data) => {
+                    setFormData((prev) => ({ ...prev, username: data.value }));
+                    if (error) setError('');
+                  }}
+                  contentBefore={<PersonRegular />}
+                  className={styles.input}
+                  size="large"
+                  disabled={loading}
+                  autoComplete="username"
+                />
+              </div>
+
+              <div>
+                <label className={styles.fieldLabel}>密码</label>
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="至少8个字符"
+                  value={formData.password}
+                  onChange={(_, data) => {
+                    setFormData((prev) => ({ ...prev, password: data.value }));
+                    if (error) setError('');
+                  }}
+                  contentBefore={<LockClosedRegular />}
+                  className={styles.input}
+                  size="large"
+                  disabled={loading}
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <div>
+                <label className={styles.fieldLabel}>确认密码</label>
+                <Input
+                  type="password"
+                  placeholder="再次输入密码"
+                  value={confirmPassword}
+                  onChange={(_, data) => setConfirmPassword(data.value)}
+                  contentBefore={<LockClosedRegular />}
+                  className={styles.input}
+                  size="large"
+                  disabled={loading}
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                disabled={loading}
+                className={styles.submitButton}
+              >
+                {loading ? '注册中...' : '注册'}
+              </Button>
+            </form>
+
+            {/* 登录链接 */}
+            <div className={styles.footer}>
+              <Body1 className={styles.footerText}>
+                已有账户？{' '}
+                <Link to="/login" className={styles.link}>
+                  立即登录
+                </Link>
+              </Body1>
+            </div>
+          </>
         )}
-
-        {/* 注册表单 */}
-        <form
-          onSubmit={(e) => {
-            void handleSubmit(e);
-          }}
-          className={styles.form}
-        >
-          <div>
-            <label className={styles.fieldLabel}>用户名</label>
-            <Input
-              name="username"
-              placeholder="至少3个字符"
-              value={formData.username}
-              onChange={(_, data) => {
-                setFormData((prev) => ({ ...prev, username: data.value }));
-                if (error) setError('');
-              }}
-              contentBefore={<PersonRegular />}
-              className={styles.input}
-              size="large"
-              disabled={loading}
-              autoComplete="username"
-            />
-          </div>
-
-          <div>
-            <label className={styles.fieldLabel}>密码</label>
-            <Input
-              type="password"
-              name="password"
-              placeholder="至少8个字符"
-              value={formData.password}
-              onChange={(_, data) => {
-                setFormData((prev) => ({ ...prev, password: data.value }));
-                if (error) setError('');
-              }}
-              contentBefore={<LockClosedRegular />}
-              className={styles.input}
-              size="large"
-              disabled={loading}
-              autoComplete="new-password"
-            />
-          </div>
-
-          <div>
-            <label className={styles.fieldLabel}>确认密码</label>
-            <Input
-              type="password"
-              placeholder="再次输入密码"
-              value={confirmPassword}
-              onChange={(_, data) => setConfirmPassword(data.value)}
-              contentBefore={<LockClosedRegular />}
-              className={styles.input}
-              size="large"
-              disabled={loading}
-              autoComplete="new-password"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            appearance="primary"
-            size="large"
-            disabled={loading}
-            className={styles.submitButton}
-          >
-            {loading ? '注册中...' : '注册'}
-          </Button>
-        </form>
-
-        {/* 登录链接 */}
-        <div className={styles.footer}>
-          <Body1 className={styles.footerText}>
-            已有账户？{' '}
-            <Link to="/login" className={styles.link}>
-              立即登录
-            </Link>
-          </Body1>
-        </div>
 
         {/* 返回按钮 */}
         <div className={styles.backButtonContainer}>

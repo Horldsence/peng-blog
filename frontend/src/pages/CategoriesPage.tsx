@@ -34,10 +34,16 @@ const useStyles = makeStyles({
     padding: '48px 24px',
     ['@media (max-width: 768px)']: {
       flexDirection: 'column',
+      padding: '24px 16px',
+      gap: '24px',
     },
   },
   sidebar: {
     flex: '0 0 300px',
+    '@media (max-width: 768px)': {
+      flex: 'auto',
+      width: '100%',
+    },
   },
   header: {
     marginBottom: '24px',
@@ -80,6 +86,11 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '32px',
+    '@media (max-width: 768px)': {
+      flexDirection: 'column',
+      gap: '16px',
+      alignItems: 'stretch',
+    },
   },
   emptyText: {
     color: tokens.colorNeutralForeground3,
@@ -100,6 +111,9 @@ const useStyles = makeStyles({
   },
   clearButton: {
     flexShrink: 0,
+    '@media (max-width: 768px)': {
+      width: '100%',
+    },
   },
 });
 

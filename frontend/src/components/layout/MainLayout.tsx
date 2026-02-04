@@ -33,8 +33,10 @@ import {
   ArrowEnterRegular,
   PanelLeftContractRegular,
   PanelLeftExpandRegular,
+  NavigationRegular,
 } from '@fluentui/react-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useConfig } from '../../contexts';
 import { authApi } from '../../api';
 
 const useStyles = makeStyles({
@@ -170,6 +172,21 @@ const useStyles = makeStyles({
     padding: '16px 8px',
   },
   // Unified style for footer items to match NavItem
+  mobileToggle: {
+    position: 'absolute',
+    top: '16px',
+    left: '16px',
+    zIndex: 100,
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: tokens.shadow4,
+  },
   footerItem: {
     display: 'flex',
     alignItems: 'center',
@@ -195,6 +212,10 @@ const useStyles = makeStyles({
     borderRadius: '20px',
     border: '1px solid rgba(255, 255, 255, 0.8)',
     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+    '@media (max-width: 768px)': {
+      margin: '4px',
+      paddingTop: '60px',
+    },
   },
   contentAcrylicDark: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -203,6 +224,10 @@ const useStyles = makeStyles({
     borderRadius: '20px',
     border: '1px solid rgba(255, 255, 255, 0.2)',
     boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+    '@media (max-width: 768px)': {
+      margin: '4px',
+      paddingTop: '60px',
+    },
   },
 });
 
@@ -211,11 +236,29 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleTheme } = useTheme();
+  const { publicConfig } = useConfig();
   const isAuthenticated = authApi.isAuthenticated();
   const currentUser = authApi.getCurrentUser();
 
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [bingImage, setBingImage] = useState<string>('');
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsOpen(true);
+      } else {
+        setIsOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchBingImage = async () => {
@@ -258,6 +301,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const handleNavClick = (_e: unknown, data: { value: string }) => {
     navigate(data.value);
+    if (isMobile) {
+      setIsOpen(false);
+    }
   };
 
   const handleLogout = () => {
@@ -282,13 +328,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <div
           className={styles.navItemIcon}
           style={{
-            width: isExpanded ? '24px' : '80px',
-            marginLeft: isExpanded ? '16px' : '0',
+            width: isExpanded || isMobile ? '24px' : '80px',
+            marginLeft: isExpanded || isMobile ? '16px' : '0',
           }}
         >
           {icon}
         </div>
-        <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
+        <span
+          className={
+            isExpanded || isMobile ? styles.navItemContent : styles.navItemContentCollapsed
+          }
+        >
           {label}
         </span>
       </NavItem>
@@ -309,17 +359,26 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <NavDrawer
         selectedValue={selectedValue}
         onNavItemSelect={handleNavClick}
-        open={true}
-        type="inline"
+        open={isMobile ? isOpen : true}
+        type={isMobile ? 'overlay' : 'inline'}
         className={mergeClasses(
           styles.navDrawer,
           mode === 'dark' && styles.navDrawerDark,
-          isExpanded ? styles.navDrawerExpanded : styles.navDrawerCollapsed
+          isMobile
+            ? styles.navDrawerExpanded
+            : isExpanded
+              ? styles.navDrawerExpanded
+              : styles.navDrawerCollapsed
         )}
       >
         <NavDrawerHeader>
-          <div className={mergeClasses(styles.logo, isExpanded ? styles.logoExpanded : undefined)}>
-            {isExpanded ? 'Peng Blog' : 'PB'}
+          <div
+            className={mergeClasses(
+              styles.logo,
+              isExpanded || isMobile ? styles.logoExpanded : undefined
+            )}
+          >
+            {isExpanded || isMobile ? 'Peng Blog' : 'PB'}
           </div>
         </NavDrawerHeader>
 
@@ -352,19 +411,23 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               onClick={toggleTheme}
               style={{
                 justifyContent: 'flex-start',
-                paddingRight: isExpanded ? '10px' : '0', // Ensure symmetry in collapsed state
+                paddingRight: isExpanded || isMobile ? '10px' : '0',
               }}
             >
               <div
                 className={styles.navItemIcon}
                 style={{
-                  width: isExpanded ? '24px' : '80px',
-                  marginLeft: isExpanded ? '16px' : '0',
+                  width: isExpanded || isMobile ? '24px' : '80px',
+                  marginLeft: isExpanded || isMobile ? '16px' : '0',
                 }}
               >
                 {mode === 'light' ? <WeatherMoonRegular /> : <WeatherSunnyFilled />}
               </div>
-              <span className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}>
+              <span
+                className={
+                  isExpanded || isMobile ? styles.navItemContent : styles.navItemContentCollapsed
+                }
+              >
                 {mode === 'light' ? '深色模式' : '浅色模式'}
               </span>
             </button>
@@ -377,21 +440,23 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 className={styles.footerItem}
                 style={{
                   justifyContent: 'flex-start',
-                  paddingRight: isExpanded ? '10px' : '0',
-                  cursor: 'default', // Profile info usually static, but keeps hover style for consistency
+                  paddingRight: isExpanded || isMobile ? '10px' : '0',
+                  cursor: 'default',
                 }}
               >
                 <div
                   className={styles.navItemIcon}
                   style={{
-                    width: isExpanded ? '24px' : '80px',
-                    marginLeft: isExpanded ? '16px' : '0',
+                    width: isExpanded || isMobile ? '24px' : '80px',
+                    marginLeft: isExpanded || isMobile ? '16px' : '0',
                   }}
                 >
                   <Avatar name={currentUser.username} size={32} color="brand" />
                 </div>
                 <span
-                  className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
+                  className={
+                    isExpanded || isMobile ? styles.navItemContent : styles.navItemContentCollapsed
+                  }
                 >
                   <div style={{ lineHeight: '1.2', fontWeight: tokens.fontWeightSemibold }}>
                     {currentUser.username}
@@ -414,6 +479,73 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   onClick={handleLogout}
                   style={{
                     justifyContent: 'flex-start',
+                    paddingRight: isExpanded || isMobile ? '10px' : '0',
+                  }}
+                >
+                  <div
+                    className={styles.navItemIcon}
+                    style={{
+                      width: isExpanded || isMobile ? '24px' : '80px',
+                      marginLeft: isExpanded || isMobile ? '16px' : '0',
+                    }}
+                  >
+                    <SignOutRegular />
+                  </div>
+                  <span
+                    className={
+                      isExpanded || isMobile
+                        ? styles.navItemContent
+                        : styles.navItemContentCollapsed
+                    }
+                  >
+                    登出
+                  </span>
+                </button>
+              </Tooltip>
+            </>
+          ) : publicConfig?.allow_registration ? (
+            <Tooltip content="登录" relationship="label" positioning="after">
+              <button
+                className={styles.footerItem}
+                onClick={() => navigate('/login')}
+                style={{
+                  justifyContent: 'flex-start',
+                  paddingRight: isExpanded || isMobile ? '10px' : '0',
+                }}
+              >
+                <div
+                  className={styles.navItemIcon}
+                  style={{
+                    width: isExpanded || isMobile ? '24px' : '80px',
+                    marginLeft: isExpanded || isMobile ? '16px' : '0',
+                  }}
+                >
+                  <ArrowEnterRegular />
+                </div>
+                <span
+                  className={
+                    isExpanded || isMobile ? styles.navItemContent : styles.navItemContentCollapsed
+                  }
+                >
+                  登录
+                </span>
+              </button>
+            </Tooltip>
+          ) : null}
+
+          {/* Collapse Toggle */}
+          {!isMobile && (
+            <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+              <Tooltip
+                content={isExpanded ? '折叠' : '展开'}
+                relationship="label"
+                positioning="after"
+              >
+                <button
+                  className={styles.footerItem}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  style={{
+                    justifyContent: 'flex-start',
                     paddingRight: isExpanded ? '10px' : '0',
                   }}
                 >
@@ -424,76 +556,40 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       marginLeft: isExpanded ? '16px' : '0',
                     }}
                   >
-                    <SignOutRegular />
+                    {isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
                   </div>
                   <span
                     className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
                   >
-                    登出
+                    折叠导航
                   </span>
                 </button>
               </Tooltip>
-            </>
-          ) : (
-            <Tooltip content="登录" relationship="label" positioning="after">
-              <button
-                className={styles.footerItem}
-                onClick={() => navigate('/login')}
-                style={{
-                  justifyContent: 'flex-start',
-                  paddingRight: isExpanded ? '10px' : '0',
-                }}
-              >
-                <div
-                  className={styles.navItemIcon}
-                  style={{
-                    width: isExpanded ? '24px' : '80px',
-                    marginLeft: isExpanded ? '16px' : '0',
-                  }}
-                >
-                  <ArrowEnterRegular />
-                </div>
-                <span
-                  className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
-                >
-                  登录
-                </span>
-              </button>
-            </Tooltip>
+            </div>
           )}
-
-          {/* Collapse Toggle */}
-          <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-            <Tooltip
-              content={isExpanded ? '折叠' : '展开'}
-              relationship="label"
-              positioning="after"
-            >
+          {isMobile && (
+            <div style={{ marginTop: 'auto', paddingTop: 8 }}>
               <button
                 className={styles.footerItem}
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => setIsOpen(false)}
                 style={{
                   justifyContent: 'flex-start',
-                  paddingRight: isExpanded ? '10px' : '0',
+                  paddingRight: '10px',
                 }}
               >
                 <div
                   className={styles.navItemIcon}
                   style={{
-                    width: isExpanded ? '24px' : '80px',
-                    marginLeft: isExpanded ? '16px' : '0',
+                    width: '24px',
+                    marginLeft: '16px',
                   }}
                 >
-                  {isExpanded ? <PanelLeftContractRegular /> : <PanelLeftExpandRegular />}
+                  <PanelLeftContractRegular />
                 </div>
-                <span
-                  className={isExpanded ? styles.navItemContent : styles.navItemContentCollapsed}
-                >
-                  折叠导航
-                </span>
+                <span className={styles.navItemContent}>关闭菜单</span>
               </button>
-            </Tooltip>
-          </div>
+            </div>
+          )}
         </NavDrawerFooter>
       </NavDrawer>
 
@@ -505,6 +601,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             (mode === 'dark' ? styles.contentAcrylicDark : styles.contentAcrylic)
         )}
       >
+        {isMobile && !isOpen && (
+          <button className={styles.mobileToggle} onClick={() => setIsOpen(true)}>
+            <NavigationRegular fontSize={20} />
+          </button>
+        )}
         {children}
       </main>
     </div>

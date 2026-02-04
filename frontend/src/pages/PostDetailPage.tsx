@@ -31,6 +31,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import mermaid from 'mermaid';
 import { postsApi, authApi, statsApi, bingApi } from '../api';
+import { useToast } from '../components/ui/Toast';
 import { getDominantColor } from '../utils/color';
 import type { Post, Comment } from '../types';
 import 'highlight.js/styles/github-dark.css';
@@ -308,6 +309,7 @@ export function PostDetailPage() {
   const styles = useStyles();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -374,8 +376,7 @@ export function PostDetailPage() {
     if (!id || !commentContent.trim()) return;
 
     if (!isAuthenticated) {
-      // eslint-disable-next-line no-alert
-      alert('请先登录');
+      toast.showWarning('请先登录');
       navigate('/login');
       return;
     }
@@ -388,8 +389,7 @@ export function PostDetailPage() {
       void fetchComments();
     } catch (error) {
       console.error('Failed to create comment:', error);
-      // eslint-disable-next-line no-alert
-      alert('评论失败，请重试');
+      toast.showError('评论失败，请重试');
     }
   };
 

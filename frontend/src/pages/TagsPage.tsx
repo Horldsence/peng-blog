@@ -27,10 +27,16 @@ const useStyles = makeStyles({
     padding: '48px 24px',
     ['@media (max-width: 768px)']: {
       flexDirection: 'column',
+      padding: '24px 16px',
+      gap: '24px',
     },
   },
   sidebar: {
     flex: '0 0 300px',
+    '@media (max-width: 768px)': {
+      flex: 'auto',
+      width: '100%',
+    },
   },
   mainContent: {
     flex: '1',
@@ -94,11 +100,20 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: '24px',
+    '@media (max-width: 768px)': {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: '16px',
+    },
   },
   clearButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      justifyContent: 'center',
+    },
   },
   selectedTagsList: {
     display: 'flex',

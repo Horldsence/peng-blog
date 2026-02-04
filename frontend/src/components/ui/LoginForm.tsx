@@ -11,6 +11,7 @@ import {
   makeStyles,
 } from '@fluentui/react-components';
 import { ArrowLeftRegular, PersonRegular, LockClosedRegular } from '@fluentui/react-icons';
+import { useConfig } from '../../contexts';
 import { authApi } from '../../api';
 import type { UserLoginRequest } from '../../types';
 
@@ -92,6 +93,7 @@ interface LoginFormProps {
 export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
   const styles = useStyles();
   const navigate = useNavigate();
+  const { publicConfig } = useConfig();
   const [formData, setFormData] = useState<UserLoginRequest>({
     username: '',
     password: '',
@@ -214,14 +216,16 @@ export function LoginForm({ onLoginSuccess, onLoginError }: LoginFormProps) {
         </form>
 
         {/* 注册链接 */}
-        <div className={styles.footer}>
-          <Body1 className={styles.footerText}>
-            还没有账户？{' '}
-            <Link to="/register" className={styles.link}>
-              立即注册
-            </Link>
-          </Body1>
-        </div>
+        {publicConfig?.allow_registration && (
+          <div className={styles.footer}>
+            <Body1 className={styles.footerText}>
+              还没有账户？{' '}
+              <Link to="/register" className={styles.link}>
+                立即注册
+              </Link>
+            </Body1>
+          </div>
+        )}
 
         {/* 返回按钮 */}
         <div className={styles.backButtonContainer}>

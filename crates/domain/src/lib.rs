@@ -24,9 +24,9 @@ pub use comment::{
     Comment, CommentResponse, CreateComment, CreateCommentGitHub, GitHubAuthRequest, GitHubUser,
 };
 pub use config::{
-    AuthConfig, Config, ConfigRepository, DatabaseConfig, GitHubConfig, ServerConfig, SiteConfig,
-    StorageConfig, UpdateAuthConfig, UpdateConfigRequest, UpdateDatabaseConfig, UpdateGitHubConfig,
-    UpdateServerConfig, UpdateSiteConfig, UpdateStorageConfig,
+    AuthConfig, Config, ConfigRepository, DatabaseConfig, GitHubConfig, PublicConfig, ServerConfig,
+    SiteConfig, StorageConfig, UpdateAuthConfig, UpdateConfigRequest, UpdateDatabaseConfig,
+    UpdateGitHubConfig, UpdateServerConfig, UpdateSiteConfig, UpdateStorageConfig,
 };
 pub use error::{Error, Result};
 pub use file::{File, FileResponse, UploadFile};

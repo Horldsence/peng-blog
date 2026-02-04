@@ -1,14 +1,16 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, ReactNode } from 'react';
+import {
+  useId,
+  Toaster,
+  useToastController,
+  Toast as FluentToast,
+  ToastTitle,
+  ToastBody,
+  ToastIntent,
+} from '@fluentui/react-components';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
-
-interface ToastMessage {
-  id: string;
-  title: string;
-  message?: string;
-  type: ToastType;
-}
 
 interface ToastContextType {
   showToast: (title: string, message?: string, type?: ToastType) => void;
@@ -29,27 +31,21 @@ export const useToast = () => {
 };
 
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const toasterId = useId('app-toaster');
+  const { dispatchToast } = useToastController(toasterId);
 
-  const getToastStyle = useCallback((type: ToastType) => {
-    const styles = {
-      success: { backgroundColor: '#dff6dd', color: '#0f5132', border: '1px solid #badbcc' },
-      error: { backgroundColor: '#f8d7da', color: '#842029', border: '1px solid #f5c2c7' },
-      info: { backgroundColor: '#d1ecf1', color: '#055160', border: '1px solid #bee5eb' },
-      warning: { backgroundColor: '#fff3cd', color: '#664d03', border: '1px solid #ffe69c' },
-    };
-    return styles[type];
-  }, []);
-
-  const showToast = useCallback((title: string, message?: string, type: ToastType = 'info') => {
-    const id = Math.random().toString(36).substring(7);
-    const newToast: ToastMessage = { id, title, message, type };
-    setToasts((prev) => [...prev, newToast]);
-
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
-  }, []);
+  const showToast = useCallback(
+    (title: string, message?: string, type: ToastType = 'info') => {
+      dispatchToast(
+        <FluentToast>
+          <ToastTitle>{title}</ToastTitle>
+          {message && <ToastBody>{message}</ToastBody>}
+        </FluentToast>,
+        { intent: type as ToastIntent }
+      );
+    },
+    [dispatchToast]
+  );
 
   const showSuccess = useCallback(
     (message: string) => {
@@ -82,36 +78,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   return (
     <ToastContext.Provider value={{ showToast, showSuccess, showError, showInfo, showWarning }}>
       {children}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 9999,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            style={{
-              ...getToastStyle(toast.type),
-              padding: '16px',
-              borderRadius: '8px',
-              minWidth: '300px',
-              animation: 'slideInRight 0.3s ease-out',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }}
-          >
-            <div style={{ fontWeight: '600', marginBottom: toast.message ? '8px' : '0' }}>
-              {toast.title}
-            </div>
-            {toast.message && <div style={{ fontSize: '14px' }}>{toast.message}</div>}
-          </div>
-        ))}
-      </div>
+      <Toaster toasterId={toasterId} position="bottom-end" />
     </ToastContext.Provider>
   );
 };

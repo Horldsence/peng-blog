@@ -20,11 +20,13 @@ import {
 } from '@fluentui/react-components';
 import { ArrowLeftRegular, SaveRegular, SendRegular, DismissRegular } from '@fluentui/react-icons';
 import { postsApi, categoriesApi, tagsApi, authApi } from '../api';
+import { useToast } from '../components/ui/Toast';
 import type { PostCreateRequest, Category, Tag as TagModel } from '../types';
 
 export function PostEditorPage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const isEditing = Boolean(id);
   const comboId = useId('tags-combo');
   const categoryId = useId('category-dropdown');
@@ -129,8 +131,7 @@ export function PostEditorPage() {
       setSelectedCategoryId(newCategory.id);
     } catch (e) {
       console.error('创建分类失败', e);
-      // eslint-disable-next-line no-alert
-      alert('创建分类失败');
+      toast.showError('创建分类失败');
     }
   };
 
@@ -147,8 +148,7 @@ export function PostEditorPage() {
       setTagQuery('');
     } catch (e) {
       console.error('创建标签失败', e);
-      // eslint-disable-next-line no-alert
-      alert('创建标签失败: 可能已存在');
+      toast.showError('创建标签失败: 可能已存在');
     }
   };
 
@@ -228,11 +228,9 @@ export function PostEditorPage() {
       }
 
       if (shouldPublish) {
-        // eslint-disable-next-line no-alert
-        alert(isEditing ? '更新并发布成功！' : '发布成功！');
+        toast.showSuccess(isEditing ? '更新并发布成功！' : '发布成功！');
       } else {
-        // eslint-disable-next-line no-alert
-        alert(isEditing ? '保存成功！' : '草稿保存成功！');
+        toast.showSuccess(isEditing ? '保存成功！' : '草稿保存成功！');
       }
 
       if (isEditing) {

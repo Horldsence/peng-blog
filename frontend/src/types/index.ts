@@ -348,6 +348,10 @@ export interface UpdateConfigRequest {
   site?: Partial<SiteConfig>;
 }
 
+export interface PublicConfig {
+  allow_registration: boolean;
+}
+
 // ===== 权限位标志 =====
 
 export enum Permission {

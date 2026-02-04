@@ -1,7 +1,14 @@
 import { http } from '../utils/request';
-import type { Config, UpdateConfigRequest, ApiResponseV2 } from '../types';
+import type { Config, UpdateConfigRequest, ApiResponseV2, PublicConfig } from '../types';
 
 export const configApi = {
+  /**
+   * Get public configuration
+   */
+  getPublicConfig: () => {
+    return http.get<ApiResponseV2<PublicConfig>>('/config/public');
+  },
+
   /**
    * Get current configuration
    * Requires admin permission

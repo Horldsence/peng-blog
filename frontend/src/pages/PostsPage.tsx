@@ -27,11 +27,17 @@ const useStyles = makeStyles({
     backgroundColor: 'transparent',
     minHeight: 'calc(100vh - 64px)',
     padding: '48px 0',
+    '@media (max-width: 768px)': {
+      padding: '24px 0',
+    },
   },
   contentInner: {
     maxWidth: '1200px',
     margin: '0 auto',
     padding: '0 56px',
+    '@media (max-width: 768px)': {
+      padding: '0 16px',
+    },
   },
   sectionHeader: {
     display: 'flex',
@@ -64,9 +70,16 @@ const useStyles = makeStyles({
     alignItems: 'center',
     marginBottom: '32px',
     justifyContent: 'center',
+    '@media (max-width: 768px)': {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+    },
   },
   searchInput: {
     width: '300px',
+    '@media (max-width: 768px)': {
+      width: '100%',
+    },
   },
   filtersContainer: {
     display: 'flex',

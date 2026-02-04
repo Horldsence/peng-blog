@@ -5,6 +5,7 @@
 //! | Method | Endpoint | Description |
 //! |--------|----------|-------------|
 //! | GET | /config | Get current configuration (admin) |
+//! | GET | /config/public | Get public configuration |
 //! | PATCH | /config | Update configuration (admin) |
 
 use axum::{extract::State, response::IntoResponse, Json, Router};
@@ -18,7 +19,17 @@ use crate::{
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", axum::routing::get(get_config))
+        .route("/public", axum::routing::get(get_public_config))
         .route("/", axum::routing::patch(update_config))
+}
+
+/// GET /config/public
+/// Get public configuration
+async fn get_public_config(State(state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
+    let config = state.config_service.get().await.map_err(ApiError::Domain)?;
+    let public_config = domain::PublicConfig::from(&config);
+
+    Ok(resp::ok(public_config))
 }
 
 /// GET /config
