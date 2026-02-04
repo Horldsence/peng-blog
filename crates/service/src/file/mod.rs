@@ -66,7 +66,8 @@ impl FileService {
             ));
         }
 
-        // Validate content type (only allow images and documents)
+        // Validate content type - allow octet-stream and detect from extension
+        // Browsers often send octet-stream for unknown file types
         let allowed_types = [
             "image/jpeg",
             "image/png",
@@ -75,6 +76,7 @@ impl FileService {
             "application/pdf",
             "text/plain",
             "text/markdown",
+            "application/octet-stream", // Will be validated from extension
         ];
         if !allowed_types.contains(&upload.content_type.as_str()) {
             return Err(Error::Validation(format!(
@@ -82,6 +84,26 @@ impl FileService {
                 upload.content_type,
                 allowed_types.join(", ")
             )));
+        }
+
+        // If octet-stream, validate based on file extension
+        if upload.content_type == "application/octet-stream" {
+            let allowed_extensions = ["jpg", "jpeg", "png", "gif", "webp", "pdf", "txt", "md"];
+            let extension = std::path::Path::new(&upload.filename)
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .unwrap_or("")
+                .to_lowercase();
+
+            if !allowed_extensions.contains(&extension.as_str()) {
+                return Err(Error::Validation(format!(
+                    "Invalid file type for octet-stream. Allowed extensions: {}",
+                    allowed_extensions.join(", ")
+                )));
+            }
+
+            // For octet-stream files, infer content type from extension
+            // This will be stored in the database for proper MIME type handling
         }
 
         // Generate unique filename

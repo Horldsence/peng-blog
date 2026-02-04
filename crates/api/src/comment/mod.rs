@@ -79,7 +79,9 @@ pub async fn github_auth_url(State(state): State<AppState>) -> Result<impl IntoR
 
 #[derive(Deserialize)]
 pub struct GitHubCallbackQuery {
-    code: String,
+    code: Option<String>,
+    error: Option<String>,
+    error_description: Option<String>,
     #[allow(dead_code)]
     state: String,
 }
@@ -88,14 +90,16 @@ pub struct GitHubCallbackQuery {
 /// Handle GitHub OAuth callback
 ///
 /// Query parameters:
-/// - code: Authorization code from GitHub
+/// - code: Authorization code from GitHub (on success)
+/// - error: Error code from GitHub (on failure)
+/// - error_description: Human-readable error description
 /// - state: CSRF protection token
 ///
 /// This endpoint:
-/// 1. Exchanges code for GitHub access token
+/// 1. Exchanges code for GitHub access token (on success)
 /// 2. Fetches GitHub user information
 /// 3. Creates a 6-hour JWT token for the GitHub user
-/// 4. Redirects to frontend with token
+/// 4. Redirects to frontend with token or error
 pub async fn github_callback(
     Query(query): Query<GitHubCallbackQuery>,
     State(state): State<AppState>,
@@ -106,6 +110,25 @@ pub async fn github_callback(
     use serde_json::json;
     use std::time::{SystemTime, UNIX_EPOCH};
 
+    // Handle OAuth errors
+    if let Some(error) = query.error {
+        let error_description = query
+            .error_description
+            .unwrap_or_else(|| "Unknown error".to_string());
+        let redirect_url = format!(
+            "{}/github-auth?error={}&description={}",
+            state.base_url,
+            urlencoding::encode(&error),
+            urlencoding::encode(&error_description)
+        );
+        return Ok(Redirect::to(&redirect_url));
+    }
+
+    // Get authorization code
+    let code = query
+        .code
+        .ok_or_else(|| ApiError::Validation("Missing authorization code".to_string()))?;
+
     // Exchange code for access token
     let client = Client::new();
     let token_response: GitHubTokenResponse = client
@@ -113,7 +136,7 @@ pub async fn github_callback(
         .form(&[
             ("client_id", &state.config.github.client_id),
             ("client_secret", &state.config.github.client_secret),
-            ("code", &query.code),
+            ("code", &code),
         ])
         .header("Accept", "application/json")
         .send()

@@ -21,7 +21,7 @@ impl MigrationTrait for CreateFile {
                 filename TEXT NOT NULL,
                 original_filename TEXT NOT NULL,
                 content_type TEXT NOT NULL,
-                size_bytes INTEGER NOT NULL,
+                size_bytes BIGINT NOT NULL,
                 url TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE

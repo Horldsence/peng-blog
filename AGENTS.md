@@ -2,108 +2,118 @@
 
 > AI编码代理工作指南 - 项目架构、构建命令和代码规范
 
-## 项目概述
+**Generated:** 2026-02-04 10:00:33 PM
+**Commit:** ce7dc03 (2026-02-04 15:57:57 +0800)
+**Branch:** main
 
-**Peng Blog** - Rust + React博客系统，分层架构（四层）
+---
+
+## OVERVIEW
+
+**Peng Blog** - Rust + React博客系统，采用严格的四层分层架构（Clean Architecture模式）
 
 **技术栈:**
 - 后端: Tokio + Axum + SeaORM + PostgreSQL
-- 前端: React + TypeScript + Vite + FluentUI
+- 前端: React 18 + TypeScript + Vite + FluentUI
 - 安全: JWT + Argon2，位标志权限系统
 
-## 项目结构
+**架构特征:**
+- 7个Rust crates (workspace管理)
+- 单二进制部署（前端通过rust_embed嵌入）
+- Repository模式（Service定义Trait，Infrastructure实现）
+- 依赖注入（App层组装所有依赖）
+
+---
+
+## STRUCTURE
 
 ```
 peng-blog/
 ├── crates/
-│   ├── app/             # 应用入口 - 依赖注入
-│   ├── api/             # HTTP路由 - 处理器
-│   ├── service/         # 业务逻辑 - Repository Traits
-│   ├── domain/          # 核心类型 - 零依赖
-│   ├── infrastructure/  # 数据访问 - SeaORM实现
+│   ├── app/             # 应用入口 - 依赖注入容器
+│   ├── api/             # HTTP路由 - 处理器（14文件）
+│   ├── service/         # 业务逻辑 - Repository Traits定义
+│   ├── domain/          # 核心类型 - 零依赖层（12文件）
+│   ├── infrastructure/  # 数据访问 - SeaORM实现（含entity/migrations）
 │   ├── config/          # 配置管理
-│   └── cli/             # CLI工具
+│   └── cli/             # CLI工具（用户/数据库管理）
 ├── frontend/            # React前端
-└── docs/api/            # API文档
+│   └── src/
+│       ├── api/         # API客户端（12文件）
+│       ├── pages/       # 页面组件（10文件）
+│       └── components/  # UI组件
+├── docs/api/            # API文档
+└── scripts/             # 构建和CI脚本
 ```
 
-**架构依赖规则:**
+**架构依赖规则（CRITICAL - 违反会破坏架构）:**
 ```
 App → API → Service → Domain
               ↓
         Infrastructure → Domain
 ```
 
-**关键原则:**
-- Domain: 不依赖任何其他层（除了serde/chrono/uuid/async-trait）
-- Service: 定义Repository Trait，依赖Domain
-- Infrastructure: 实现Repository，依赖Domain
-- API: 依赖Service+Domain，不直接访问Infrastructure
+**依赖方向原则:**
+- ✅ Domain: 不依赖任何其他层（仅允许 serde/chrono/uuid/async-trait）
+- ✅ Service: 定义Repository Trait，依赖Domain
+- ✅ Infrastructure: 实现Repository，依赖Domain
+- ✅ API: 依赖Service+Domain，**禁止**直接访问Infrastructure
+- ✅ App: 依赖所有层，负责组装
 
-## 构建命令
+---
 
-### 后端 (Rust)
+## WHERE TO LOOK
 
-```bash
-# 构建
-cargo build                    # 开发构建
-cargo build --release          # 生产构建
+| Task | Location | Notes |
+|------|----------|-------|
+| 定义业务实体 | `crates/domain/src/*.rs` | Post, User, Comment等核心类型 |
+| 定义Repository接口 | `crates/service/src/*.rs` | UserService, PostService等Trait |
+| 实现Repository | `crates/infrastructure/src/*.rs` | SeaORM实现 |
+| HTTP路由 | `crates/api/src/*.rs` | 各模块的handler函数 |
+| 前端API调用 | `frontend/src/api/*.ts` | Axios客户端封装 |
+| 数据库迁移 | `crates/infrastructure/src/migrations/` | 13个迁移文件 |
+| 数据库实体 | `crates/infrastructure/src/entity/` | 11个SeaORM实体 |
+| 依赖注入 | `crates/app/src/lib.rs` | `run_server()`组装所有依赖 |
+| 前端构建集成 | `crates/app/build.rs` | npm run build + rust_embed |
+| CLI命令 | `crates/cli/src/main.rs` | user/db管理命令 |
 
-# 运行
-cargo run                      # 启动服务器
-cargo run --release            # 生产模式
+---
 
-# 测试
-cargo test                     # 所有测试
-cargo test -p service          # 单个crate
-cargo test test_name           # 单个测试（模糊匹配）
-cargo test test_name -- --exact  # 精确匹配
-cargo test -- --nocapture      # 显示测试输出
-cargo test -- --test-threads=1 # 单线程运行
-cargo test service::tests::test_name  # 特定测试
+## ANTI-PATTERNS (CRITICAL VIOLATIONS DETECTED)
 
-# 快速检查
-cargo check                    # 类型检查（不构建）
-cargo clippy                   # Lint检查
-cargo fmt                      # 格式化代码
-cargo fmt --check              # 检查格式（不修改）
-```
+### 🚨 Current Architectural Violations
 
-### 前端 (TypeScript)
+**1. Domain → Config Dependency (CRITICAL)**
+- **Location:** `crates/domain/Cargo.toml:14`
+- **Issue:** Domain层依赖config crate（违反零依赖原则）
+- **Fix Required:** 移除`config = { path = "../config" }`，将`From<config::AppConfig>`转换逻辑移到Service或API层
 
-```bash
-cd frontend
-npm run dev                    # 开发服务器
-npm run build                  # 生产构建
-npm run type-check             # TypeScript检查
-npm run lint                   # ESLint
-npm run format                 # Prettier格式化
-```
+**2. API → Infrastructure Dependency (MEDIUM)**
+- **Location:** `crates/api/Cargo.toml:11`
+- **Issue:** API层直接依赖Infrastructure（应通过Service）
+- **Current:** 仅在doc comments使用，实际代码未依赖
+- **Fix Required:** 移除依赖声明，更新doc注释
 
-### CLI工具
+### ⚠️ Deprecated Frontend Types
 
-```bash
-cargo run -- user list
-cargo run -- user create --username admin --password pass --admin
-cargo run -- db migrate
-cargo run -- db reset --force
-```
+**frontend/src/types/index.ts (Lines 44-58):**
+- `ApiResponse<T>` - 迁移到 `ApiResponseV2<T>`
+- `PaginatedResponse<T>` - 迁移到 `ApiListResponseV2<T>`
+- `ApiError` - 迁移到 `ApiErrorV2`
 
-## 代码风格
+### 📋 Known Technical Debt
 
-### Rust命名规范
+**crates/service/src/stats/mod.rs:54**
+- `let is_today = true;` - 简化实现，始终假设今天
+- **Impact:** 日期统计功能不准确
 
-```rust
-struct PostService;            // PascalCase - 结构体
-enum Error { NotFound }        // PascalCase - 枚举
-fn create_post() {}            // snake_case - 函数
-const MAX_SIZE: u64 = 100;     // SCREAMING_SNAKE_CASE - 常量
-mod post_service;              // snake_case - 模块
-type Result<T> = ...;          // PascalCase - 类型别名
-```
+---
 
-### Rust导入顺序
+## CONVENTIONS
 
+### Rust Backend
+
+**导入顺序（CRITICAL - 必须遵守）:**
 ```rust
 // 1. 标准库
 use std::sync::Arc;
@@ -121,37 +131,7 @@ use crate::error::ApiError;
 use crate::models::Post;
 ```
 
-### 错误处理模式
-
-**Domain层错误:**
-```rust
-use domain::{Error, Result};
-
-// 验证错误
-if input.is_empty() {
-    return Err(Error::Validation("输入不能为空".to_string()));
-}
-
-// 资源未找到
-Err(Error::NotFound("User not found".to_string()))
-
-// 传播错误（使用?操作符）
-let user = self.repo.get_user(id).await?;
-
-// 转换错误类型
-self.repo.create(post).await
-    .map_err(|e| Error::Internal(e.to_string()))?;
-```
-
-**API层错误转换:**
-```rust
-// Domain错误自动转换为API错误
-let user = self.user_service.get(id).await
-    .map_err(ApiError::Domain)?;
-```
-
-### Repository Trait定义（在Service层）
-
+**Repository Trait定义（Service层）:**
 ```rust
 use async_trait::async_trait;
 use domain::{Result, User};
@@ -164,27 +144,16 @@ pub trait UserRepository: Send + Sync {
 }
 ```
 
-### Service层模式
-
+**Service层模式:**
 ```rust
-use domain::{Result, User, DEFAULT_USER_PERMISSIONS};
-use std::sync::Arc;
-
 pub struct UserService {
-    repo: Arc<dyn UserRepository>,
+    repo: Arc<dyn UserRepository>,  // 使用Trait对象
     allow_registration: bool,
 }
 
 impl UserService {
-    pub fn new(repo: Arc<dyn UserRepository>, allow_registration: bool) -> Self {
-        Self { repo, allow_registration }
-    }
-
     pub async fn register(&self, username: String, password: String) -> Result<User> {
         // 1. 业务规则验证
-        if !self.allow_registration {
-            return Err(Error::Validation("Registration is disabled".to_string()));
-        }
         self.validate_username(&username)?;
         self.validate_password(&password)?;
 
@@ -193,119 +162,86 @@ impl UserService {
             return Err(Error::Validation("Username already exists".to_string()));
         }
 
-        // 3. 业务逻辑（如：第一个用户是管理员）
-        let is_first_user = self.repo.list_users(1).await?.is_empty();
-        let permissions = if is_first_user {
-            domain::ADMIN_PERMISSIONS
-        } else {
-            DEFAULT_USER_PERMISSIONS
-        };
+        // 3. 业务逻辑
+        let permissions = self.determine_permissions()?;
 
-        // 4. 持久化
+        // 4. 持久化（通过Repository）
         self.repo.create_user(username, password, permissions).await
     }
 }
 ```
 
-### API层处理器模式
-
+**API层处理器模式:**
 ```rust
 use axum::{extract::State, response::IntoResponse, Json};
-use crate::{error::ApiError, state::AppState};
 
-/// GET /users/{id}
 async fn get_user(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, ApiError> {
     let user = state.user_service.get(id).await
-        .map_err(ApiError::Domain)?;
+        .map_err(ApiError::Domain)?;  // Domain错误自动转换
 
     Ok(resp::ok(user))
 }
 ```
 
-### Infrastructure层Repository实现
-
+**错误处理模式:**
 ```rust
-use domain::UserRepository;
-use sea_orm::DatabaseConnection;
-
-pub struct UserRepositoryImpl {
-    db: Arc<DatabaseConnection>,
+// Domain层
+if input.is_empty() {
+    return Err(Error::Validation("输入不能为空".to_string()));
 }
 
-impl UserRepositoryImpl {
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
-        Self { db }
-    }
-}
+// 传播错误（使用?操作符）
+let user = self.repo.get_user(id).await?;
 
-#[async_trait]
-impl UserRepository for UserRepositoryImpl {
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>> {
-        // SeaORM查询实现
-        let result = users::Entity::find_by_id(id)
-            .one(&*self.db)
-            .await
-            .map_err(|e| Error::Internal(e.to_string()))?;
+// 转换错误类型
+self.repo.create(post).await
+    .map_err(|e| Error::Internal(e.to_string()))?;
+```
 
-        Ok(result.map(|entity| entity.into()))
-    }
+### TypeScript Frontend
+
+**导入顺序:**
+```tsx
+// 1. React导入
+import { useState, useEffect } from 'react';
+
+// 2. 第三方库
+import { Button } from '@fluentui/react-components';
+
+// 3. 本地模块
+import { api } from '../api';
+import type { Post } from '../types';
+
+// 4. 样式
+import './styles.css';
+```
+
+**错误处理:**
+```tsx
+try {
+  const response = await api.getPost(id);
+  setPost(response.data);
+} catch (error) {
+  console.error('Failed to fetch post:', error);
+  // 显示用户友好的错误消息
 }
 ```
 
-## 测试规范
+---
 
-### Service层测试（使用mockall）
+## UNIQUE STYLES (Project-Specific)
 
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use mockall::*;
-    use domain::User;
+### Frontend Build Integration
 
-    mock! {
-        UserRepo {}
-        #[async_trait]
-        impl UserRepository for UserRepo {
-            async fn find_by_username(&self, username: &str) -> Result<Option<User>>;
-            async fn create_user(&self, username: String, password: String, permissions: u64) -> Result<User>;
-        }
-    }
+**Dual-Mode Frontend Serving:**
+- **Release模式:** Vite构建的静态资源通过`rust_embed`嵌入二进制
+- **Debug模式:** 从文件系统serving（热重载）
+- **实现位置:** `crates/app/build.rs` + `crates/app/src/lib.rs` (fallback handler)
 
-    #[tokio::test]
-    async fn test_register_validates_username() {
-        let mut mock = MockUserRepo::new();
-        mock.expect_find_by_username()
-            .returning(|_| Ok(None));
-
-        let service = UserService::new(Arc::new(mock), true);
-
-        let result = service.register("".to_string(), "password123".to_string()).await;
-
-        assert!(matches!(result, Err(Error::Validation(_))));
-    }
-}
-```
-
-### Infrastructure层测试
-
-```rust
-#[tokio::test]
-async fn test_user_repository_impl() {
-    // 使用测试数据库
-    let db = establish_test_connection().await;
-    let repo = UserRepositoryImpl::new(db);
-
-    // 测试CRUD操作
-    let user = repo.create_user("test".to_string(), "pass".to_string(), 0).await;
-    assert!(user.is_ok());
-}
-```
-
-## 权限系统
+### Bit-Flag Permissions
 
 ```rust
 // 位标志权限常量
@@ -327,71 +263,110 @@ domain::check_ownership_or_admin(
 )?;
 ```
 
-## TypeScript规范
+### First-User-Is-Admin Pattern
 
-**导入顺序:**
-```tsx
-// 1. React导入
-import { useState, useEffect } from 'react';
-
-// 2. 第三方库
-import { Button } from '@fluentui/react-components';
-
-// 3. 本地模块
-import { api } from '../api';
-import type { Post } from '../types';
-
-// 4. 样式
-import './styles.css';
+**Service层逻辑:**
+```rust
+let is_first_user = self.repo.list_users(1).await?.is_empty();
+let permissions = if is_first_user {
+    domain::ADMIN_PERMISSIONS  // 第一个用户自动成为管理员
+} else {
+    DEFAULT_USER_PERMISSIONS
+};
 ```
 
-**命名:**
-```tsx
-const [isLoading, setIsLoading] = useState(false);  // camelCase - 变量
-function PostList() {}                              // PascalCase - 组件
-const MAX_POSTS = 10;                              // SCREAMING_SNAKE_CASE - 常量
-interface PostData {}                              // PascalCase - 接口/类型
+---
+
+## COMMANDS
+
+### Backend (Rust)
+
+```bash
+# 构建
+cargo build                    # 开发构建
+cargo build --release          # 生产构建（启用LTO + 单codegen unit）
+
+# 运行
+cargo run                      # 启动服务器
+cargo run --release            # 生产模式
+
+# 测试
+cargo test                     # 所有测试
+cargo test -p service          # 单个crate测试
+cargo test test_name -- --exact  # 精确匹配测试名
+
+# 快速检查
+cargo check                    # 类型检查（不构建）
+cargo clippy                   # Lint检查
+cargo fmt                      # 格式化代码
 ```
 
-**错误处理:**
-```tsx
-try {
-  const response = await api.getPost(id);
-  setPost(response.data);
-} catch (error) {
-  console.error('Failed to fetch post:', error);
-  // 显示用户友好的错误消息
-}
+### Frontend (TypeScript)
+
+```bash
+cd frontend
+
+# 开发
+npm run dev                    # Vite watch模式（输出到../dist）
+
+# 构建
+npm run build                  # TypeScript检查 + Vite构建
+npm run type-check             # 仅TypeScript检查
+npm run lint                   # ESLint检查
+npm run format                 # Prettier格式化
 ```
 
-## 重要规则
+### CLI Tools
 
-**DO:**
-- ✅ Domain层保持零外部依赖（除了serde/chrono/uuid/async-trait）
-- ✅ Service层定义Repository Trait
-- ✅ Infrastructure层实现Repository
-- ✅ 使用Domain层的Error类型
-- ✅ 为所有新功能写测试
-- ✅ 使用`#[async_trait]`为trait添加async支持
-- ✅ 使用`Arc<dyn Trait>`进行依赖注入
+```bash
+# 用户管理
+cargo run -- user list
+cargo run -- user create --username admin --password pass --admin
+cargo run -- user reset-password <user_id>
+cargo run -- user promote <user_id>
 
-**DON'T:**
-- ❌ 绕过Repository直接操作数据库
-- ❌ 在API层写业务逻辑
-- ❌ 在Service层直接I/O操作
-- ❌ 违反依赖方向（Domain不能依赖其他层）
-- ❌ 硬编码配置（使用环境变量）
-- ❌ 使用`Rc<RefCell<>>`（在async环境用Arc）
-- ❌ 使用阻塞I/O（用tokio::task::spawn_blocking包装）
+# 数据库管理
+cargo run -- db migrate
+cargo run -- db reset --force  # 警告：删除所有数据
+```
 
-## Workspace配置
+### Makefile Targets
 
-- **Edition:** 2021
-- **Resolver:** 2
+```bash
+make help          # 显示所有可用命令
+make dev           # 启动开发环境
+make build         # 完整构建（前端+后端）
+make test          # 运行所有测试
+make ci            # 运行CI检查
+make fmt           # 格式化代码
+```
+
+---
+
+## NOTES
+
+### Workspace Configuration
+
+- **Edition:** Rust 2021
+- **Resolver:** Version 2
+- **Members:** 7 crates (统一版本管理)
 - **依赖管理:** workspace.dependencies统一管理版本
 - **编译优化:** release启用lto和codegen-units=1
 
-## 环境变量
+### Build Profiles
+
+```toml
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0  # 更快的编译速度
+```
+
+### Environment Variables
 
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/peng_blog
@@ -401,14 +376,35 @@ JWT_SECRET=change-this-in-production
 UPLOAD_DIR=./uploads
 BASE_URL=http://localhost:3000
 RUST_LOG=debug
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
 ```
 
-## 文档
+### Testing Patterns
 
-- API文档: `docs/api/INDEX.md`
-- 架构: 四层分层架构，Repository模式
-- CLI: `cargo run -- help`
+- **Service层:** 使用mockall进行mock测试
+- **Infrastructure层:** 使用测试数据库进行集成测试
+- **测试配置:** timeout=0 (禁用超时), threads=0 (自动检测)
+
+### Important Reminders
+
+1. **Domain层禁止添加外部依赖**（仅允许serde/chrono/uuid/async-trait）
+2. **所有新功能必须写测试**
+3. **使用Arc<dyn Trait>进行依赖注入**（避免泛型爆炸）
+4. **前端构建输出到../dist**（通过Vite配置）
+5. **Release模式包含前端静态资源**（通过rust_embed）
+6. **位标志权限系统高效但需注意常量定义**
 
 ---
 
-*Last updated: 2026-02-03*
+## SUBDIRECTORIES
+
+Hierarchical AGENTS.md files for detailed domain knowledge:
+- `crates/domain/src/AGENTS.md` - Domain层核心类型规范
+- `frontend/src/api/AGENTS.md` - 前端API客户端模式
+
+---
+
+*Last updated: 2026-02-04*
+*Total files: 195 (82 Rust + 43 TypeScript + 70 others)*
+*Lines of code: ~19,673*

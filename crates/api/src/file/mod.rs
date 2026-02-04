@@ -27,12 +27,13 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         // POST /api/files - Upload a file
         .route("/", axum::routing::post(upload_file))
-        // GET /api/files/{id} - Get file info
-        .route("/{id}", axum::routing::get(get_file))
-        // GET /api/files/{id}/download - Download file
-        .route("/{id}/download", axum::routing::get(download_file))
         // GET /api/files - List user's files
         .route("/", axum::routing::get(list_files))
+        // GET /api/files/download/{filename} - Download file by filename (MUST be before /{id})
+        .route(
+            "/download/{filename}",
+            axum::routing::get(download_file_by_name),
+        )
         // DELETE /api/files/{id} - Delete a file
         .route("/{id}", axum::routing::delete(delete_file))
 }
@@ -114,43 +115,19 @@ pub async fn get_file(
     }
 }
 
-/// GET /api/files/:id/download
-/// Download file content
-pub async fn download_file(
+/// GET /api/files/download/:filename
+/// Download file by filename (for use in markdown content)
+pub async fn download_file_by_name(
     State(state): State<AppState>,
-    Path(id): Path<String>,
+    Path(filename): Path<String>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let file_id = Uuid::parse_str(&id)
-        .map_err(|e| ApiError::Validation(format!("Invalid file ID: {}", e)))?;
-
-    let file_opt = state
-        .file_service
-        .get_file(file_id)
-        .await
-        .map_err(ApiError::Domain)?;
-
-    let file = file_opt.ok_or_else(|| ApiError::NotFound("File not found".to_string()))?;
-
-    // Read file from disk
-    let file_path = format!(
-        "{}/{}",
-        state.upload_dir.trim_end_matches('/'),
-        file.filename
-    );
+    let file_path = format!("{}/{}", state.upload_dir.trim_end_matches('/'), filename);
 
     let file_content = tokio::fs::read(&file_path)
         .await
-        .map_err(|e| ApiError::Internal(format!("Failed to read file: {}", e)))?;
+        .map_err(|_| ApiError::NotFound("File not found".to_string()))?;
 
-    let headers = [
-        (header::CONTENT_TYPE, file.content_type),
-        (
-            header::CONTENT_DISPOSITION,
-            format!("attachment; filename=\"{}\"", file.original_filename),
-        ),
-    ];
-
-    Ok((headers, file_content))
+    Ok(([(header::CONTENT_TYPE, "image/jpeg")], file_content))
 }
 
 /// GET /api/files?limit=50
@@ -170,7 +147,8 @@ pub async fn list_files(
         .await
         .map_err(ApiError::Domain)?;
 
-    Ok((StatusCode::OK, Json(files)))
+    use crate::response::helpers;
+    Ok(helpers::ok(files))
 }
 
 /// DELETE /api/files/:id

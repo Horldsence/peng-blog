@@ -6,8 +6,8 @@
 
 use config::AppConfig;
 use service::{
-    CategoryService, CommentService, ConfigService, FileService, PostService, SessionService,
-    StatsService, TagService, UserService,
+    CategoryService, CommentService, ConfigService, FileService, PostService, RssService,
+    SessionService, StatsService, TagService, UserService,
 };
 use std::sync::Arc;
 
@@ -50,6 +50,9 @@ pub struct AppState {
 
     /// Tag service with business logic for tag operations
     pub tag_service: Arc<TagService>,
+
+    /// RSS service for generating RSS feeds
+    pub rss_service: Arc<dyn RssService>,
 
     /// Authentication state for JWT token operations
     pub auth_state: AuthState,
@@ -131,6 +134,7 @@ pub struct AppStateBuilder {
     stats_service: Option<StatsService>,
     category_service: Option<CategoryService>,
     tag_service: Option<TagService>,
+    rss_service: Option<Arc<dyn RssService>>,
     auth_state: Option<AuthState>,
     upload_dir: Option<String>,
     bing_cache: Option<FileCache>,
@@ -188,6 +192,11 @@ impl AppStateBuilder {
         self
     }
 
+    pub fn rss_service(mut self, service: Arc<dyn RssService>) -> Self {
+        self.rss_service = Some(service);
+        self
+    }
+
     pub fn auth_state(mut self, state: AuthState) -> Self {
         self.auth_state = Some(state);
         self
@@ -227,6 +236,7 @@ impl AppStateBuilder {
                 self.category_service.expect("category_service must be set"),
             ),
             tag_service: Arc::new(self.tag_service.expect("tag_service must be set")),
+            rss_service: self.rss_service.expect("rss_service must be set"),
             auth_state: self.auth_state.expect("auth_state must be set"),
             upload_dir: self.upload_dir.expect("upload_dir must be set"),
             bing_cache: self.bing_cache.expect("bing_cache must be set"),

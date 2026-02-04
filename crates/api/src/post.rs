@@ -246,6 +246,12 @@ async fn create_post(
         .await
         .map_err(ApiError::Domain)?;
 
+    state
+        .rss_service
+        .refresh_cache()
+        .await
+        .map_err(ApiError::Domain)?;
+
     Ok(resp::created(post))
 }
 
@@ -293,6 +299,12 @@ async fn update_post(
     let post = state
         .post_service
         .update(id, input.title, input.content, user_id, user.permissions)
+        .await
+        .map_err(ApiError::Domain)?;
+
+    state
+        .rss_service
+        .refresh_cache()
         .await
         .map_err(ApiError::Domain)?;
 
@@ -350,6 +362,12 @@ async fn patch_post(
             }
             _ => return Err(ApiError::Validation(format!("Invalid status: {}", status))),
         };
+
+        state
+            .rss_service
+            .refresh_cache()
+            .await
+            .map_err(ApiError::Domain)?;
     }
 
     // Handle category change
@@ -378,6 +396,12 @@ async fn patch_post(
             .update(id, Some(title), Some(content), user_id, user.permissions)
             .await
             .map_err(ApiError::Domain)?;
+
+        state
+            .rss_service
+            .refresh_cache()
+            .await
+            .map_err(ApiError::Domain)?;
     }
 
     // Refresh post data if we only changed category
@@ -401,6 +425,12 @@ async fn delete_post(
     state
         .post_service
         .delete(id, user_id, user.permissions)
+        .await
+        .map_err(ApiError::Domain)?;
+
+    state
+        .rss_service
+        .refresh_cache()
         .await
         .map_err(ApiError::Domain)?;
 

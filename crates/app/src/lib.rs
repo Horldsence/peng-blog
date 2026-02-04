@@ -14,8 +14,8 @@ use infrastructure::{
 #[cfg(not(debug_assertions))]
 use rust_embed::RustEmbed;
 use service::{
-    CategoryService, CommentService, ConfigService, FileService, PostService, SessionService,
-    StatsService, TagService, UserService,
+    CategoryService, CommentService, ConfigService, FileService, PostService, RssService,
+    RssServiceImpl, SessionService, StatsService, TagService, UserService,
 };
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -26,6 +26,9 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = load_config()?;
 
+    let base_url =
+        std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -35,6 +38,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("DATABASE_URL: {}", config.database.url);
     tracing::info!("ALLOW_REGISTRATION: {}", config.site.allow_registration);
+    tracing::info!("BASE_URL: {} (for OAuth callbacks)", base_url);
     tracing::info!(
         "DATABASE_URL env override: {:?}",
         config.database.url_env_override
@@ -47,6 +51,19 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         "JWT_SECRET env override: {:?}",
         config.auth.jwt_secret_env_override
     );
+
+    let github_callback_url = format!("{}/api/comments/github/callback", base_url);
+    if config.github.client_id.is_empty() || config.github.client_secret.is_empty() {
+        tracing::warn!(
+            "GitHub OAuth is not configured. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to enable GitHub OAuth for comments."
+        );
+    } else {
+        tracing::info!(
+            "GitHub OAuth configured with callback URL: {}",
+            github_callback_url
+        );
+        tracing::info!("Make sure this URL is registered in your GitHub OAuth App settings");
+    }
 
     if let Some(true) = config.site.allow_registration_env_override {
         tracing::warn!("ALLOW_REGISTRATION is overridden by environment variable");
@@ -72,10 +89,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let category_repo = Arc::new(CategoryRepositoryImpl::new(db_clone.clone()));
     let tag_repo = Arc::new(TagRepositoryImpl::new(db_clone));
 
-    let base_url =
-        std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-
-    let post_service = PostService::new(post_repo);
+    let post_service = PostService::new(post_repo.clone());
     let user_service = UserService::new(user_repo.clone(), config.site.allow_registration);
     let session_service = SessionService::new(session_repo);
     let file_service = FileService::new(
@@ -94,6 +108,14 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let tag_service = TagService::new(tag_repo);
     let config_repo = Arc::new(ConfigRepositoryImpl::new());
     let config_service = ConfigService::new(config_repo);
+
+    let rss_service = Arc::new(RssServiceImpl::new(
+        post_repo.clone(),
+        base_url.clone(),
+        Some("Peng Blog".to_string()),
+        Some("Latest posts from Peng Blog".to_string()),
+    )) as Arc<dyn RssService>;
+
     let auth_state = AuthState::new(&config.auth.jwt_secret);
 
     let state = AppState::builder()
@@ -107,6 +129,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .stats_service(stats_service)
         .category_service(category_service)
         .tag_service(tag_service)
+        .rss_service(rss_service)
         .auth_state(auth_state)
         .upload_dir(config.storage.upload_dir.clone())
         .bing_cache(bing_cache)

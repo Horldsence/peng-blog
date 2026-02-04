@@ -42,9 +42,13 @@ impl File {
         self.user_id == user_id
     }
 
-    /// Generate URL for the file
+    /// Generate URL for the file download endpoint
     pub fn generate_url(base_url: &str, filename: &str) -> String {
-        format!("{}/files/{}", base_url.trim_end_matches('/'), filename)
+        format!(
+            "{}/api/files/{}/download",
+            base_url.trim_end_matches('/'),
+            filename
+        )
     }
 }
 

@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
-  CardHeader,
   Button,
   Input,
-  Textarea,
   Title2,
   Body1,
   Caption1,
@@ -19,14 +17,22 @@ import {
   useId,
 } from '@fluentui/react-components';
 import { ArrowLeftRegular, SaveRegular, SendRegular, DismissRegular } from '@fluentui/react-icons';
+import MDEditor from '@uiw/react-md-editor';
+import '@uiw/react-md-editor/markdown-editor.css';
+import rehypeHighlight from 'rehype-highlight';
+
 import { postsApi, categoriesApi, tagsApi, authApi } from '../api';
 import { useToast } from '../components/ui/Toast';
+import { ImageUploadDialog } from '../components/ui/ImageUploadDialog';
+import { useTheme } from '../contexts/ThemeContext';
 import type { PostCreateRequest, Category, Tag as TagModel } from '../types';
 
 export function PostEditorPage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const toast = useToast();
+  const { mode } = useTheme();
+
   const isEditing = Boolean(id);
   const comboId = useId('tags-combo');
   const categoryId = useId('category-dropdown');
@@ -36,6 +42,7 @@ export function PostEditorPage() {
 
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
   const [published, setPublished] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchLoading, setFetchLoading] = useState<boolean>(isEditing);
@@ -254,21 +261,48 @@ export function PostEditorPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-      {/* 返回按钮 */}
-      <Button
-        appearance="transparent"
-        icon={<ArrowLeftRegular />}
-        onClick={() => navigate(-1)}
-        style={{ marginBottom: '16px' }}
+    <div style={{ maxWidth: '100%', padding: '0 24px', margin: '0 auto' }}>
+      {/* 头部导航和标题 */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}
       >
-        返回
-      </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Button appearance="transparent" icon={<ArrowLeftRegular />} onClick={() => navigate(-1)}>
+            返回
+          </Button>
+          <Title2>{isEditing ? '编辑文章' : '新建文章'}</Title2>
+        </div>
+
+        {/* 操作按钮 (顶部也放一组方便操作) */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Button
+            appearance="secondary"
+            icon={<SaveRegular />}
+            onClick={() => void handleSubmit(false)}
+            disabled={loading}
+          >
+            {loading ? '保存中...' : '保存草稿'}
+          </Button>
+          <Button
+            appearance="primary"
+            icon={<SendRegular />}
+            onClick={() => {
+              void handleSubmit(true);
+            }}
+            disabled={loading}
+          >
+            {loading ? '发布中...' : isEditing && published ? '更新发布' : '发布'}
+          </Button>
+        </div>
+      </div>
 
       {/* 编辑器卡片 */}
-      <Card style={{ borderRadius: tokens.borderRadiusLarge }}>
-        <CardHeader header={<Title2>{isEditing ? '编辑文章' : '新建文章'}</Title2>} />
-
+      <Card style={{ borderRadius: tokens.borderRadiusLarge, padding: '24px' }}>
         {/* 错误提示 */}
         {error && (
           <div
@@ -291,11 +325,20 @@ export function PostEditorPage() {
           </div>
         )}
 
-        {/* 表单 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* 标题输入 */}
+        {/* 标题和元数据行 */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: '24px',
+            marginBottom: '24px',
+          }}
+        >
+          {/* 左侧：标题输入 */}
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>文章标题</Body1>
+            <Body1 style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+              文章标题
+            </Body1>
             <Input
               placeholder="输入文章标题..."
               value={title}
@@ -306,190 +349,205 @@ export function PostEditorPage() {
             />
           </div>
 
-          {/* 内容输入 */}
+          {/* 右侧：分类选择 */}
           <div>
-            <Body1 style={{ fontWeight: '600', marginBottom: '8px' }}>文章内容</Body1>
-            <Textarea
-              placeholder="在这里写下你的文章内容..."
-              value={content}
-              onChange={(_, data) => setContent(data.value)}
-              style={{ width: '100%' }}
-              textarea={{ style: { minHeight: '400px' } }}
-              disabled={loading}
-              resize="vertical"
-            />
-          </div>
-
-          {/* 分类和标签选择 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {/* 分类选择 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <label id={categoryId} style={{ fontWeight: '600' }}>
-                  分类
-                </label>
-                {isAdmin && (
-                  <Button
-                    size="small"
-                    appearance="subtle"
-                    onClick={() => {
-                      void createNewCategory();
-                    }}
-                  >
-                    新建
-                  </Button>
-                )}
-              </div>
-              <Dropdown
-                aria-labelledby={categoryId}
-                placeholder="选择分类"
-                value={categories.find((c) => c.id === selectedCategoryId)?.name ?? ''}
-                selectedOptions={selectedCategoryId ? [selectedCategoryId] : []}
-                onOptionSelect={(_, data) => {
-                  if (data.optionValue) setSelectedCategoryId(data.optionValue);
-                }}
-                disabled={loading || isLoadingOptions}
-              >
-                {categories.map((c) => (
-                  <Option key={c.id} value={c.id} text={c.name}>
-                    {c.name}
-                  </Option>
-                ))}
-              </Dropdown>
-            </div>
-
-            {/* 标签选择 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label id={comboId} style={{ fontWeight: '600' }}>
-                标签
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '8px',
+              }}
+            >
+              <label id={categoryId} style={{ fontWeight: '600' }}>
+                分类
               </label>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <Combobox
-                    aria-labelledby={comboId}
-                    placeholder="搜索或添加标签"
-                    onChange={(ev) => setTagQuery(ev.target.value)}
-                    value={tagQuery}
-                    selectedOptions={selectedTags}
-                    onOptionSelect={(_, data) => {
-                      void onTagSelect(_, data);
-                    }}
-                    disabled={loading || isLoadingOptions}
-                    freeform
-                    multiselect
-                  >
-                    {filteredTags.map((t) => (
-                      <Option key={t.id} value={t.id} text={t.name}>
-                        {t.name}
+              {isAdmin && (
+                <Button
+                  size="small"
+                  appearance="subtle"
+                  onClick={() => {
+                    void createNewCategory();
+                  }}
+                >
+                  新建
+                </Button>
+              )}
+            </div>
+            <Dropdown
+              aria-labelledby={categoryId}
+              placeholder="选择分类"
+              value={categories.find((c) => c.id === selectedCategoryId)?.name ?? ''}
+              selectedOptions={selectedCategoryId ? [selectedCategoryId] : []}
+              onOptionSelect={(_, data) => {
+                if (data.optionValue) setSelectedCategoryId(data.optionValue);
+              }}
+              disabled={loading || isLoadingOptions}
+              style={{ width: '100%' }}
+            >
+              {categories.map((c) => (
+                <Option key={c.id} value={c.id} text={c.name}>
+                  {c.name}
+                </Option>
+              ))}
+            </Dropdown>
+          </div>
+        </div>
+
+        {/* 标签和发布设置行 */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: '24px',
+            marginBottom: '24px',
+          }}
+        >
+          {/* 标签选择 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label id={comboId} style={{ fontWeight: '600' }}>
+              标签
+            </label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Combobox
+                  aria-labelledby={comboId}
+                  placeholder="搜索或添加标签"
+                  onChange={(ev) => setTagQuery(ev.target.value)}
+                  value={tagQuery}
+                  selectedOptions={selectedTags}
+                  onOptionSelect={(_, data) => {
+                    void onTagSelect(_, data);
+                  }}
+                  disabled={loading || isLoadingOptions}
+                  freeform
+                  multiselect
+                  style={{ width: '100%' }}
+                >
+                  {filteredTags.map((t) => (
+                    <Option key={t.id} value={t.id} text={t.name}>
+                      {t.name}
+                    </Option>
+                  ))}
+                  {isAdmin &&
+                    tagQuery &&
+                    !allTags.some((t) => t.name.toLowerCase() === tagQuery.toLowerCase()) && (
+                      <Option key="create-new" value="create-new" text={`创建 "${tagQuery}"`}>
+                        创建 "{tagQuery}"
                       </Option>
-                    ))}
-                    {isAdmin &&
-                      tagQuery &&
-                      !allTags.some((t) => t.name.toLowerCase() === tagQuery.toLowerCase()) && (
-                        <Option key="create-new" value="create-new" text={`创建 "${tagQuery}"`}>
-                          创建 "{tagQuery}"
-                        </Option>
-                      )}
-                  </Combobox>
-                  {/* 已选标签展示 */}
-                  {selectedTags.length > 0 && (
-                    <TagGroup aria-label="Selected tags" style={{ flexWrap: 'wrap' }}>
-                      {selectedTags.map((tagId) => {
-                        const tag = allTags.find((t) => t.id === tagId);
-                        if (!tag) return null;
-                        return (
-                          <Tag
-                            key={tagId}
-                            dismissible
-                            shape="rounded"
-                            dismissIcon={
-                              <DismissRegular
-                                onClick={() =>
-                                  setSelectedTags(selectedTags.filter((id) => id !== tagId))
-                                }
-                              />
-                            }
-                          >
-                            {tag.name}
-                          </Tag>
-                        );
-                      })}
-                    </TagGroup>
-                  )}
-                </div>
+                    )}
+                </Combobox>
+                {/* 已选标签展示 */}
+                {selectedTags.length > 0 && (
+                  <TagGroup aria-label="Selected tags" style={{ flexWrap: 'wrap' }}>
+                    {selectedTags.map((tagId) => {
+                      const tag = allTags.find((t) => t.id === tagId);
+                      if (!tag) return null;
+                      return (
+                        <Tag
+                          key={tagId}
+                          dismissible
+                          shape="rounded"
+                          dismissIcon={
+                            <DismissRegular
+                              onClick={() =>
+                                setSelectedTags(selectedTags.filter((id) => id !== tagId))
+                              }
+                            />
+                          }
+                        >
+                          {tag.name}
+                        </Tag>
+                      );
+                    })}
+                  </TagGroup>
+                )}
               </div>
             </div>
           </div>
 
           {/* 发布选项 */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 16px',
-              backgroundColor: 'var(--colorNeutralBackground1)',
-              borderRadius: tokens.borderRadiusMedium,
-            }}
-          >
-            <input
-              type="checkbox"
-              id="publish-checkbox"
-              checked={published}
-              onChange={(e) => setPublished(e.target.checked)}
-              disabled={loading}
-              style={{ width: '18px', height: '18px' }}
-            />
-            <label htmlFor="publish-checkbox" style={{ cursor: 'pointer' }}>
-              <Body1>立即发布（取消勾选保存为草稿）</Body1>
-            </label>
-          </div>
-
-          {/* 操作按钮 */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <Button appearance="secondary" onClick={() => navigate(-1)} disabled={loading}>
-              取消
-            </Button>
-            <Button
-              appearance="secondary"
-              icon={<SaveRegular />}
-              onClick={() => void handleSubmit(false)}
-              disabled={loading}
-            >
-              {loading ? '保存中...' : '保存草稿'}
-            </Button>
-            <Button
-              appearance="primary"
-              icon={<SendRegular />}
-              onClick={() => {
-                void handleSubmit(true);
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                backgroundColor: 'var(--colorNeutralBackground1)',
+                borderRadius: tokens.borderRadiusMedium,
+                border: '1px solid var(--colorNeutralStroke1)',
+                height: '32px',
               }}
-              disabled={loading}
             >
-              {loading ? '发布中...' : isEditing && published ? '更新发布' : '发布'}
-            </Button>
+              <input
+                type="checkbox"
+                id="publish-checkbox"
+                checked={published}
+                onChange={(e) => setPublished(e.target.checked)}
+                disabled={loading}
+                style={{ width: '18px', height: '18px' }}
+              />
+              <label htmlFor="publish-checkbox" style={{ cursor: 'pointer' }}>
+                <Body1>立即发布</Body1>
+              </label>
+            </div>
           </div>
+        </div>
 
-          {/* 字数统计 */}
+        {/* 内容编辑器 - MDEditor */}
+        <div data-color-mode={mode}>
           <div
             style={{
               display: 'flex',
-              gap: '24px',
-              padding: '12px 16px',
-              backgroundColor: 'var(--colorNeutralBackground2)',
-              borderRadius: tokens.borderRadiusMedium,
-              color: 'var(--colorNeutralForeground2)',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px',
             }}
           >
-            <Caption1>标题: {title.length} 字符</Caption1>
-            <Caption1>内容: {content.length} 字符</Caption1>
+            <Body1 style={{ fontWeight: '600' }}>文章内容</Body1>
+            <ImageUploadDialog
+              onInsert={(url, alt) => {
+                const imageMarkdown = `![${alt}](${url})`;
+                if (cursorPosition !== null && cursorPosition >= 0) {
+                  const before = content.substring(0, cursorPosition);
+                  const after = content.substring(cursorPosition);
+                  setContent(before + imageMarkdown + after);
+                } else {
+                  setContent((prev) => (prev ? prev + '\n' + imageMarkdown : imageMarkdown));
+                }
+              }}
+            />
           </div>
+          <MDEditor
+            value={content}
+            onChange={(val) => setContent(val ?? '')}
+            textareaProps={{
+              onBlur: (e) => setCursorPosition(e.currentTarget.selectionStart),
+            }}
+            height={700}
+            preview="live"
+            visibleDragbar={false}
+            previewOptions={{
+              rehypePlugins: [[rehypeHighlight, { detect: true, ignoreMissing: true }]],
+            }}
+          />
+        </div>
+
+        {/* 底部信息 */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '24px',
+            marginTop: '16px',
+            padding: '12px 16px',
+            backgroundColor: 'var(--colorNeutralBackground2)',
+            borderRadius: tokens.borderRadiusMedium,
+            color: 'var(--colorNeutralForeground2)',
+          }}
+        >
+          <Caption1>标题: {title.length} 字符</Caption1>
+          <Caption1>内容: {content.length} 字符</Caption1>
         </div>
       </Card>
     </div>

@@ -8,9 +8,9 @@ const createAxiosInstance = (): AxiosInstance => {
   const instance = axios.create({
     baseURL: '/api',
     timeout: 30000,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    // 不设置默认Content-Type，让axios根据data类型自动设置
+    // FormData会自动设置为multipart/form-data并生成boundary
+    // JSON对象会自动设置为application/json
   });
 
   // 请求拦截器 - 添加 token

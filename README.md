@@ -111,12 +111,50 @@ peng-blog/
    ```env
    # PostgreSQL 连接字符串格式: postgresql://username:password@hostname:port/database_name
    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/peng_blog
-   JWT_SECRET=your-secret-key-here
-   UPLOAD_DIR=./uploads
+
+   # 服务器配置
+   # HOST: 服务器绑定地址（使用 0.0.0.0 监听所有网络接口）
+   # 重要: 不要使用域名，会导致 "Cannot assign requested address" 错误
+   # 有效值: 0.0.0.0（所有接口）, 127.0.0.1（仅本地）, 或具体 IP
+   HOST=0.0.0.0
+   PORT=3000
+
+   # BASE_URL: 公网访问地址（用于 OAuth 回调和链接）
+   # 开发环境: http://localhost:3000
+   # 生产环境: https://yourdomain.com 或 https://your-subdomain.example.com
    BASE_URL=http://localhost:3000
+
+   # 认证配置
+   JWT_SECRET=your-secret-key-here
+
+   # 存储配置
+   UPLOAD_DIR=./uploads
+
+   # GitHub OAuth 配置
+   # 在 https://github.com/settings/developers 注册应用
+   # Authorization callback URL: {BASE_URL}/api/comments/github/callback
    GITHUB_CLIENT_ID=your-github-client-id
    GITHUB_CLIENT_SECRET=your-github-client-secret
    ```
+
+3. **配置 GitHub OAuth 应用**（用于评论功能）
+
+   访问 https://github.com/settings/developers，创建新的 OAuth App：
+
+   - **Application name**: 你的博客名称
+   - **Homepage URL**: 你的 `BASE_URL`（如 `https://yourdomain.com`）
+   - **Authorization callback URL**: `BASE_URL/api/comments/github/callback`
+     - 开发环境: `http://localhost:3000/api/comments/github/callback`
+     - 生产环境: `https://yourdomain.com/api/comments/github/callback`
+   - **Application description**: （可选）
+
+   创建后，复制 **Client ID** 和生成 **Client Secret**，填入上面的 `.env` 文件。
+
+   **重要说明**：
+   - `HOST`: 服务器监听地址，使用 `0.0.0.0` 以允许外网访问
+   - `BASE_URL`: 公网访问地址，GitHub OAuth 回调会使用此地址
+   - 生产环境部署时，只需修改 `BASE_URL` 为实际域名，`HOST` 保持 `0.0.0.0`
+   - GitHub 应用设置中的回调 URL 必须与 `BASE_URL/api/comments/github/callback` 完全匹配
 
 3. **安装依赖**
    ```bash

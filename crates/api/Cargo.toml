@@ -29,3 +29,6 @@ axum-extra = { version = "0.10", features = ["typed-header", "multipart"] }
 
 # HTTP client
 reqwest = { workspace = true }
+
+# URL encoding
+urlencoding = { workspace = true }

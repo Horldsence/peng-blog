@@ -15,6 +15,7 @@ pub mod file_cache;
 pub mod middleware;
 pub mod post;
 pub mod response;
+pub mod rss;
 pub mod session;
 pub mod state;
 pub mod stats;
@@ -60,4 +61,5 @@ pub fn routes() -> axum::Router<AppState> {
         .nest("/tags", tag::routes())
         .nest("/bing", bing::routes())
         .nest("/config", config::routes())
+        .route("/rss", axum::routing::get(rss::get_rss_feed))
 }
