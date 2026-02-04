@@ -451,7 +451,16 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     marginLeft: isExpanded || isMobile ? '16px' : '0',
                   }}
                 >
-                  <Avatar name={currentUser.username} size={32} color="brand" />
+                  {currentUser.avatar_url ? (
+                    <Avatar
+                      name={currentUser.username}
+                      size={32}
+                      color="brand"
+                      image={{ src: currentUser.avatar_url }}
+                    />
+                  ) : (
+                    <Avatar name={currentUser.username} size={32} color="brand" />
+                  )}
                 </div>
                 <span
                   className={

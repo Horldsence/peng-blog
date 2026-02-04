@@ -78,7 +78,11 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let post_service = PostService::new(post_repo);
     let user_service = UserService::new(user_repo.clone(), config.site.allow_registration);
     let session_service = SessionService::new(session_repo);
-    let file_service = FileService::new(file_repo, config.storage.upload_dir.clone(), base_url);
+    let file_service = FileService::new(
+        file_repo,
+        config.storage.upload_dir.clone(),
+        base_url.clone(),
+    );
     let comment_service = CommentService::new(
         comment_repo,
         user_repo,
@@ -106,6 +110,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         .auth_state(auth_state)
         .upload_dir(config.storage.upload_dir.clone())
         .bing_cache(bing_cache)
+        .base_url(base_url.clone())
         .build();
 
     api::bing::start_bing_cache_refresh_task(state.clone()).await;

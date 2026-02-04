@@ -44,6 +44,25 @@ impl Comment {
         }
     }
 
+    /// Create a new comment from GitHub user (with username and avatar URL)
+    pub fn from_github_with_username(
+        post_id: Uuid,
+        github_username: &str,
+        github_avatar_url: Option<&str>,
+        content: String,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            post_id,
+            user_id: None,
+            github_username: Some(github_username.to_string()),
+            github_avatar_url: github_avatar_url.map(|s| s.to_string()),
+            content,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
     /// Update comment content
     pub fn update_content(&mut self, content: String) {
         self.content = content;

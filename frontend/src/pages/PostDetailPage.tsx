@@ -315,6 +315,9 @@ export function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [commentContent, setCommentContent] = useState('');
   const [accentColor, setAccentColor] = useState<string>('');
+  const [githubUser, setGithubUser] = useState<{ username: string; avatar_url: string } | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchBingColor = async () => {
@@ -330,6 +333,54 @@ export function PostDetailPage() {
     };
     void fetchBingColor();
   }, []);
+
+  useEffect(() => {
+    setIsAuthenticated(authApi.isAuthenticated());
+  }, []);
+
+  // Restore GitHub user from localStorage on mount
+  useEffect(() => {
+    const savedGithubUser = localStorage.getItem('github_user');
+    if (savedGithubUser) {
+      const data = JSON.parse(savedGithubUser);
+      if (Date.now() - data.timestamp < 6 * 60 * 60 * 1000) {
+        setGithubUser(data.user);
+      } else {
+        localStorage.removeItem('github_user');
+      }
+    }
+  }, []);
+
+  // Handle GitHub OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const user = {
+          username: payload.username,
+          avatar_url: payload.avatar_url,
+        };
+
+        setGithubUser(user);
+        localStorage.setItem(
+          'github_user',
+          JSON.stringify({
+            user,
+            timestamp: Date.now(),
+            token,
+          })
+        );
+
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (error) {
+        console.error('Failed to parse GitHub token:', error);
+      }
+    }
+  }, []);
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const fetchPost = useCallback(async () => {
@@ -375,22 +426,36 @@ export function PostDetailPage() {
   const handleCommentSubmit = async () => {
     if (!id || !commentContent.trim()) return;
 
-    if (!isAuthenticated) {
+    if (isAuthenticated) {
+      try {
+        await postsApi.createPostComment(id, {
+          content: commentContent,
+        });
+        setCommentContent('');
+        void fetchComments();
+      } catch (error) {
+        console.error('Failed to create comment:', error);
+        toast.showError('评论失败，请重试');
+      }
+    } else {
       toast.showWarning('请先登录');
-      navigate('/login');
-      return;
     }
+  };
 
+  const handleGitHubLogin = async () => {
     try {
-      await postsApi.createPostComment(id, {
-        content: commentContent,
-      });
-      setCommentContent('');
-      void fetchComments();
+      const response = await postsApi.getGitHubAuthUrl();
+      sessionStorage.setItem('github_oauth_return', window.location.pathname);
+      window.location.href = response.auth_url;
     } catch (error) {
-      console.error('Failed to create comment:', error);
-      toast.showError('评论失败，请重试');
+      console.error('Failed to get GitHub auth URL:', error);
+      toast.showError('GitHub登录失败，请重试');
     }
+  };
+
+  const handleGitHubLogout = () => {
+    setGithubUser(null);
+    localStorage.removeItem('github_user');
   };
 
   const formatDate = (dateString: string) => {
@@ -587,8 +652,30 @@ export function PostDetailPage() {
           />
 
           {/* 评论输入 */}
-          {isAuthenticated ? (
+          {isAuthenticated || githubUser ? (
             <div className={styles.commentInputContainer}>
+              {githubUser && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '12px',
+                  }}
+                >
+                  <img
+                    src={githubUser.avatar_url}
+                    alt={githubUser.username}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                  />
+                  <Body1>
+                    <strong>{githubUser.username}</strong>
+                  </Body1>
+                  <Button appearance="transparent" size="small" onClick={handleGitHubLogout}>
+                    退出
+                  </Button>
+                </div>
+              )}
               <Textarea
                 placeholder="写下你的评论..."
                 value={commentContent}
@@ -608,11 +695,15 @@ export function PostDetailPage() {
           ) : (
             <div className={styles.loginPrompt}>
               <Body1 style={{ marginBottom: '8px' }}>登录后发表评论</Body1>
-              <Button appearance="primary" onClick={() => navigate('/login')}>
-                登录
+              <Button
+                appearance="primary"
+                onClick={handleGitHubLogin}
+                style={{ marginRight: '8px' }}
+              >
+                使用 GitHub 登录
               </Button>
-              <Button appearance="transparent" onClick={() => navigate('/register')}>
-                注册
+              <Button appearance="transparent" onClick={() => navigate('/login')}>
+                账号密码登录
               </Button>
             </div>
           )}
@@ -629,9 +720,7 @@ export function PostDetailPage() {
               comments.map((comment) => (
                 <div key={comment.id} className={styles.commentItem}>
                   <div className={styles.commentHeader}>
-                    <strong className={styles.commentUser}>
-                      {comment.github_username ?? '用户'}
-                    </strong>
+                    <strong className={styles.commentUser}>{comment.username || '用户'}</strong>
                     <Caption1 className={styles.commentDate}>
                       {formatDate(comment.created_at)}
                     </Caption1>

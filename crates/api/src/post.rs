@@ -514,32 +514,45 @@ async fn list_post_comments(
 }
 
 /// POST /posts/{id}/comments
-/// Add a comment to a post
+/// Add a comment to a post (supports both registered users and GitHub OAuth users)
 async fn create_comment(
     user: Claims,
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
     Json(input): Json<serde_json::Value>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let user_id = Uuid::parse_str(&user.sub)
-        .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
-
     let content = input
         .get("content")
         .and_then(|v| v.as_str())
         .ok_or_else(|| ApiError::Validation("Content is required".to_string()))?;
 
-    let comment = state
-        .comment_service
-        .create_comment(
-            user_id,
-            domain::CreateComment {
-                post_id: id,
-                content: content.to_string(),
-            },
-        )
-        .await
-        .map_err(ApiError::Domain)?;
+    // Check if user is registered user (UUID) or GitHub user (username)
+    let comment = if let Ok(user_id) = Uuid::parse_str(&user.sub) {
+        // Registered user
+        state
+            .comment_service
+            .create_comment(
+                user_id,
+                domain::CreateComment {
+                    post_id: id,
+                    content: content.to_string(),
+                },
+            )
+            .await
+            .map_err(ApiError::Domain)?
+    } else {
+        // GitHub user - sub is the GitHub username
+        state
+            .comment_service
+            .create_comment_github_username(
+                user.sub.clone(),
+                user.avatar_url.clone(),
+                id,
+                content.to_string(),
+            )
+            .await
+            .map_err(ApiError::Domain)?
+    };
 
     Ok(resp::created(comment))
 }

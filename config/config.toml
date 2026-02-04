@@ -1,5 +1,6 @@
 [database]
 url = "postgresql://peng@localhost:5432/peng_blog"
+url_env_override = true
 
 [server]
 host = "0.0.0.0"
@@ -7,14 +8,16 @@ port = 3000
 
 [auth]
 jwt_secret = "change-this-secret-in-production"
+jwt_secret_env_override = true
 
 [storage]
 upload_dir = "./uploads"
+upload_dir_env_override = true
 cache_dir = "./cache"
 
 [github]
-client_id = ""
-client_secret = ""
+client_id = "Iv23liXnKTHmgU4b7h08"
+client_secret = "0e637e61920a4bdfd257dc267ec969b472984b45"
 
 [site]
 allow_registration = false

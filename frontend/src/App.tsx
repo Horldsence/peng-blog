@@ -13,6 +13,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { PostEditorPage } from './pages/PostEditorPage';
 import { AdminPage } from './pages/AdminPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { GitHubAuthCallback } from './pages/GitHubAuthCallback';
 import './App.css';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -79,6 +80,7 @@ function App() {
                 element={<LoginForm onLoginSuccess={() => (window.location.href = '/')} />}
               />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/github-auth" element={<GitHubAuthCallback />} />
 
               {/* 管理员路由 */}
               <Route

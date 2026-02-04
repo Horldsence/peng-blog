@@ -39,10 +39,13 @@ fn get_jwt_secret() -> &'static str {
 /// JWT Claims structure
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-    /// Subject - user ID
+    /// Subject - user ID (UUID for registered users, GitHub username for GitHub users)
     pub sub: String,
     /// Username
     pub username: String,
+    /// Avatar URL (optional, for GitHub users)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avatar_url: Option<String>,
     /// Expiration time as Unix timestamp
     pub exp: usize,
     /// Issued at time as Unix timestamp
@@ -72,6 +75,7 @@ impl AuthState {
         user_id: impl Into<String>,
         username: String,
         permissions: u64,
+        avatar_url: Option<String>,
     ) -> Result<String, jsonwebtoken::errors::Error> {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -83,6 +87,7 @@ impl AuthState {
         let claims = Claims {
             sub: user_id.into(),
             username,
+            avatar_url,
             exp: expiration,
             iat: now,
             permissions,
@@ -104,6 +109,11 @@ impl AuthState {
         )
         .map(|data| data.claims)
         .map_err(|_| AuthError::InvalidToken)
+    }
+
+    /// Get the secret key (for custom token creation)
+    pub fn get_secret(&self) -> String {
+        self.secret.clone()
     }
 }
 

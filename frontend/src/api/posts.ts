@@ -101,6 +101,20 @@ export const postsApi = {
   },
 
   /**
+   * 获取GitHub OAuth授权URL
+   */
+  getGitHubAuthUrl: () => {
+    return http.get<{ auth_url: string; state: string }>('/comments/github/auth');
+  },
+
+  /**
+   * GitHub用户发表评论
+   */
+  createGitHubPostComment: (postId: string, data: { content: string }) => {
+    return http.post<ApiResponseV2<Comment>>(`/posts/${postId}/comments/github`, data);
+  },
+
+  /**
    * 获取文章的所有标签
    * API v2 新增方法
    */

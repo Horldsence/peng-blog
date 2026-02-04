@@ -95,33 +95,40 @@ fn merge_config(base: &mut Config, overlay: Config) {
 }
 
 fn load_from_env(config: &mut Config) -> Result<(), ConfigError> {
-    // Check for env vars and mark them as overridden, but keep config file values
-    // This allows the UI to show config file values while indicating env override status
-    if std::env::var("DATABASE_URL").is_ok() {
+    if let Ok(url) = std::env::var("DATABASE_URL") {
+        config.database.url = url;
         config.database.url_env_override = Some(true);
     }
-    if std::env::var("HOST").is_ok() {
+    if let Ok(host) = std::env::var("HOST") {
+        config.server.host = host;
         config.server.host_env_override = Some(true);
     }
-    if std::env::var("PORT").is_ok() {
+    if let Ok(port) = std::env::var("PORT") {
+        config.server.port = port.parse().unwrap_or(config.server.port);
         config.server.port_env_override = Some(true);
     }
-    if std::env::var("JWT_SECRET").is_ok() {
+    if let Ok(secret) = std::env::var("JWT_SECRET") {
+        config.auth.jwt_secret = secret;
         config.auth.jwt_secret_env_override = Some(true);
     }
-    if std::env::var("UPLOAD_DIR").is_ok() {
+    if let Ok(dir) = std::env::var("UPLOAD_DIR") {
+        config.storage.upload_dir = dir;
         config.storage.upload_dir_env_override = Some(true);
     }
-    if std::env::var("CACHE_DIR").is_ok() {
+    if let Ok(dir) = std::env::var("CACHE_DIR") {
+        config.storage.cache_dir = dir;
         config.storage.cache_dir_env_override = Some(true);
     }
-    if std::env::var("GITHUB_CLIENT_ID").is_ok() {
+    if let Ok(client_id) = std::env::var("GITHUB_CLIENT_ID") {
+        config.github.client_id = client_id;
         config.github.client_id_env_override = Some(true);
     }
-    if std::env::var("GITHUB_CLIENT_SECRET").is_ok() {
+    if let Ok(client_secret) = std::env::var("GITHUB_CLIENT_SECRET") {
+        config.github.client_secret = client_secret;
         config.github.client_secret_env_override = Some(true);
     }
-    if std::env::var("ALLOW_REGISTRATION").is_ok() {
+    if let Ok(allow) = std::env::var("ALLOW_REGISTRATION") {
+        config.site.allow_registration = allow.parse().unwrap_or(config.site.allow_registration);
         config.site.allow_registration_env_override = Some(true);
     }
 

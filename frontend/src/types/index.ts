@@ -72,6 +72,7 @@ export interface User {
   username: string;
   permissions: number;
   created_at: Timestamp;
+  avatar_url?: string | null;
 }
 
 export interface UserCreateRequest {
@@ -192,12 +193,12 @@ export interface TagCreateRequest {
 export interface Comment {
   id: UUID;
   post_id: UUID;
-  user_id?: UUID | null;
-  github_username?: string | null;
-  github_avatar_url?: string | null;
+  username: string; // 统一的用户名字段（注册用户或GitHub用户）
+  avatar_url?: string | null; // 统一的头像字段
   content: string;
   created_at: Timestamp;
   updated_at: Timestamp;
+  is_github_user: boolean; // 标识是否为GitHub用户
 }
 
 export interface CommentCreateRequest {

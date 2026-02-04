@@ -59,6 +59,9 @@ pub struct AppState {
 
     /// File-based cache manager
     pub bing_cache: FileCache,
+
+    /// Base URL for the application (used for OAuth callbacks)
+    pub base_url: String,
 }
 
 impl AppState {
@@ -131,6 +134,7 @@ pub struct AppStateBuilder {
     auth_state: Option<AuthState>,
     upload_dir: Option<String>,
     bing_cache: Option<FileCache>,
+    base_url: Option<String>,
 }
 
 impl AppStateBuilder {
@@ -199,6 +203,11 @@ impl AppStateBuilder {
         self
     }
 
+    pub fn base_url(mut self, url: String) -> Self {
+        self.base_url = Some(url);
+        self
+    }
+
     /// Build the AppState
     ///
     /// # Panics
@@ -221,6 +230,7 @@ impl AppStateBuilder {
             auth_state: self.auth_state.expect("auth_state must be set"),
             upload_dir: self.upload_dir.expect("upload_dir must be set"),
             bing_cache: self.bing_cache.expect("bing_cache must be set"),
+            base_url: self.base_url.expect("base_url must be set"),
         }
     }
 }

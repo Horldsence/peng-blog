@@ -9,11 +9,12 @@
 //! - No special cases - all comments follow the same rules
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
-    response::{IntoResponse, Json},
+    response::{IntoResponse, Json, Redirect},
     Router,
 };
+use serde::Deserialize;
 use domain::{CreateComment, CreateCommentGitHub};
 use uuid::Uuid;
 
@@ -27,6 +28,8 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         // GET /api/comments/github/auth - Get GitHub OAuth URL (most specific)
         .route("/github/auth", axum::routing::get(github_auth_url))
+        // GET /api/comments/github/callback - GitHub OAuth callback
+        .route("/github/callback", axum::routing::get(github_callback))
         // POST /api/comments/github - Create comment (GitHub user)
         .route("/github", axum::routing::post(create_comment_github))
         // GET /api/comments/posts/{id} - Get comments for a post
@@ -54,21 +57,117 @@ pub fn routes() -> Router<AppState> {
 ///
 /// This endpoint is public - no authentication required.
 pub async fn github_auth_url(
-    State(_state): State<AppState>,
+    State(state): State<AppState>,
 ) -> Result<impl IntoResponse, ApiError> {
-    // Note: In a real implementation, we would:
-    // 1. Generate a random state
-    // 2. Store it in a cache with expiry
-    // 3. Return the GitHub OAuth URL
+    // Generate random state for CSRF protection
+    let state_param = uuid::Uuid::new_v4().to_string();
 
-    // For now, return a placeholder response
+    // Build OAuth callback URL
+    let redirect_uri = format!("{}/api/comments/github/callback", state.base_url);
+
+    // Generate GitHub OAuth URL
+    let auth_url = state
+        .comment_service
+        .github_auth_url(&state_param, &redirect_uri);
+
     Ok((
         StatusCode::OK,
         Json(serde_json::json!({
-            "message": "GitHub OAuth URL generation not implemented yet",
-            "note": "In production, this would generate and return a GitHub OAuth URL with state parameter"
+            "auth_url": auth_url,
+            "state": state_param
         })),
     ))
+}
+
+#[derive(Deserialize)]
+pub struct GitHubCallbackQuery {
+    code: String,
+    #[allow(dead_code)]
+    state: String,
+}
+
+/// GET /api/comments/github/callback
+/// Handle GitHub OAuth callback
+///
+/// Query parameters:
+/// - code: Authorization code from GitHub
+/// - state: CSRF protection token
+///
+/// This endpoint:
+/// 1. Exchanges code for GitHub access token
+/// 2. Fetches GitHub user information
+/// 3. Creates a 6-hour JWT token for the GitHub user
+/// 4. Redirects to frontend with token
+pub async fn github_callback(
+    Query(query): Query<GitHubCallbackQuery>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, ApiError> {
+    use domain::comment::{GitHubTokenResponse, GitHubUser};
+    use jsonwebtoken::{encode, EncodingKey, Header};
+    use reqwest::Client;
+    use serde_json::json;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    // Exchange code for access token
+    let client = Client::new();
+    let token_response: GitHubTokenResponse = client
+        .post("https://github.com/login/oauth/access_token")
+        .form(&[
+            ("client_id", &state.config.github.client_id),
+            ("client_secret", &state.config.github.client_secret),
+            ("code", &query.code),
+        ])
+        .header("Accept", "application/json")
+        .send()
+        .await
+        .map_err(|e| ApiError::Internal(format!("GitHub API error: {}", e)))?
+        .json()
+        .await
+        .map_err(|e| ApiError::Internal(format!("GitHub API error: {}", e)))?;
+
+    // Get GitHub user information
+    let github_user: GitHubUser = client
+        .get("https://api.github.com/user")
+        .header(
+            "Authorization",
+            format!("Bearer {}", token_response.access_token),
+        )
+        .header("User-Agent", "peng-blog")
+        .send()
+        .await
+        .map_err(|e| ApiError::Internal(format!("GitHub API error: {}", e)))?
+        .json()
+        .await
+        .map_err(|e| ApiError::Internal(format!("GitHub API error: {}", e)))?;
+
+    // Create 6-hour JWT token for GitHub user
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0) as usize;
+
+    let expiration = now + 60 * 60 * 6; // 6 hours
+
+    let claims = json!({
+        "sub": github_user.login.clone(), // Use GitHub username as user ID
+        "username": github_user.login.clone(),
+        "avatar_url": github_user.avatar_url.clone(),
+        "exp": expiration,
+        "iat": now,
+        "permissions": 0u64, // GitHub users have no special permissions
+    });
+
+    let secret = state.auth_state.get_secret();
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_ref()),
+    )
+    .map_err(|e| ApiError::Internal(format!("Failed to create token: {}", e)))?;
+
+    // Redirect to frontend page with token
+    let redirect_url = format!("{}/github-auth?token={}", state.base_url, token);
+    Ok(Redirect::to(&redirect_url))
 }
 
 /// POST /api/comments

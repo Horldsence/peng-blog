@@ -8,6 +8,57 @@ import type {
 } from '../types';
 
 /**
+ * JWT payload interface for GitHub OAuth users
+ */
+interface GitHubJWTPayload {
+  sub: string; // GitHub username
+  username: string;
+  avatar_url?: string;
+  exp: number;
+  iat: number;
+  permissions: number;
+}
+
+/**
+ * Parse JWT token (without verification - for client-side use only)
+ */
+function parseJWT(token: string): GitHubJWTPayload | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    return JSON.parse(jsonPayload) as GitHubJWTPayload;
+  } catch (error) {
+    console.error('Failed to parse JWT:', error);
+    return null;
+  }
+}
+
+/**
+ * Build User object from JWT token
+ */
+function buildUserFromToken(token: string): User | null {
+  const payload = parseJWT(token);
+  if (!payload) return null;
+
+  return {
+    id: payload.sub, // Use GitHub username as ID
+    username: payload.username,
+    permissions: payload.permissions,
+    created_at: new Date(payload.iat * 1000).toISOString(),
+    avatar_url: payload.avatar_url,
+  };
+}
+
+/**
  * 认证 API 模块
  * 处理用户注册、登录、登出等认证相关操作
  */
@@ -100,6 +151,20 @@ export const authApi = {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     return !!(token && user);
+  },
+
+  /**
+   * Save GitHub OAuth token and parse user info from JWT
+   * @param token JWT token from GitHub OAuth callback
+   */
+  saveGitHubAuth: (token: string) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('authProvider', 'github');
+
+    const user = buildUserFromToken(token);
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
   },
 };
 

@@ -47,6 +47,7 @@ async fn register(
         user.id.to_string(),
         user.username.clone(),
         user.permissions,
+        None,
     )?;
 
     let response = LoginResponse {
@@ -82,6 +83,7 @@ async fn login(
         user.id.to_string(),
         user.username.clone(),
         user.permissions,
+        None,
     )?;
 
     let response = LoginResponse {

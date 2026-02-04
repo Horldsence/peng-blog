@@ -146,6 +146,38 @@ impl CommentService {
         self.build_response(&saved).await
     }
 
+    /// Create a comment from a GitHub OAuth user (using JWT token)
+    ///
+    /// This is used when the user has already authenticated via GitHub OAuth
+    /// and has a valid JWT token. The JWT token contains the GitHub username
+    /// and avatar URL, so we don't need to perform the OAuth flow again.
+    ///
+    /// # Arguments
+    /// * `github_username` - GitHub username from JWT token
+    /// * `github_avatar_url` - GitHub avatar URL from JWT token
+    /// * `post_id` - The post ID
+    /// * `content` - Comment content
+    ///
+    /// # Returns
+    /// * `Ok(CommentResponse)` - The created comment
+    /// * `Err(Error)` - Database error
+    pub async fn create_comment_github_username(
+        &self,
+        github_username: String,
+        github_avatar_url: Option<String>,
+        post_id: uuid::Uuid,
+        content: String,
+    ) -> Result<CommentResponse> {
+        let comment = Comment::from_github_with_username(
+            post_id,
+            &github_username,
+            github_avatar_url.as_deref(),
+            content,
+        );
+        let saved = self.comment_repo.create_comment(comment).await?;
+        self.build_response(&saved).await
+    }
+
     /// Get a comment by ID
     ///
     /// # Arguments
