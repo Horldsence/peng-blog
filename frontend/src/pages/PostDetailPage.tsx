@@ -36,6 +36,23 @@ import { getDominantColor } from '../utils/color';
 import type { Post, Comment } from '../types';
 import 'highlight.js/styles/github-dark.css';
 
+interface GithubUserData {
+  username: string;
+  avatar_url: string;
+}
+
+interface StoredGithubUser {
+  user: GithubUserData;
+  timestamp: number;
+  token: string;
+}
+
+interface JwtPayload {
+  username: string;
+  avatar_url: string;
+  exp: number;
+}
+
 // Initialize mermaid
 mermaid.initialize({
   startOnLoad: false,
@@ -342,7 +359,7 @@ export function PostDetailPage() {
   useEffect(() => {
     const savedGithubUser = localStorage.getItem('github_user');
     if (savedGithubUser) {
-      const data = JSON.parse(savedGithubUser);
+      const data = JSON.parse(savedGithubUser) as StoredGithubUser;
       if (Date.now() - data.timestamp < 6 * 60 * 60 * 1000) {
         setGithubUser(data.user);
       } else {
@@ -358,8 +375,8 @@ export function PostDetailPage() {
 
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const user = {
+        const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload;
+        const user: GithubUserData = {
           username: payload.username,
           avatar_url: payload.avatar_url,
         };
@@ -697,7 +714,9 @@ export function PostDetailPage() {
               <Body1 style={{ marginBottom: '8px' }}>登录后发表评论</Body1>
               <Button
                 appearance="primary"
-                onClick={handleGitHubLogin}
+                onClick={() => {
+                  void handleGitHubLogin();
+                }}
                 style={{ marginRight: '8px' }}
               >
                 使用 GitHub 登录
