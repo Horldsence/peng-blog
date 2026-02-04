@@ -76,12 +76,12 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     backgroundColor: tokens.colorNeutralBackground1,
     ':hover': {
-      borderColor: tokens.colorBrandStroke1,
+      ...shorthands.borderColor(tokens.colorBrandStroke1),
       boxShadow: tokens.shadow4,
     },
   },
   fileItemSelected: {
-    borderColor: tokens.colorBrandStroke1,
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
     ...shorthands.borderWidth('2px'),
     backgroundColor: tokens.colorBrandBackground2,
     boxShadow: tokens.shadow8,
@@ -121,11 +121,11 @@ const useStyles = makeStyles({
     transition: 'background-color 0.2s',
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
-      borderColor: tokens.colorBrandStroke1,
+      ...shorthands.borderColor(tokens.colorBrandStroke1),
     },
   },
   dropZoneActive: {
-    borderColor: tokens.colorBrandStroke1,
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
     backgroundColor: tokens.colorBrandBackground2,
   },
   previewContainer: {

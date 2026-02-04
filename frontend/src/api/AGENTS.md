@@ -2,8 +2,7 @@
 
 > 前端API客户端层 - HTTP请求封装和错误处理
 
-**Generated:** 2026-02-04 10:00:33 PM
-**Parent:** `../../AGENTS.md`
+**Generated:** 2026-02-04 10:00:33 PM **Parent:** `../../AGENTS.md`
 
 ---
 
@@ -32,17 +31,18 @@ frontend/src/api/
 
 ## WHERE TO LOOK
 
-| Task | File | Purpose |
-|------|------|---------|
-| Axios配置 | `client.ts` | baseURL, token interceptor, 401 handler |
-| 类型定义 | `types.ts` | ApiResponseV2<T>, ApiListResponseV2<T> |
-| Barrel导出 | `index.ts` | 统一导出所有API模块 |
+| Task       | File        | Purpose                                 |
+| ---------- | ----------- | --------------------------------------- |
+| Axios配置  | `client.ts` | baseURL, token interceptor, 401 handler |
+| 类型定义   | `types.ts`  | ApiResponseV2<T>, ApiListResponseV2<T>  |
+| Barrel导出 | `index.ts`  | 统一导出所有API模块                     |
 
 ---
 
 ## CONVENTIONS
 
 **API模块模式:**
+
 ```tsx
 export const postsApi = {
   list: (params?) => api.get<ApiListResponseV2<Post>>('/posts', { params }),
@@ -52,6 +52,7 @@ export const postsApi = {
 ```
 
 **错误处理（FluentUI Toast）:**
+
 ```tsx
 try {
   const result = await postsApi.list();
@@ -68,6 +69,7 @@ try {
 **Location:** `../types/index.ts:44-58`
 
 迁移到V2版本:
+
 - `ApiResponse<T>` → `ApiResponseV2<T>`
 - `PaginatedResponse<T>` → `ApiListResponseV2<T>`
 - `ApiError` → `ApiErrorV2`
@@ -83,4 +85,4 @@ try {
 
 ---
 
-*Last updated: 2026-02-04*
+_Last updated: 2026-02-04_
