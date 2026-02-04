@@ -228,6 +228,45 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${{ steps.version.outputs.version }}"
+
+          # Fetch all tags and history
+          git fetch --prune --unshallow
+          git fetch --tags
+
+          # Get the previous tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "$CURRENT_TAG" | head -n 1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found. Using first commit."
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          echo "Current tag: $CURRENT_TAG"
+          echo "Previous tag: $PREV_TAG"
+
+          # Generate changelog
+          CHANGELOG=$(git log ${PREV_TAG}..${CURRENT_TAG} --pretty=format:"* %s (%h)" --reverse)
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No commits in this release."
+          fi
+
+          # Save to file for later use
+          echo "$CHANGELOG" > changelog.md
+
+          # Also set as output (truncated for logs)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "### 📝 Generated Changelog ###"
+          cat changelog.md
+          echo "###############################"
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -235,50 +274,52 @@ jobs:
           name: Pre-Release ${{ steps.version.outputs.version }}
           body: |
             ## Peng Blog Pre-Release ${{ steps.version.outputs.version }}
-            
+
             ### 📦 Binary Downloads
-            
+
             | Platform | Architecture | Download |
             |----------|-------------|----------|
             | Linux | x86_64 (amd64) | [peng-blog-linux-amd64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/peng-blog-linux-amd64.tar.gz) |
-            
+
             ### 🔐 SHA256 Checksums
-            
+
             ```bash
             # Verify downloaded file
             sha256sum -c peng-blog-linux-amd64.tar.gz.sha256
             ```
-            
+
             ### 🚀 Quick Start
-            
+
             ```bash
             # Download and extract
             wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/peng-blog-linux-amd64.tar.gz
             tar xzf peng-blog-linux-amd64.tar.gz
             cd peng-blog
-            
+
             # Configure
             cp .env.example .env
             # Edit .env with your settings
-            
+
             # Run
             ./peng-blog
             # Or use the start script
             ./start.sh
             ```
-            
+
             ### 📝 Changes
-            
-            This is a pre-release build. Please report any issues.
-            
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
             **Built with:**
             - Rust: stable
             - Target: Linux (x86_64)
             - Features: Full async runtime, PostgreSQL, JWT auth
             - Frontend: React + TypeScript + FluentUI (embedded in binary)
-            
+
             ### ✨ Features
-            
+
             - 📝 Full-featured blog with Markdown support
             - 🔐 JWT-based authentication
             - 📁 File upload and management
