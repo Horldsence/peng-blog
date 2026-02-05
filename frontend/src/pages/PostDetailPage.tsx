@@ -198,6 +198,8 @@ const useStyles = makeStyles({
   },
   commentContent: {
     lineHeight: '1.6',
+    whiteSpace: 'pre-wrap',
+    fontFamily: '"JetBrains Mono", "Fira Code", "Menlo", "Monaco", "Courier New", monospace',
   },
   loadingContainer: {
     display: 'flex',
