@@ -38,6 +38,7 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import { useConfig } from '../../contexts';
 import { authApi } from '../../api';
+import { LiquidGlassBackground } from '../effects/LiquidGlassBackground';
 
 const useStyles = makeStyles({
   root: {
@@ -347,7 +348,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.root}>
-      {/* Global Background */}
       <div
         className={mergeClasses(
           styles.globalBackground,
@@ -355,6 +355,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         )}
         style={{ backgroundImage: bingImage ? `url(${bingImage})` : undefined }}
       />
+
+      <LiquidGlassBackground />
 
       <NavDrawer
         selectedValue={selectedValue}

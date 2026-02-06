@@ -85,13 +85,10 @@ const useStyles = makeStyles({
   welcomeTitle: {
     fontSize: '64px',
     fontWeight: tokens.fontWeightBold,
-    color: 'transparent',
+    color: tokens.colorNeutralForeground1,
     margin: '0 0 24px 0',
     lineHeight: '1.1',
     letterSpacing: '-0.02em',
-    backgroundImage: `linear-gradient(180deg, ${tokens.colorNeutralForeground1} 0%, ${tokens.colorNeutralForeground2} 100%)`,
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
     filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.1))',
     '@media (max-width: 768px)': {
       fontSize: '42px',
