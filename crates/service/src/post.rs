@@ -106,9 +106,20 @@ impl PostService {
         // Notify IndexNow if configured (non-blocking)
         if let (Some(client), Some(key)) = (&self.indexnow_client, &self.indexnow_key) {
             let url = format!("{}/posts/{}", self.base_url, updated_post.id);
+
+            let base_url_clean = self
+                .base_url
+                .trim_start_matches("http://")
+                .trim_start_matches("https://");
+            let host = base_url_clean.split('/').next().unwrap_or("localhost");
+
+            let key_location = format!("{}/{}.txt", self.base_url, key);
+
             let request = IndexNowRequest {
-                url,
+                host: host.to_string(),
                 key: key.clone(),
+                key_location: Some(key_location),
+                url_list: vec![url],
             };
 
             let client_clone = Arc::clone(client);
