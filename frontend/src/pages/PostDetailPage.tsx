@@ -2,7 +2,7 @@
  * 文章详情页 - Markdown 渲染和代码高亮
  */
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, isValidElement } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -35,6 +35,7 @@ import { useToast } from '../components/ui/Toast';
 import { CodeBlock } from '../components/ui/CodeBlock';
 import { getDominantColor } from '../utils/color';
 import type { Post, Comment } from '../types';
+import type { HTMLAttributes, ReactElement } from 'react';
 import 'highlight.js/styles/github-dark.css';
 
 interface GithubUserData {
@@ -52,6 +53,25 @@ interface JwtPayload {
   username: string;
   avatar_url: string;
   exp: number;
+}
+
+interface PreProps extends HTMLAttributes<HTMLElement> {
+  children?: React.ReactNode;
+}
+
+interface CodeElementProps extends HTMLAttributes<HTMLElement> {
+  className?: string;
+  children?: React.ReactNode;
+  node?: {
+    type: string;
+    tagName: string;
+    properties: Record<string, unknown>;
+  };
+}
+
+interface CodeBlockProps {
+  className?: string;
+  children?: React.ReactNode;
 }
 
 // Initialize mermaid
@@ -620,34 +640,34 @@ export function PostDetailPage() {
                   return <h3 id={id} className={styles.mdH3} {...props} />;
                 },
                 p: ({ ...props }) => <p className={styles.mdP} {...props} />,
-                                code: ({ className, children, ...props }: any) => {
+                code: ({ className, children, ...props }: CodeElementProps) => {
                   return (
-                    <code className={`${styles.mdInlineCode} ${className ?? ""}`} {...props}>
+                    <code className={`${styles.mdInlineCode} ${className ?? ''}`} {...props}>
                       {children}
                     </code>
                   );
                 },
-                pre: ({ children }: any) => {
+                pre: ({ children }: PreProps) => {
                   if (isValidElement(children)) {
-                     const props = (children.props as any) || {};
-                     const className = props.className || "";
-                     const match = /language-(\w+)/.exec(className);
-                     const isMermaid = match && match[1] === "mermaid";
+                    const elementProps = (children as ReactElement).props as CodeBlockProps;
+                    const className = elementProps.className ?? '';
+                    const match = /language-(\w+)/.exec(className);
+                    const isMermaid = match && match[1] === 'mermaid';
 
-                     if (isMermaid) {
-                        return (
-                          <MermaidDiagram
-                            chart={String(props.children).replace(/\n$/, "")}
-                            accentColor={accentColor}
-                          />
-                        );
-                     }
+                    if (isMermaid) {
+                      return (
+                        <MermaidDiagram
+                          chart={String(elementProps.children).replace(/\n$/, '')}
+                          accentColor={accentColor}
+                        />
+                      );
+                    }
 
-                     return (
-                        <CodeBlock className={className} inline={false}>
-                            {props.children}
-                        </CodeBlock>
-                     );
+                    return (
+                      <CodeBlock className={className} inline={false}>
+                        {elementProps.children}
+                      </CodeBlock>
+                    );
                   }
                   return <pre className={styles.mdPre}>{children}</pre>;
                 },
