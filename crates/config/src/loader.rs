@@ -24,6 +24,11 @@ client_secret = ""
 
 [site]
 allow_registration = true
+
+[indexnow]
+enabled = false
+api_key = ""
+endpoint = "https://www.indexnow.org/indexnow"
 "#;
 
 pub fn load_config() -> Result<Config, ConfigError> {
@@ -92,6 +97,13 @@ fn merge_config(base: &mut Config, overlay: Config) {
         base.github.client_secret = overlay.github.client_secret;
     }
     base.site.allow_registration = overlay.site.allow_registration;
+    base.indexnow.enabled = overlay.indexnow.enabled;
+    if !overlay.indexnow.api_key.is_empty() {
+        base.indexnow.api_key = overlay.indexnow.api_key;
+    }
+    if !overlay.indexnow.endpoint.is_empty() {
+        base.indexnow.endpoint = overlay.indexnow.endpoint;
+    }
 }
 
 fn load_from_env(config: &mut Config) -> Result<(), ConfigError> {
@@ -130,6 +142,10 @@ fn load_from_env(config: &mut Config) -> Result<(), ConfigError> {
     if let Ok(allow) = std::env::var("ALLOW_REGISTRATION") {
         config.site.allow_registration = allow.parse().unwrap_or(config.site.allow_registration);
         config.site.allow_registration_env_override = Some(true);
+    }
+    if let Ok(api_key) = std::env::var("INDEXNOW_API_KEY") {
+        config.indexnow.api_key = api_key;
+        config.indexnow.api_key_env_override = Some(true);
     }
 
     Ok(())

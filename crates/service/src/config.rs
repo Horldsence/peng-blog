@@ -64,6 +64,18 @@ impl ConfigService {
             }
         }
 
+        if let Some(indexnow) = request.indexnow {
+            if let Some(enabled) = indexnow.enabled {
+                config.indexnow.enabled = enabled;
+            }
+            if let Some(api_key) = indexnow.api_key {
+                config.indexnow.api_key = api_key;
+            }
+            if let Some(endpoint) = indexnow.endpoint {
+                config.indexnow.endpoint = endpoint;
+            }
+        }
+
         self.repo.save_config(&config).await?;
         Ok(config)
     }

@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 domain = { path = "../domain" }
+infrastructure = { path = "../infrastructure" }
 uuid = { workspace = true }
 async-trait = { workspace = true }
 thiserror = { workspace = true }
@@ -15,6 +16,7 @@ chrono = { workspace = true }
 tokio = { workspace = true, features = ["fs"] }
 urlencoding = { workspace = true }
 rss = "2.0.12"
+tracing = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

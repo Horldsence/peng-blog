@@ -32,6 +32,7 @@ import rehypeHighlight from 'rehype-highlight';
 import mermaid from 'mermaid';
 import { postsApi, authApi, statsApi, bingApi } from '../api';
 import { useToast } from '../components/ui/Toast';
+import { CodeBlock } from '../components/ui/CodeBlock';
 import { getDominantColor } from '../utils/color';
 import type { Post, Comment } from '../types';
 import 'highlight.js/styles/github-dark.css';
@@ -619,30 +620,37 @@ export function PostDetailPage() {
                   return <h3 id={id} className={styles.mdH3} {...props} />;
                 },
                 p: ({ ...props }) => <p className={styles.mdP} {...props} />,
-                code: ({
-                  className,
-                  children,
-                  ...props
-                }: React.HTMLAttributes<HTMLElement> & { inline?: boolean }) => {
-                  const match = /language-(\w+)/.exec(className ?? '');
-                  const isMermaid = match && match[1] === 'mermaid';
-
-                  if (isMermaid) {
-                    return (
-                      <MermaidDiagram
-                        chart={String(children).replace(/\n$/, '')}
-                        accentColor={accentColor}
-                      />
-                    );
-                  }
-
+                                code: ({ className, children, ...props }: any) => {
                   return (
-                    <code className={`${styles.mdInlineCode} ${className ?? ''}`} {...props}>
+                    <code className={`${styles.mdInlineCode} ${className ?? ""}`} {...props}>
                       {children}
                     </code>
                   );
                 },
-                pre: ({ ...props }) => <pre className={styles.mdPre} {...props} />,
+                pre: ({ children }: any) => {
+                  if (isValidElement(children)) {
+                     const props = (children.props as any) || {};
+                     const className = props.className || "";
+                     const match = /language-(\w+)/.exec(className);
+                     const isMermaid = match && match[1] === "mermaid";
+
+                     if (isMermaid) {
+                        return (
+                          <MermaidDiagram
+                            chart={String(props.children).replace(/\n$/, "")}
+                            accentColor={accentColor}
+                          />
+                        );
+                     }
+
+                     return (
+                        <CodeBlock className={className} inline={false}>
+                            {props.children}
+                        </CodeBlock>
+                     );
+                  }
+                  return <pre className={styles.mdPre}>{children}</pre>;
+                },
                 a: ({ ...props }) => (
                   <a
                     className={styles.mdLink}

@@ -9,6 +9,7 @@ pub struct Config {
     pub storage: StorageConfig,
     pub github: GitHubConfig,
     pub site: SiteConfig,
+    pub indexnow: IndexNowConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -60,6 +61,15 @@ pub struct SiteConfig {
     pub allow_registration: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_registration_env_override: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct IndexNowConfig {
+    pub enabled: bool,
+    pub api_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_key_env_override: Option<bool>,
+    pub endpoint: String,
 }
 
 impl Config {

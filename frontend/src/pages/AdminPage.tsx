@@ -801,6 +801,52 @@ export function AdminPage() {
                     </div>
                   </div>
 
+                  <Divider style={{ margin: '24px 0' }} />
+
+                  {/* IndexNow 设置 */}
+                  <div className={styles.settingsSection}>
+                    <Title3 style={{ marginBottom: '16px' }}>IndexNow 搜索引擎通知</Title3>
+                    <div className={styles.settingsGroup}>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>启用 IndexNow</Body1>
+                        <Switch
+                          checked={config.indexnow.enabled}
+                          onChange={(_, data) =>
+                            handleConfigChange('indexnow', 'enabled', data.checked)
+                          }
+                          label={config.indexnow.enabled ? '开启' : '关闭'}
+                        />
+                      </div>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>
+                          API Key
+                          {config.indexnow.api_key_env_override && (
+                            <EnvOverrideBadge message="INDEXNOW_API_KEY" />
+                          )}
+                        </Body1>
+                        <Input
+                          value={config.indexnow.api_key}
+                          onChange={(e) =>
+                            handleConfigChange('indexnow', 'api_key', e.target.value)
+                          }
+                          type="password"
+                          disabled={!!config.indexnow.api_key_env_override}
+                          placeholder="输入你的 IndexNow API Key"
+                        />
+                      </div>
+                      <div className={styles.settingsRow}>
+                        <Body1 style={{ fontWeight: '600' }}>API 端点</Body1>
+                        <Input
+                          value={config.indexnow.endpoint}
+                          onChange={(e) =>
+                            handleConfigChange('indexnow', 'endpoint', e.target.value)
+                          }
+                          placeholder="https://www.indexnow.org/indexnow"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className={styles.settingsActions}>
                     <Button appearance="primary" onClick={() => void handleSaveConfig()}>
                       保存更改

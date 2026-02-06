@@ -19,6 +19,7 @@ pub struct Config {
     pub storage: StorageConfig,
     pub github: GitHubConfig,
     pub site: SiteConfig,
+    pub indexnow: IndexNowConfig,
 }
 
 /// Public configuration exposed to frontend without authentication
@@ -86,6 +87,15 @@ pub struct SiteConfig {
     pub allow_registration_env_override: Option<bool>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IndexNowConfig {
+    pub enabled: bool,
+    pub api_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_key_env_override: Option<bool>,
+    pub endpoint: String,
+}
+
 /// Repository for configuration persistence operations
 #[async_trait]
 pub trait ConfigRepository: Send + Sync {
@@ -107,6 +117,7 @@ pub struct UpdateConfigRequest {
     pub storage: Option<UpdateStorageConfig>,
     pub github: Option<UpdateGitHubConfig>,
     pub site: Option<UpdateSiteConfig>,
+    pub indexnow: Option<UpdateIndexNowConfig>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -142,6 +153,13 @@ pub struct UpdateSiteConfig {
     pub allow_registration: Option<bool>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateIndexNowConfig {
+    pub enabled: Option<bool>,
+    pub api_key: Option<String>,
+    pub endpoint: Option<String>,
+}
+
 impl From<config::AppConfig> for Config {
     fn from(app_config: config::AppConfig) -> Self {
         Self {
@@ -174,6 +192,12 @@ impl From<config::AppConfig> for Config {
             site: SiteConfig {
                 allow_registration: app_config.site.allow_registration,
                 allow_registration_env_override: app_config.site.allow_registration_env_override,
+            },
+            indexnow: IndexNowConfig {
+                enabled: app_config.indexnow.enabled,
+                api_key: app_config.indexnow.api_key,
+                api_key_env_override: app_config.indexnow.api_key_env_override,
+                endpoint: app_config.indexnow.endpoint,
             },
         }
     }
@@ -211,6 +235,12 @@ impl From<Config> for config::AppConfig {
             site: config::SiteConfig {
                 allow_registration: domain_config.site.allow_registration,
                 allow_registration_env_override: domain_config.site.allow_registration_env_override,
+            },
+            indexnow: config::IndexNowConfig {
+                enabled: domain_config.indexnow.enabled,
+                api_key: domain_config.indexnow.api_key,
+                api_key_env_override: domain_config.indexnow.api_key_env_override,
+                endpoint: domain_config.indexnow.endpoint,
             },
         }
     }

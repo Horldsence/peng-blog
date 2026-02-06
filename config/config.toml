@@ -21,3 +21,8 @@ client_secret = "0e637e61920a4bdfd257dc267ec969b472984b45"
 
 [site]
 allow_registration = false
+
+[indexnow]
+enabled = true
+api_key = "c68d327f590e4cd084fb955120599c4b"
+endpoint = "https://www.indexnow.org/indexnow"

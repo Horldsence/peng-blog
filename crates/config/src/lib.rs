@@ -6,7 +6,8 @@ pub use loader::load_config;
 pub use loader::load_config_from_path;
 pub use loader::save_config;
 pub use types::{
-    AuthConfig, Config, DatabaseConfig, GitHubConfig, ServerConfig, SiteConfig, StorageConfig,
+    AuthConfig, Config, DatabaseConfig, GitHubConfig, IndexNowConfig, ServerConfig, SiteConfig,
+    StorageConfig,
 };
 
 pub use load_config as load;

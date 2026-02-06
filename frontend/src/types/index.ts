@@ -331,6 +331,13 @@ export interface SiteConfig {
   allow_registration_env_override?: boolean;
 }
 
+export interface IndexNowConfig {
+  enabled: boolean;
+  api_key: string;
+  api_key_env_override?: boolean;
+  endpoint: string;
+}
+
 export interface Config {
   database: DatabaseConfig;
   server: ServerConfig;
@@ -338,6 +345,7 @@ export interface Config {
   storage: StorageConfig;
   github: GitHubConfig;
   site: SiteConfig;
+  indexnow: IndexNowConfig;
 }
 
 export interface UpdateConfigRequest {
@@ -347,6 +355,7 @@ export interface UpdateConfigRequest {
   storage?: Partial<StorageConfig>;
   github?: Partial<GitHubConfig>;
   site?: Partial<SiteConfig>;
+  indexnow?: Partial<IndexNowConfig>;
 }
 
 export interface PublicConfig {

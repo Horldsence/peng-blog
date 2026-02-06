@@ -8,8 +8,8 @@ use axum::{
 use config::load_config;
 use infrastructure::{
     establish_connection, CategoryRepositoryImpl, CommentRepositoryImpl, ConfigRepositoryImpl,
-    FileRepositoryImpl, Migrator, MigratorTrait, PostRepositoryImpl, SessionRepositoryImpl,
-    StatsRepositoryImpl, TagRepositoryImpl, UserRepositoryImpl,
+    FileRepositoryImpl, IndexNowClient, Migrator, MigratorTrait, PostRepositoryImpl,
+    SessionRepositoryImpl, StatsRepositoryImpl, TagRepositoryImpl, UserRepositoryImpl,
 };
 #[cfg(not(debug_assertions))]
 use rust_embed::RustEmbed;
@@ -69,6 +69,33 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         tracing::warn!("ALLOW_REGISTRATION is overridden by environment variable");
     }
 
+    // IndexNow configuration
+    let indexnow_client = if config.indexnow.enabled {
+        if config.indexnow.api_key.is_empty() {
+            tracing::warn!(
+                "IndexNow is enabled but API key is empty. IndexNow notifications will be disabled."
+            );
+            None
+        } else {
+            tracing::info!(
+                "IndexNow enabled with endpoint: {}",
+                config.indexnow.endpoint
+            );
+            Some(Arc::new(IndexNowClient::new(
+                config.indexnow.endpoint.clone(),
+            )))
+        }
+    } else {
+        tracing::info!("IndexNow is disabled");
+        None
+    };
+
+    let indexnow_key = if config.indexnow.api_key.is_empty() {
+        None
+    } else {
+        Some(config.indexnow.api_key.clone())
+    };
+
     set_jwt_secret(config.auth.jwt_secret.clone());
 
     let db = establish_connection(&config.database.url).await?;
@@ -89,7 +116,12 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let category_repo = Arc::new(CategoryRepositoryImpl::new(db_clone.clone()));
     let tag_repo = Arc::new(TagRepositoryImpl::new(db_clone));
 
-    let post_service = PostService::new(post_repo.clone());
+    let post_service = PostService::new(
+        post_repo.clone(),
+        indexnow_client,
+        base_url.clone(),
+        indexnow_key,
+    );
     let user_service = UserService::new(user_repo.clone(), config.site.allow_registration);
     let session_service = SessionService::new(session_repo);
     let file_service = FileService::new(

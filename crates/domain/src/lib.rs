@@ -11,6 +11,7 @@ pub mod comment;
 pub mod config;
 pub mod error;
 pub mod file;
+pub mod indexnow;
 pub mod post;
 pub mod repository;
 pub mod session;
@@ -24,12 +25,14 @@ pub use comment::{
     Comment, CommentResponse, CreateComment, CreateCommentGitHub, GitHubAuthRequest, GitHubUser,
 };
 pub use config::{
-    AuthConfig, Config, ConfigRepository, DatabaseConfig, GitHubConfig, PublicConfig, ServerConfig,
-    SiteConfig, StorageConfig, UpdateAuthConfig, UpdateConfigRequest, UpdateDatabaseConfig,
-    UpdateGitHubConfig, UpdateServerConfig, UpdateSiteConfig, UpdateStorageConfig,
+    AuthConfig, Config, ConfigRepository, DatabaseConfig, GitHubConfig, IndexNowConfig,
+    PublicConfig, ServerConfig, SiteConfig, StorageConfig, UpdateAuthConfig, UpdateConfigRequest,
+    UpdateDatabaseConfig, UpdateGitHubConfig, UpdateIndexNowConfig, UpdateServerConfig,
+    UpdateSiteConfig, UpdateStorageConfig,
 };
 pub use error::{Error, Result};
 pub use file::{File, FileResponse, UploadFile};
+pub use indexnow::{IndexNowRequest, IndexNowResponse};
 pub use post::{CreatePost, Post, SearchPostsRequest, SearchPostsResponse, UpdatePost};
 pub use repository::{
     CategoryRepository, CommentRepository, FileRepository, PostRepository, SessionRepository,

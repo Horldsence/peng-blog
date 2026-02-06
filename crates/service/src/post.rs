@@ -5,9 +5,10 @@
 
 use domain::PostRepository;
 use domain::{
-    Error, Post, Result, SearchPostsRequest, SearchPostsResponse, POST_DELETE, POST_PUBLISH,
-    POST_UPDATE,
+    Error, IndexNowRequest, Post, Result, SearchPostsRequest, SearchPostsResponse, POST_DELETE,
+    POST_PUBLISH, POST_UPDATE,
 };
+use infrastructure::IndexNowClient;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -24,12 +25,25 @@ const DEFAULT_LIST_LIMIT: u64 = 20;
 /// It uses dependency injection for repositories, making it testable.
 pub struct PostService {
     repo: Arc<dyn PostRepository>,
+    indexnow_client: Option<Arc<IndexNowClient>>,
+    base_url: String,
+    indexnow_key: Option<String>,
 }
 
 impl PostService {
-    /// Create a new PostService with given repository
-    pub fn new(repo: Arc<dyn PostRepository>) -> Self {
-        Self { repo }
+    /// Create a new PostService with given repository and optional IndexNow client
+    pub fn new(
+        repo: Arc<dyn PostRepository>,
+        indexnow_client: Option<Arc<IndexNowClient>>,
+        base_url: String,
+        indexnow_key: Option<String>,
+    ) -> Self {
+        Self {
+            repo,
+            indexnow_client,
+            base_url,
+            indexnow_key,
+        }
     }
 
     /// Create a new post with validation
@@ -87,7 +101,25 @@ impl PostService {
         domain::check_ownership_or_admin(post.user_id, user_id, permissions, POST_DELETE)?;
 
         post.publish();
-        self.repo.update_post(post).await
+        let updated_post = self.repo.update_post(post).await?;
+
+        // Notify IndexNow if configured (non-blocking)
+        if let (Some(client), Some(key)) = (&self.indexnow_client, &self.indexnow_key) {
+            let url = format!("{}/posts/{}", self.base_url, updated_post.id);
+            let request = IndexNowRequest {
+                url,
+                key: key.clone(),
+            };
+
+            let client_clone = Arc::clone(client);
+            tokio::spawn(async move {
+                if let Err(e) = client_clone.notify(request).await {
+                    tracing::warn!("IndexNow notification failed: {}", e);
+                }
+            });
+        }
+
+        Ok(updated_post)
     }
 
     /// Unpublish a post with permission and ownership checks
@@ -294,7 +326,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_post_validates_empty_title() {
         let mock_repo = Arc::new(MockPostRepo::new());
-        let service = PostService::new(mock_repo);
+        let service = PostService::new(mock_repo, None, "http://localhost".to_string(), None);
 
         let user_id = Uuid::new_v4();
 
@@ -312,7 +344,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_post_validates_title_too_long() {
         let mock_repo = Arc::new(MockPostRepo::new());
-        let service = PostService::new(mock_repo);
+        let service = PostService::new(mock_repo, None, "http://localhost".to_string(), None);
 
         let user_id = Uuid::new_v4();
         let long_title = "a".repeat(201);
@@ -331,7 +363,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_post_validates_long_content() {
         let mock_repo = Arc::new(MockPostRepo::new());
-        let service = PostService::new(mock_repo);
+        let service = PostService::new(mock_repo, None, "http://localhost".to_string(), None);
 
         let _long_content = "a".repeat(10001);
         let user_id = Uuid::new_v4();
@@ -350,7 +382,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_requires_permission() {
         let mock_repo = Arc::new(MockPostRepo::new());
-        let service = PostService::new(mock_repo);
+        let service = PostService::new(mock_repo, None, "http://localhost".to_string(), None);
 
         let post_id = Uuid::new_v4();
         let user_id = Uuid::new_v4();
@@ -376,7 +408,7 @@ mod tests {
     #[tokio::test]
     async fn test_delete_post_requires_permission() {
         let mock_repo = Arc::new(MockPostRepo::new());
-        let service = PostService::new(mock_repo);
+        let service = PostService::new(mock_repo, None, "http://localhost".to_string(), None);
 
         let post_id = Uuid::new_v4();
         let user_id = Uuid::new_v4();
