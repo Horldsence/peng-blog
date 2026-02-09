@@ -13,11 +13,13 @@
 **Peng Blog** - Rust + React博客系统，采用严格的四层分层架构（Clean Architecture模式）
 
 **技术栈:**
+
 - 后端: Tokio + Axum + SeaORM + PostgreSQL
 - 前端: React 18 + TypeScript + Vite + FluentUI
 - 安全: JWT + Argon2，位标志权限系统
 
 **架构特征:**
+
 - 7个Rust crates (workspace管理)
 - 单二进制部署（前端通过rust_embed嵌入）
 - Repository模式（Service定义Trait，Infrastructure实现）
@@ -47,6 +49,7 @@ peng-blog/
 ```
 
 **架构依赖规则（CRITICAL - 违反会破坏架构）:**
+
 ```
 App → API → Service → Domain
               ↓
@@ -54,6 +57,7 @@ App → API → Service → Domain
 ```
 
 **依赖方向原则:**
+
 - ✅ Domain: 不依赖任何其他层（仅允许 serde/chrono/uuid/async-trait）
 - ✅ Service: 定义Repository Trait，依赖Domain
 - ✅ Infrastructure: 实现Repository，依赖Domain
@@ -64,18 +68,18 @@ App → API → Service → Domain
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| 定义业务实体 | `crates/domain/src/*.rs` | Post, User, Comment等核心类型 |
-| 定义Repository接口 | `crates/service/src/*.rs` | UserService, PostService等Trait |
-| 实现Repository | `crates/infrastructure/src/*.rs` | SeaORM实现 |
-| HTTP路由 | `crates/api/src/*.rs` | 各模块的handler函数 |
-| 前端API调用 | `frontend/src/api/*.ts` | Axios客户端封装 |
-| 数据库迁移 | `crates/infrastructure/src/migrations/` | 13个迁移文件 |
-| 数据库实体 | `crates/infrastructure/src/entity/` | 11个SeaORM实体 |
-| 依赖注入 | `crates/app/src/lib.rs` | `run_server()`组装所有依赖 |
-| 前端构建集成 | `crates/app/build.rs` | npm run build + rust_embed |
-| CLI命令 | `crates/cli/src/main.rs` | user/db管理命令 |
+| Task               | Location                                | Notes                           |
+| ------------------ | --------------------------------------- | ------------------------------- |
+| 定义业务实体       | `crates/domain/src/*.rs`                | Post, User, Comment等核心类型   |
+| 定义Repository接口 | `crates/service/src/*.rs`               | UserService, PostService等Trait |
+| 实现Repository     | `crates/infrastructure/src/*.rs`        | SeaORM实现                      |
+| HTTP路由           | `crates/api/src/*.rs`                   | 各模块的handler函数             |
+| 前端API调用        | `frontend/src/api/*.ts`                 | Axios客户端封装                 |
+| 数据库迁移         | `crates/infrastructure/src/migrations/` | 13个迁移文件                    |
+| 数据库实体         | `crates/infrastructure/src/entity/`     | 11个SeaORM实体                  |
+| 依赖注入           | `crates/app/src/lib.rs`                 | `run_server()`组装所有依赖      |
+| 前端构建集成       | `crates/app/build.rs`                   | npm run build + rust_embed      |
+| CLI命令            | `crates/cli/src/main.rs`                | user/db管理命令                 |
 
 ---
 
@@ -84,11 +88,13 @@ App → API → Service → Domain
 ### 🚨 Current Architectural Violations
 
 **1. Domain → Config Dependency (CRITICAL)**
+
 - **Location:** `crates/domain/Cargo.toml:14`
 - **Issue:** Domain层依赖config crate（违反零依赖原则）
 - **Fix Required:** 移除`config = { path = "../config" }`，将`From<config::AppConfig>`转换逻辑移到Service或API层
 
 **2. API → Infrastructure Dependency (MEDIUM)**
+
 - **Location:** `crates/api/Cargo.toml:11`
 - **Issue:** API层直接依赖Infrastructure（应通过Service）
 - **Current:** 仅在doc comments使用，实际代码未依赖
@@ -97,6 +103,7 @@ App → API → Service → Domain
 ### ⚠️ Deprecated Frontend Types
 
 **frontend/src/types/index.ts (Lines 44-58):**
+
 - `ApiResponse<T>` - 迁移到 `ApiResponseV2<T>`
 - `PaginatedResponse<T>` - 迁移到 `ApiListResponseV2<T>`
 - `ApiError` - 迁移到 `ApiErrorV2`
@@ -104,6 +111,7 @@ App → API → Service → Domain
 ### 📋 Known Technical Debt
 
 **crates/service/src/stats/mod.rs:54**
+
 - `let is_today = true;` - 简化实现，始终假设今天
 - **Impact:** 日期统计功能不准确
 
@@ -114,6 +122,7 @@ App → API → Service → Domain
 ### Rust Backend
 
 **导入顺序（CRITICAL - 必须遵守）:**
+
 ```rust
 // 1. 标准库
 use std::sync::Arc;
@@ -132,6 +141,7 @@ use crate::models::Post;
 ```
 
 **Repository Trait定义（Service层）:**
+
 ```rust
 use async_trait::async_trait;
 use domain::{Result, User};
@@ -145,6 +155,7 @@ pub trait UserRepository: Send + Sync {
 ```
 
 **Service层模式:**
+
 ```rust
 pub struct UserService {
     repo: Arc<dyn UserRepository>,  // 使用Trait对象
@@ -172,6 +183,7 @@ impl UserService {
 ```
 
 **API层处理器模式:**
+
 ```rust
 use axum::{extract::State, response::IntoResponse, Json};
 
@@ -187,6 +199,7 @@ async fn get_user(
 ```
 
 **错误处理模式:**
+
 ```rust
 // Domain层
 if input.is_empty() {
@@ -204,28 +217,30 @@ self.repo.create(post).await
 ### TypeScript Frontend
 
 **导入顺序:**
+
 ```tsx
 // 1. React导入
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // 2. 第三方库
-import { Button } from '@fluentui/react-components';
+import { Button } from "@fluentui/react-components";
 
 // 3. 本地模块
-import { api } from '../api';
-import type { Post } from '../types';
+import { api } from "../api";
+import type { Post } from "../types";
 
 // 4. 样式
-import './styles.css';
+import "./styles.css";
 ```
 
 **错误处理:**
+
 ```tsx
 try {
   const response = await api.getPost(id);
   setPost(response.data);
 } catch (error) {
-  console.error('Failed to fetch post:', error);
+  console.error("Failed to fetch post:", error);
   // 显示用户友好的错误消息
 }
 ```
@@ -237,6 +252,7 @@ try {
 ### Frontend Build Integration
 
 **Dual-Mode Frontend Serving:**
+
 - **Release模式:** Vite构建的静态资源通过`rust_embed`嵌入二进制
 - **Debug模式:** 从文件系统serving（热重载）
 - **实现位置:** `crates/app/build.rs` + `crates/app/src/lib.rs` (fallback handler)
@@ -266,6 +282,7 @@ domain::check_ownership_or_admin(
 ### First-User-Is-Admin Pattern
 
 **Service层逻辑:**
+
 ```rust
 let is_first_user = self.repo.list_users(1).await?.is_empty();
 let permissions = if is_first_user {
@@ -400,11 +417,12 @@ GITHUB_CLIENT_SECRET=
 ## SUBDIRECTORIES
 
 Hierarchical AGENTS.md files for detailed domain knowledge:
+
 - `crates/domain/src/AGENTS.md` - Domain层核心类型规范
 - `frontend/src/api/AGENTS.md` - 前端API客户端模式
 
 ---
 
-*Last updated: 2026-02-04*
-*Total files: 195 (82 Rust + 43 TypeScript + 70 others)*
-*Lines of code: ~19,673*
+_Last updated: 2026-02-04_
+_Total files: 195 (82 Rust + 43 TypeScript + 70 others)_
+_Lines of code: ~19,673_

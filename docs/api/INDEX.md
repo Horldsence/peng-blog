@@ -92,97 +92,97 @@ curl -X PATCH http://localhost:3000/api/posts/{post_id} \
 
 ### Authentication
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| POST | `/auth/register` | No | Register new user |
-| POST | `/auth/login` | No | Login with credentials |
-| POST | `/auth/logout` | No | Logout (client-side) |
-| GET | `/auth/me` | Yes | Get current user info |
+| Method | Endpoint         | Auth Required | Description            |
+| ------ | ---------------- | ------------- | ---------------------- |
+| POST   | `/auth/register` | No            | Register new user      |
+| POST   | `/auth/login`    | No            | Login with credentials |
+| POST   | `/auth/logout`   | No            | Logout (client-side)   |
+| GET    | `/auth/me`       | Yes           | Get current user info  |
 
 ### Users
 
-| Method | Endpoint | Auth Required | Permission | Description |
-|--------|----------|---------------|------------|-------------|
-| GET | `/users` | Yes | USER_MANAGE | List all users |
-| GET | `/users/{id}` | Yes | Self/Admin | Get user info |
-| PATCH | `/users/{id}` | Yes | Self/Admin | Update user |
-| DELETE | `/users/{id}` | Yes | Self/Admin | Delete user (cannot delete last admin) |
-| GET | `/users/{id}/posts` | No | - | Get user's posts |
+| Method | Endpoint            | Auth Required | Permission  | Description                            |
+| ------ | ------------------- | ------------- | ----------- | -------------------------------------- |
+| GET    | `/users`            | Yes           | USER_MANAGE | List all users                         |
+| GET    | `/users/{id}`       | Yes           | Self/Admin  | Get user info                          |
+| PATCH  | `/users/{id}`       | Yes           | Self/Admin  | Update user                            |
+| DELETE | `/users/{id}`       | Yes           | Self/Admin  | Delete user (cannot delete last admin) |
+| GET    | `/users/{id}/posts` | No            | -           | Get user's posts                       |
 
 ### Posts
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/posts` | No | List posts with filters |
-| GET | `/posts/search` | No | Search posts |
-| POST | `/posts` | Yes | Create new post |
-| GET | `/posts/{id}` | No | Get post details |
-| PUT | `/posts/{id}` | Yes | Full update post |
-| PATCH | `/posts/{id}` | Yes | Partial update (status, category, etc.) |
-| DELETE | `/posts/{id}` | Yes | Delete post |
-| GET | `/posts/{id}/comments` | No | Get post comments |
-| POST | `/posts/{id}/comments` | Yes | Add comment to post |
-| GET | `/posts/{id}/tags` | No | Get post tags |
-| POST | `/posts/{id}/tags` | Yes | Add tag to post |
-| DELETE | `/posts/{id}/tags/{tag_id}` | Yes | Remove tag from post |
+| Method | Endpoint                    | Auth Required | Description                             |
+| ------ | --------------------------- | ------------- | --------------------------------------- |
+| GET    | `/posts`                    | No            | List posts with filters                 |
+| GET    | `/posts/search`             | No            | Search posts                            |
+| POST   | `/posts`                    | Yes           | Create new post                         |
+| GET    | `/posts/{id}`               | No            | Get post details                        |
+| PUT    | `/posts/{id}`               | Yes           | Full update post                        |
+| PATCH  | `/posts/{id}`               | Yes           | Partial update (status, category, etc.) |
+| DELETE | `/posts/{id}`               | Yes           | Delete post                             |
+| GET    | `/posts/{id}/comments`      | No            | Get post comments                       |
+| POST   | `/posts/{id}/comments`      | Yes           | Add comment to post                     |
+| GET    | `/posts/{id}/tags`          | No            | Get post tags                           |
+| POST   | `/posts/{id}/tags`          | Yes           | Add tag to post                         |
+| DELETE | `/posts/{id}/tags/{tag_id}` | Yes           | Remove tag from post                    |
 
 ### Categories
 
-| Method | Endpoint | Auth Required | Permission | Description |
-|--------|----------|---------------|------------|-------------|
-| GET | `/categories` | No | - | List all categories |
-| POST | `/categories` | Yes | USER_MANAGE | Create category |
-| GET | `/categories/{id}` | No | - | Get category details |
-| GET | `/categories/{id}/posts` | No | - | Get posts in category |
-| PATCH | `/categories/{id}` | Yes | USER_MANAGE | Update category |
-| DELETE | `/categories/{id}` | Yes | USER_MANAGE | Delete category |
+| Method | Endpoint                 | Auth Required | Permission  | Description           |
+| ------ | ------------------------ | ------------- | ----------- | --------------------- |
+| GET    | `/categories`            | No            | -           | List all categories   |
+| POST   | `/categories`            | Yes           | USER_MANAGE | Create category       |
+| GET    | `/categories/{id}`       | No            | -           | Get category details  |
+| GET    | `/categories/{id}/posts` | No            | -           | Get posts in category |
+| PATCH  | `/categories/{id}`       | Yes           | USER_MANAGE | Update category       |
+| DELETE | `/categories/{id}`       | Yes           | USER_MANAGE | Delete category       |
 
 ### Tags
 
-| Method | Endpoint | Auth Required | Permission | Description |
-|--------|----------|---------------|------------|-------------|
-| GET | `/tags` | No | - | List all tags |
-| POST | `/tags` | Yes | USER_MANAGE | Create tag |
-| GET | `/tags/{id}` | No | - | Get tag details |
-| GET | `/tags/{id}/posts` | No | - | Get posts with tag |
-| DELETE | `/tags/{id}` | Yes | USER_MANAGE | Delete tag |
+| Method | Endpoint           | Auth Required | Permission  | Description        |
+| ------ | ------------------ | ------------- | ----------- | ------------------ |
+| GET    | `/tags`            | No            | -           | List all tags      |
+| POST   | `/tags`            | Yes           | USER_MANAGE | Create tag         |
+| GET    | `/tags/{id}`       | No            | -           | Get tag details    |
+| GET    | `/tags/{id}/posts` | No            | -           | Get posts with tag |
+| DELETE | `/tags/{id}`       | Yes           | USER_MANAGE | Delete tag         |
 
 ### Comments
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/comments/{id}` | No | Get comment details |
-| PATCH | `/comments/{id}` | Yes | Update comment (owner) |
-| DELETE | `/comments/{id}` | Yes | Delete comment (owner) |
+| Method | Endpoint         | Auth Required | Description            |
+| ------ | ---------------- | ------------- | ---------------------- |
+| GET    | `/comments/{id}` | No            | Get comment details    |
+| PATCH  | `/comments/{id}` | Yes           | Update comment (owner) |
+| DELETE | `/comments/{id}` | Yes           | Delete comment (owner) |
 
 ### Files
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/files` | Yes | List user's files |
-| POST | `/files` | Yes | Upload file |
-| GET | `/files/{id}` | No | Get file info |
-| GET | `/files/{id}/download` | No | Download file |
-| DELETE | `/files/{id}` | Yes | Delete file |
+| Method | Endpoint               | Auth Required | Description       |
+| ------ | ---------------------- | ------------- | ----------------- |
+| GET    | `/files`               | Yes           | List user's files |
+| POST   | `/files`               | Yes           | Upload file       |
+| GET    | `/files/{id}`          | No            | Get file info     |
+| GET    | `/files/{id}/download` | No            | Download file     |
+| DELETE | `/files/{id}`          | Yes           | Delete file       |
 
 ### Sessions (Cookie Auth)
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| POST | `/sessions` | No | Create session (cookie login) |
-| DELETE | `/sessions` | Yes | Delete session (logout) |
-| GET | `/sessions/info` | Yes | Get session info |
-| POST | `/sessions/github` | No | GitHub OAuth callback |
+| Method | Endpoint           | Auth Required | Description                   |
+| ------ | ------------------ | ------------- | ----------------------------- |
+| POST   | `/sessions`        | No            | Create session (cookie login) |
+| DELETE | `/sessions`        | Yes           | Delete session (logout)       |
+| GET    | `/sessions/info`   | Yes           | Get session info              |
+| POST   | `/sessions/github` | No            | GitHub OAuth callback         |
 
 ### Statistics
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| GET | `/stats` | No | Get overall statistics |
-| GET | `/stats/visits` | No | Get visit statistics |
-| POST | `/stats/visits` | No | Record a visit |
-| GET | `/stats/posts/{id}` | No | Get post statistics |
-| POST | `/stats/posts/{id}/views` | No | Record a post view |
+| Method | Endpoint                  | Auth Required | Description            |
+| ------ | ------------------------- | ------------- | ---------------------- |
+| GET    | `/stats`                  | No            | Get overall statistics |
+| GET    | `/stats/visits`           | No            | Get visit statistics   |
+| POST   | `/stats/visits`           | No            | Record a visit         |
+| GET    | `/stats/posts/{id}`       | No            | Get post statistics    |
+| POST   | `/stats/posts/{id}/views` | No            | Record a post view     |
 
 ---
 
@@ -270,16 +270,16 @@ Authorization: Bearer <your_jwt_token>
 
 ## HTTP Status Codes
 
-| Code | Meaning | Usage |
-|------|---------|-------|
-| 200 | OK | Successful GET, PUT, PATCH |
-| 201 | Created | Successful POST |
-| 204 | No Content | Successful DELETE |
-| 400 | Bad Request | Validation error |
-| 401 | Unauthorized | Missing or invalid token |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource not found |
-| 500 | Internal Server Error | Server error |
+| Code | Meaning               | Usage                      |
+| ---- | --------------------- | -------------------------- |
+| 200  | OK                    | Successful GET, PUT, PATCH |
+| 201  | Created               | Successful POST            |
+| 204  | No Content            | Successful DELETE          |
+| 400  | Bad Request           | Validation error           |
+| 401  | Unauthorized          | Missing or invalid token   |
+| 403  | Forbidden             | Insufficient permissions   |
+| 404  | Not Found             | Resource not found         |
+| 500  | Internal Server Error | Server error               |
 
 ---
 
@@ -287,15 +287,16 @@ Authorization: Bearer <your_jwt_token>
 
 Peng Blog uses bit flag-based permissions:
 
-| Permission | Value | Description |
-|------------|-------|-------------|
-| `POST_CREATE` | 1 | Create posts |
-| `POST_UPDATE` | 2 | Update posts |
-| `POST_DELETE` | 4 | Delete posts |
-| `POST_PUBLISH` | 8 | Publish/unpublish posts |
-| `USER_MANAGE` | 16 | Manage users, categories, tags |
+| Permission     | Value | Description                    |
+| -------------- | ----- | ------------------------------ |
+| `POST_CREATE`  | 1     | Create posts                   |
+| `POST_UPDATE`  | 2     | Update posts                   |
+| `POST_DELETE`  | 4     | Delete posts                   |
+| `POST_PUBLISH` | 8     | Publish/unpublish posts        |
+| `USER_MANAGE`  | 16    | Manage users, categories, tags |
 
 **Default Permissions:**
+
 - Regular user: `POST_CREATE | POST_UPDATE | POST_PUBLISH` (11)
 - Admin: All permissions (31)
 
@@ -307,7 +308,7 @@ Peng Blog uses bit flag-based permissions:
 
 ```typescript
 class PengBlogAPI {
-  private baseURL = 'http://localhost:3000/api';
+  private baseURL = "http://localhost:3000/api";
   private token?: string;
 
   constructor(token?: string) {
@@ -316,15 +317,15 @@ class PengBlogAPI {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(options.headers || {}),
     };
 
     if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+      headers["Authorization"] = `Bearer ${this.token}`;
     }
 
     const response = await fetch(`${this.baseURL}${endpoint}`, {
@@ -335,7 +336,7 @@ class PengBlogAPI {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw new Error(data.message || "Request failed");
     }
 
     return data;
@@ -343,45 +344,55 @@ class PengBlogAPI {
 
   // Auth
   async register(username: string, password: string) {
-    return this.request('/auth/register', {
-      method: 'POST',
+    return this.request("/auth/register", {
+      method: "POST",
       body: JSON.stringify({ username, password }),
     });
   }
 
   async login(username: string, password: string) {
-    const data = await this.request<{ data: { token: string } }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
+    const data = await this.request<{ data: { token: string } }>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+      },
+    );
     this.token = data.data.token;
     return data;
   }
 
   // Posts
-  async getPosts(filters?: { author?: string; category?: string; tag?: string }) {
+  async getPosts(filters?: {
+    author?: string;
+    category?: string;
+    tag?: string;
+  }) {
     const params = new URLSearchParams();
-    if (filters?.author) params.append('author', filters.author);
-    if (filters?.category) params.append('category', filters.category);
-    if (filters?.tag) params.append('tag', filters.tag);
+    if (filters?.author) params.append("author", filters.author);
+    if (filters?.category) params.append("category", filters.category);
+    if (filters?.tag) params.append("tag", filters.tag);
     return this.request(`/posts?${params}`);
   }
 
   async createPost(title: string, content: string) {
-    return this.request('/posts', {
-      method: 'POST',
+    return this.request("/posts", {
+      method: "POST",
       body: JSON.stringify({ title, content }),
     });
   }
 
-  async updatePost(postId: string, updates: {
-    title?: string;
-    content?: string;
-    status?: 'published' | 'draft';
-    category_id?: string | null;
-  }) {
+  async updatePost(
+    postId: string,
+    updates: {
+      title?: string;
+      content?: string;
+      status?: "published" | "draft";
+      category_id?: string | null;
+    },
+  ) {
     return this.request(`/posts/${postId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates),
     });
   }
@@ -401,12 +412,14 @@ If you're migrating from API v1, here are the key changes:
 ### 1. Publish/Unpublish Changed
 
 **Old:**
+
 ```bash
 POST /posts/{id}/publish
 POST /posts/{id}/unpublish
 ```
 
 **New:**
+
 ```bash
 PATCH /posts/{id}
 {"status": "published"}
@@ -418,11 +431,13 @@ PATCH /posts/{id}
 ### 2. Add Tag Changed
 
 **Old:**
+
 ```bash
 POST /posts/{id}/tags/{tag_id}
 ```
 
 **New:**
+
 ```bash
 POST /posts/{id}/tags
 {"tag_id": "..."}
@@ -431,6 +446,7 @@ POST /posts/{id}/tags
 ### 3. Response Format Changed
 
 **Old:**
+
 ```json
 { "id": "...", "title": "..." }
 // or
@@ -438,6 +454,7 @@ POST /posts/{id}/tags
 ```
 
 **New:**
+
 ```json
 {
   "code": 200,
@@ -449,11 +466,13 @@ POST /posts/{id}/tags
 ### 4. Query Parameters Changed
 
 **Old:**
+
 ```bash
 /posts?user_id=xxx&category_id=yyy
 ```
 
 **New:**
+
 ```bash
 /posts?author=xxx&category=yyy
 ```

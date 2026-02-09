@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Architecture & Setup
+
 - Initialize Rust workspace with 6 crates
   - `blog-bin`: Main entry point
   - `blog-web`: Leptos frontend (WASM)
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `blog-infrastructure`: SeaORM repositories
 
 #### Technical Stack
+
 - **Backend**: Axum 0.8 (type-safe routing, Tower middleware)
 - **Frontend**: Leptos 0.7 (fine-grained reactivity, SSR support)
 - **Database**: SeaORM 1.2 + SQLite (async ORM, migrations)
@@ -26,27 +28,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Runtime**: Tokio 1.42 (async runtime)
 
 #### Documentation
+
 - `docs/AGENT.md`: Technical decisions, architecture rationale, design principles
 - `docs/CHANGELOG.md`: This changelog
 
 ### Design Principles
 
 #### Data Structure First
+
 - `blog-domain` crate contains Plain Old Rust Structs (PORS)
 - Shared between frontend and backend (zero duplication)
 - Eliminates type synchronization issues
 
 #### Eliminate Special Cases
+
 - Unified error handling across all layers
 - Trait abstractions eliminate code duplication
 - State embedded in data, not in control flow
 
 #### Simplicity Focus
+
 - Single responsibility per crate
 - Short, focused functions (<3 levels of indentation)
 - Early returns, avoid nesting
 
 #### Pragmatic Choices
+
 - SQLite over PostgreSQL (sufficient for blog scale)
 - REST over GraphQL (adequate for blog use case)
 - Monolithic over microservices (no need for complexity)
@@ -59,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Initial Release
 
 #### Features
+
 - Project scaffolding
 - Workspace configuration
 - Documentation infrastructure
@@ -66,23 +74,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Technology Decisions
 
 **Why Axum over Actix-web?**
+
 - More ergonomic, type-safe routing
 - 10-20% lower memory footprint
 - Actix-web's extreme performance overkill for blogs
 
 **Why Leptos over Yew?**
+
 - Fine-grained reactivity (no Virtual DOM)
 - Full SSR support for SEO
 - 2.1x better real-world performance
 - Modern design, no historical baggage
 
 **Why SeaORM over SQLx?**
+
 - Built-in migrations (SQLx requires manual setup)
 - Cleaner CRUD operations for blog use case
 - Production-ready for enterprise (2026 consensus)
 - Async-first, seamless Axum integration
 
 **Why Rust fullstack over React + TypeScript?**
+
 - Shared types via `blog-domain` crate
 - Compile-time type safety
 - Zero serialization errors
@@ -134,6 +146,7 @@ MIT License (to be added)
 ## Future Roadmap
 
 ### [0.2.0] - Planned
+
 - [ ] User authentication (JWT tokens)
 - [ ] Password hashing (bcrypt/argon2)
 - [ ] Post CRUD operations (Create, Read, Update, Delete)
@@ -142,6 +155,7 @@ MIT License (to be added)
 - [ ] Frontend post detail view
 
 ### [0.3.0] - Planned
+
 - [ ] Comment system
 - [ ] Tag/Category support
 - [ ] Search functionality (SQLite FTS5)
@@ -149,6 +163,7 @@ MIT License (to be added)
 - [ ] Syntax highlighting for code blocks
 
 ### [0.4.0] - Planned
+
 - [ ] Admin dashboard
 - [ ] File uploads (images)
 - [ ] Post drafts
@@ -156,6 +171,7 @@ MIT License (to be added)
 - [ ] Analytics integration
 
 ### [1.0.0] - Planned
+
 - [ ] Production deployment
 - [ ] Docker containerization
 - [ ] CI/CD pipeline

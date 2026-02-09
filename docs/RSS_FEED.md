@@ -22,6 +22,7 @@ GET /api/rss
 **响应格式**: `application/rss+xml; charset=utf-8`
 
 **示例**:
+
 ```bash
 curl http://localhost:3000/api/rss
 ```
@@ -29,6 +30,7 @@ curl http://localhost:3000/api/rss
 ## 文章内容包含
 
 RSS feed包含以下信息：
+
 - 文章标题
 - 文章链接（格式: `{BASE_URL}/posts/{id}`）
 - 文章内容
@@ -63,6 +65,7 @@ let rss_service = Arc::new(RssServiceImpl::new(
 ### 通过RSS阅读器订阅
 
 将以下URL添加到RSS阅读器：
+
 ```
 http://localhost:3000/api/rss
 ```

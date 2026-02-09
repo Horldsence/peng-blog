@@ -5,6 +5,7 @@
 ## 📋 功能特性
 
 ### 核心功能
+
 - **用户认证系统**：基于 JWT 的安全认证，支持注册、登录和会话管理
 - **文章管理**：创建、编辑、删除和发布文章，支持 Markdown 格式
 - **评论系统**：支持匿名评论和 GitHub OAuth 登录评论
@@ -13,6 +14,7 @@
 - **权限管理**：基于位标志的细粒度权限控制系统
 
 ### 技术特性
+
 - **异步高性能**：基于 Tokio 异步运行时，提供出色的并发性能
 - **类型安全**：充分利用 Rust 类型系统，编译时捕获错误
 - **RESTful API**：标准化的 REST API 设计
@@ -23,20 +25,24 @@
 ## 🏗️ 技术栈
 
 ### 后端框架
+
 - **Tokio** - 异步运行时
 - **Axum** - 现代化 Web 框架
 - **Tower** - 服务抽象和中间件
 
 ### 数据库
+
 - **SeaORM** - 异步 ORM
 - **PostgreSQL** - 关系型数据库
 - **SeaORM Migration** - 数据库迁移工具
 
 ### 安全与认证
+
 - **JWT** - JSON Web Token 认证
 - **Argon2** - 密码哈希算法
 
 ### 开发工具
+
 - **Tracing** - 结构化日志
 - **Serde** - 序列化/反序列化
 - **Anyhow/Thiserror** - 错误处理
@@ -100,6 +106,7 @@ peng-blog/
 ### 安装步骤
 
 1. **克隆仓库**
+
    ```bash
    git clone <repository-url>
    cd peng-blog
@@ -108,6 +115,7 @@ peng-blog/
 2. **配置环境变量**
 
    创建 `.env` 文件：
+
    ```env
    # PostgreSQL 连接字符串格式: postgresql://username:password@hostname:port/database_name
    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/peng_blog
@@ -140,7 +148,6 @@ peng-blog/
 3. **配置 GitHub OAuth 应用**（用于评论功能）
 
    访问 https://github.com/settings/developers，创建新的 OAuth App：
-
    - **Application name**: 你的博客名称
    - **Homepage URL**: 你的 `BASE_URL`（如 `https://yourdomain.com`）
    - **Authorization callback URL**: `BASE_URL/api/comments/github/callback`
@@ -156,18 +163,21 @@ peng-blog/
    - 生产环境部署时，只需修改 `BASE_URL` 为实际域名，`HOST` 保持 `0.0.0.0`
    - GitHub 应用设置中的回调 URL 必须与 `BASE_URL/api/comments/github/callback` 完全匹配
 
-3. **安装依赖**
+4. **安装依赖**
+
    ```bash
    cargo build
    ```
 
-4. **运行数据库迁移**
+5. **运行数据库迁移**
+
    ```bash
    cargo run
    ```
+
    迁移会在首次启动时自动执行。
 
-5. **启动服务**
+6. **启动服务**
    ```bash
    cargo run
    ```
@@ -260,11 +270,13 @@ cargo run --package cli -- user reset-password <user_id> --password "newpass123"
 ## 📚 API 文档
 
 ### 认证相关
+
 - `POST /api/auth/register` - 用户注册
 - `POST /api/auth/login` - 用户登录
 - `POST /api/auth/logout` - 用户登出
 
 ### 文章管理
+
 - `GET /api/posts` - 获取文章列表
 - `GET /api/posts/:id` - 获取单篇文章
 - `POST /api/posts` - 创建文章（需认证）
@@ -272,16 +284,19 @@ cargo run --package cli -- user reset-password <user_id> --password "newpass123"
 - `DELETE /api/posts/:id` - 删除文章（需认证）
 
 ### 评论管理
+
 - `GET /api/posts/:id/comments` - 获取文章评论
 - `POST /api/posts/:id/comments` - 创建评论
 - `POST /api/comments/github/auth` - GitHub 认证
 
 ### 文件管理
+
 - `POST /api/files/upload` - 上传文件（需认证）
 - `GET /api/files/:id` - 获取文件信息
 - `DELETE /api/files/:id` - 删除文件（需认证）
 
 ### 统计信息
+
 - `GET /api/stats/visits` - 获取访问统计
 - `POST /api/stats/visits` - 记录访问
 - `GET /api/stats/posts/:id/views` - 获取文章阅读量

@@ -20,10 +20,10 @@ Get all tags.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 50 | Items per page |
+| Parameter  | Type    | Required | Default | Description    |
+| ---------- | ------- | -------- | ------- | -------------- |
+| `page`     | integer | No       | 1       | Page number    |
+| `per_page` | integer | No       | 50      | Items per page |
 
 **Response (200 OK):**
 
@@ -75,10 +75,10 @@ Create a new tag.
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | Yes | Tag name |
-| `slug` | string | Yes | URL-friendly identifier |
+| Field  | Type   | Required | Description             |
+| ------ | ------ | -------- | ----------------------- |
+| `name` | string | Yes      | Tag name                |
+| `slug` | string | Yes      | URL-friendly identifier |
 
 **Response (201 Created):**
 
@@ -132,10 +132,10 @@ Get all posts with a specific tag.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 20 | Items per page |
+| Parameter  | Type    | Required | Default | Description    |
+| ---------- | ------- | -------- | ------- | -------------- |
+| `page`     | integer | No       | 1       | Page number    |
+| `per_page` | integer | No       | 20      | Items per page |
 
 **Response (200 OK):** Paginated list of posts
 

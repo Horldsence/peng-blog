@@ -3,13 +3,13 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag (e.g., v0.1.0)'
+        description: "Version tag (e.g., v0.1.0)"
         required: true
-        default: 'v0.1.0'
+        default: "v0.1.0"
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,7 +19,7 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
     name: Build x86_64-unknown-linux-gnu
     needs: test
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,8 +61,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: ./frontend/package-lock.json
 
       - name: Build release binary
@@ -72,28 +72,28 @@ jobs:
       - name: Verify frontend build
         run: |
           echo "🔍 Verifying frontend build..."
-          
+
           # Check if dist directory exists
           if [ ! -d "dist" ]; then
             echo "❌ dist directory not found!"
             exit 1
           fi
           echo "✅ dist directory exists"
-          
+
           # Check for essential frontend files
           if [ ! -f "dist/index.html" ]; then
             echo "❌ index.html not found in dist/"
             exit 1
           fi
           echo "✅ index.html exists"
-          
+
           # Check for JavaScript bundles
           if ! find dist -name "*.js" -type f | grep -q .; then
             echo "❌ No JavaScript files found in dist/"
             exit 1
           fi
           echo "✅ JavaScript bundles exist"
-          
+
           echo "📁 dist directory contents:"
           ls -lh dist/
           echo "✅ Frontend build verification passed!"
@@ -101,19 +101,19 @@ jobs:
       - name: Verify binary
         run: |
           echo "🔍 Verifying binary..."
-          
+
           BINARY_PATH="target/release/peng-blog"
-          
+
           if [ ! -f "$BINARY_PATH" ]; then
             echo "❌ Binary not found"
             exit 1
           fi
-          
+
           echo "✅ Binary exists"
-          
+
           SIZE=$(ls -lh "$BINARY_PATH" | awk '{print $5}')
           echo "📦 Binary size: $SIZE"
-          
+
           # Check if frontend is embedded (should be at least 5MB)
           SIZE_BYTES=$(stat -c%s "$BINARY_PATH")
           if [ "$SIZE_BYTES" -lt 5000000 ]; then
@@ -128,44 +128,44 @@ jobs:
           cp target/release/peng-blog release/peng-blog/
           cp README.md release/peng-blog/ || true
           cp LICENSE release/peng-blog/ || true
-          
+
           # Create example config
           cat > release/peng-blog/.env.example << 'EOF'
           # Database
           DATABASE_URL=sqlite://blog.db
-          
+
           # Server
           HOST=0.0.0.0
           PORT=3000
-          
+
           # JWT Secret (CHANGE THIS!)
           JWT_SECRET=change-this-secret-in-production
-          
+
           # Upload
           UPLOAD_DIR=./uploads
           BASE_URL=http://localhost:3000
-          
+
           # GitHub OAuth (Optional)
           GITHUB_CLIENT_ID=your-client-id
           GITHUB_CLIENT_SECRET=your-client-secret
-          
+
           # Log
           RUST_LOG=info
           EOF
-          
+
           # Create start script
           cat > release/peng-blog/start.sh << 'EOF'
           #!/bin/bash
-          
+
           # Create .env if not exists
           if [ ! -f .env ]; then
             cp .env.example .env
             echo "Created .env file. Please edit it with your configuration."
           fi
-          
+
           # Create uploads directory
           mkdir -p uploads
-          
+
           # Start server
           echo "Starting Peng Blog server..."
           echo "Frontend assets are embedded in the binary."
@@ -173,11 +173,11 @@ jobs:
           ./peng-blog
           EOF
           chmod +x release/peng-blog/start.sh
-          
+
           cd release
           tar -czf peng-blog-linux-amd64.tar.gz peng-blog
           sha256sum peng-blog-linux-amd64.tar.gz > peng-blog-linux-amd64.tar.gz.sha256
-          
+
           echo ""
           echo "✅ Release package created:"
           ls -lh peng-blog-linux-amd64.tar.gz*
@@ -191,15 +191,13 @@ jobs:
             release/peng-blog-linux-amd64.tar.gz.sha256
           retention-days: 7
 
-
-
   create-release:
     name: Create Pre-Release
     needs: [build-linux-amd64]
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -229,8 +227,6 @@ jobs:
           else
             echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
-
-
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -309,15 +305,15 @@ jobs:
           echo "- Test: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Build Linux AMD64: ${{ needs.build-linux-amd64.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Create Release: ${{ needs.create-release.result }}" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.build-linux-amd64.result }}" != "success" ]; then
             echo "::error::Build failed"
             exit 1
           fi
-          
+
           if [ "${{ needs.test.result }}" != "success" ]; then
             echo "::warning::Tests failed"
             exit 1
           fi
-          
+
           echo "✅ Release completed successfully"

@@ -63,6 +63,7 @@ make help
 这是核心 CI 检查脚本，严格遵照 GitHub CI 配置 (`.github/workflows/ci.yml`)。
 
 **特点：**
+
 - ✅ 与 GitHub CI 完全一致的检查标准
 - ✅ 彩色输出，易于阅读
 - ✅ 详细的错误报告
@@ -70,14 +71,14 @@ make help
 
 **命令选项：**
 
-| 选项 | 说明 | 适用场景 |
-|------|------|----------|
-| 无参数 | 完整 CI 检查 | 提交前、推送前 |
-| `--fast` | 快速模式（跳过 build） | 开发过程中 |
-| `--skip-tests` | 跳过所有测试 | 仅检查代码质量 |
-| `--fix` | 自动修复格式问题 | 格式化代码 |
-| `--verbose` | 显示详细输出 | 调试 CI 失败 |
-| `--help` | 显示帮助信息 | 查看用法 |
+| 选项           | 说明                   | 适用场景       |
+| -------------- | ---------------------- | -------------- |
+| 无参数         | 完整 CI 检查           | 提交前、推送前 |
+| `--fast`       | 快速模式（跳过 build） | 开发过程中     |
+| `--skip-tests` | 跳过所有测试           | 仅检查代码质量 |
+| `--fix`        | 自动修复格式问题       | 格式化代码     |
+| `--verbose`    | 显示详细输出           | 调试 CI 失败   |
+| `--help`       | 显示帮助信息           | 查看用法       |
 
 **使用示例：**
 
@@ -133,6 +134,7 @@ make install-hooks
 **检查内容：** 快速 CI 检查（`--fast` 模式）
 
 **行为：**
+
 - 检查是否有暂存的文件
 - 运行快速 CI 检查（跳过 build）
 - 失败时阻止提交
@@ -152,6 +154,7 @@ git commit -n
 **检查内容：** 完整 CI 检查
 
 **行为：**
+
 - 运行完整的 CI 检查（包括 build）
 - 失败时阻止推送
 
@@ -300,6 +303,7 @@ make help
 **命令：** `cargo fmt --all -- --check`
 
 **标准：**
+
 - 使用 `rustfmt` 默认配置
 - 所有 `.rs` 文件必须正确格式化
 
@@ -316,6 +320,7 @@ make ci-fix
 ```
 
 **常见错误：**
+
 - 缩进不正确
 - 行尾空格
 - 导入顺序错误
@@ -327,11 +332,13 @@ make ci-fix
 **命令：** `cargo clippy --all-targets --all-features --workspace -- -D warnings`
 
 **标准：**
+
 - 所有 clippy 警告视为错误（`-D warnings`）
 - 检查所有目标（lib、bin、tests、examples）
 - 启用所有特性
 
 **常见警告：**
+
 - 未使用的变量/函数
 - 不必要的克隆
 - 可以简化的代码
@@ -358,10 +365,12 @@ make clippy
 **命令：** `cargo check --all-features --workspace`
 
 **标准：**
+
 - 所有 workspace 成员必须编译通过
 - 启用所有特性
 
 **常见错误：**
+
 - 语法错误
 - 类型错误
 - 缺少依赖
@@ -374,6 +383,7 @@ make clippy
 **命令：** `cargo test --all-features --workspace --verbose`
 
 **标准：**
+
 - 所有测试必须通过
 - 包括单元测试和集成测试
 - 详细输出（与 CI 一致）
@@ -402,26 +412,27 @@ cargo test test_create_post
 **命令：** `cargo test --doc --workspace`
 
 **标准：**
+
 - 文档注释中的示例代码必须能够编译和运行
 - 所有 `/// # Examples` 中的代码都会被测试
 
 **示例：**
 
-```rust
+````rust
 /// 创建新文章
 ///
 /// # Examples
 ///
 /// ```no_run
 /// use service::PostService;
-/// 
+///
 /// let service = PostService::new(repo);
 /// let post = service.create_post(request).await?;
 /// ```
 pub async fn create_post(&self, request: CreatePost) -> Result<Post> {
     // 实现
 }
-```
+````
 
 ### 6. Build Release
 
@@ -430,10 +441,12 @@ pub async fn create_post(&self, request: CreatePost) -> Result<Post> {
 **命令：** `cargo build --release --workspace`
 
 **标准：**
+
 - Release 优化必须成功
 - 所有 workspace 成员都能构建
 
 **注意：**
+
 - 此步骤在 `--fast` 模式下跳过
 - 构建时间较长（~1-3 分钟）
 
@@ -616,16 +629,18 @@ rm .git/hooks/pre-push
 这通常不应该发生，因为本地 CI 严格遵照 GitHub CI。可能原因：
 
 1. **环境差异：** 本地和 CI 的 Rust 版本不同
+
    ```bash
    # 检查版本
    rustc --version
    cargo --version
-   
+
    # 更新到最新稳定版
    rustup update stable
    ```
 
 2. **缓存问题：** 本地缓存了旧的构建产物
+
    ```bash
    # 清理并重新检查
    make clean
@@ -920,6 +935,7 @@ Tips:
 4. **友好：** 彩色输出和详细报告，易于理解和修复
 
 **建议所有开发者：**
+
 - 安装 Git hooks（`make install-hooks`）
 - 提交前运行完整检查（`make ci`）
 - 开发时使用快速模式（`make ci-fast`）
@@ -928,4 +944,4 @@ Tips:
 
 ---
 
-*Last updated: 2026-01-31*
+_Last updated: 2026-01-31_

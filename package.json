@@ -1,5 +1,5 @@
 {
-	"dependencies": {
-		"@fluentui/react-components": "^9.72.11"
-	}
+  "dependencies": {
+    "@fluentui/react-components": "^9.72.11"
+  }
 }

@@ -27,10 +27,10 @@ Register a new user account.
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `username` | string | Yes | 3-30 characters, unique |
-| `password` | string | Yes | Minimum 8 characters |
+| Field      | Type   | Required | Description             |
+| ---------- | ------ | -------- | ----------------------- |
+| `username` | string | Yes      | 3-30 characters, unique |
+| `password` | string | Yes      | Minimum 8 characters    |
 
 **Response (201 Created):**
 
@@ -180,13 +180,13 @@ curl http://localhost:3000/api/posts \
 
 The `permissions` field in user info is a bit flag value:
 
-| Permission | Value | Description |
-|-----------|-------|-------------|
-| `POST_CREATE` | 1 | Create posts |
-| `POST_UPDATE` | 2 | Update posts |
-| `POST_DELETE` | 4 | Delete posts |
-| `POST_PUBLISH` | 8 | Publish/unpublish posts |
-| `USER_MANAGE` | 16 | Manage users, categories, tags |
+| Permission     | Value | Description                    |
+| -------------- | ----- | ------------------------------ |
+| `POST_CREATE`  | 1     | Create posts                   |
+| `POST_UPDATE`  | 2     | Update posts                   |
+| `POST_DELETE`  | 4     | Delete posts                   |
+| `POST_PUBLISH` | 8     | Publish/unpublish posts        |
+| `USER_MANAGE`  | 16    | Manage users, categories, tags |
 
 **Default user:** 11 (POST_CREATE | POST_UPDATE | POST_PUBLISH)  
 **Admin:** 31 (all permissions)

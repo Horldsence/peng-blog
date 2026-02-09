@@ -20,6 +20,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 **Purpose**: Defines the core data structures and business rules. This is the "Plain Old Rust Structs" (PORS) layer.
 
 **Responsibilities**:
+
 - Define all domain types (Post, User, etc.)
 - Define domain-specific errors
 - Define permission constants and helpers
@@ -27,6 +28,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 - Shared between frontend and backend (future)
 
 **Key Types**:
+
 ```rust
 - Post: Blog post entity
 - User: User entity with permissions
@@ -44,6 +46,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 **Purpose**: Implements business logic and defines repository interfaces. This is the pure logic layer with no I/O.
 
 **Responsibilities**:
+
 - Define repository traits (interfaces)
 - Implement business rules and validation
 - Orchestrate repository operations
@@ -51,12 +54,14 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 - Testable without database
 
 **Key Services**:
+
 ```rust
 - PostService<R: PostRepository>: Post business logic
 - UserService<R: UserRepository>: User business logic
 ```
 
 **Key Repository Traits**:
+
 ```rust
 - PostRepository: Interface for post data access
 - UserRepository: Interface for user data access
@@ -73,6 +78,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 **Purpose**: Implements repository interfaces and handles all database operations using SeaORM.
 
 **Responsibilities**:
+
 - Implement repository traits from `core`
 - Handle database connections and migrations
 - Perform CRUD operations
@@ -80,6 +86,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 - Handle password hashing (argon2)
 
 **Key Implementations**:
+
 ```rust
 - PostRepositoryImpl: SeaORM-based post repository
 - UserRepositoryImpl: SeaORM-based user repository
@@ -95,6 +102,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 **Purpose**: Implements HTTP endpoints using Axum framework. This is the presentation layer.
 
 **Responsibilities**:
+
 - Define API routes
 - Handle HTTP request/response
 - Extract and validate request data
@@ -103,6 +111,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 - Return appropriate HTTP status codes
 
 **Key Modules**:
+
 ```rust
 - auth.rs: Registration, login, and token validation
 - post.rs: Post CRUD endpoints
@@ -120,6 +129,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 **Purpose**: Application entry point. Wires everything together and starts the server.
 
 **Responsibilities**:
+
 - Initialize logging
 - Load environment variables
 - Establish database connection
@@ -156,6 +166,7 @@ Peng Blog follows a clean, layered architecture based on Domain-Driven Design (D
 ```
 
 **Key Points**:
+
 - `Domain` has no dependencies (leaf node)
 - `Core` depends only on `Domain`
 - `Infrastructure` depends on `Domain` and `Core` (implements traits)
@@ -215,16 +226,19 @@ Return LoginResponse to API
 **Definition**: Abstracts data access logic behind interfaces.
 
 **Implementation**:
+
 - Repository traits defined in `core` (interfaces)
 - Concrete implementations in `infrastructure` (SQLite via SeaORM)
 - Services depend on traits, not implementations
 
 **Benefits**:
+
 - Testable (mock repositories for unit tests)
 - Swappable (change SQLite → PostgreSQL without changing core)
 - Clear separation of concerns
 
 **Example**:
+
 ```rust
 // In core/src/repository.rs
 #[async_trait]
@@ -251,16 +265,19 @@ impl PostRepository for PostRepositoryImpl {
 **Definition**: Services receive dependencies through constructor, not creating them internally.
 
 **Implementation**:
+
 - Services are generic over repository types
 - Repositories passed to service constructors
 - Makes testing easy by passing mock repositories
 
 **Benefits**:
+
 - Testable (inject mocks)
 - Flexible (change implementations without changing code)
 - Explicit dependencies (visible in constructor)
 
 **Example**:
+
 ```rust
 // Generic service
 pub struct PostService<R: PostRepository> {
@@ -279,16 +296,19 @@ let post_service = PostService::new(post_repo);
 **Definition**: Encapsulates business logic in dedicated services.
 
 **Implementation**:
+
 - One service per domain entity (PostService, UserService)
 - Services orchestrate repository calls
 - Services enforce business rules and validation
 
 **Benefits**:
+
 - Clear separation of business logic from data access
 - Reusable logic across multiple endpoints
 - Easy to test (unit tests without database)
 
 **Example**:
+
 ```rust
 impl<R: PostRepository> PostService<R> {
     pub async fn create(&self, user_id: Uuid, title: String, content: String) -> Result<Post> {
@@ -306,16 +326,19 @@ impl<R: PostRepository> PostService<R> {
 **Definition**: Separate objects for API input/output from domain entities.
 
 **Implementation**:
+
 - Domain types (Post, User) for internal use
 - DTOs (CreatePost, UpdatePost, LoginRequest) for API
 - Conversion happens in API layer
 
 **Benefits**:
+
 - Separate API concerns from domain logic
 - Different validation rules for API vs domain
 - Hide sensitive data (password hashes) from API responses
 
 **Example**:
+
 ```rust
 // Domain type
 pub struct Post {
@@ -341,6 +364,7 @@ pub struct CreatePost {
 ### Design Rationale
 
 Bit-mask based permissions for simplicity and performance:
+
 - Fast to check (bitwise AND)
 - Easy to combine (bitwise OR)
 - No complex RBAC infrastructure needed
@@ -419,12 +443,12 @@ API (converts to ApiError)
 
 ### HTTP Status Mapping
 
-| Domain Error | API Error | HTTP Status |
-|--------------|-----------|--------------|
-| NotFound | Domain(NotFound) | 404 Not Found |
-| Validation | Domain(Validation) | 400 Bad Request |
-| Internal | Domain/Internal | 500 Internal Server Error |
-| Auth failed | Unauthorized | 401 Unauthorized |
+| Domain Error | API Error          | HTTP Status               |
+| ------------ | ------------------ | ------------------------- |
+| NotFound     | Domain(NotFound)   | 404 Not Found             |
+| Validation   | Domain(Validation) | 400 Bad Request           |
+| Internal     | Domain/Internal    | 500 Internal Server Error |
+| Auth failed  | Unauthorized       | 401 Unauthorized          |
 
 ---
 
@@ -437,19 +461,21 @@ API (converts to ApiError)
 **Tools**: `mockall` for mocking repositories
 
 **Example**:
+
 ```rust
 #[tokio::test]
 async fn test_create_post_validates_empty_title() {
     let mut mock_repo = MockPostRepo::new();
     let service = PostService::new(mock_repo);
-    
+
     let result = service.create(user_id, "".to_string(), "content".to_string()).await;
-    
+
     assert!(result.is_err());
 }
 ```
 
 **Benefits**:
+
 - Fast (no database)
 - Test business rules in isolation
 - Test edge cases easily
@@ -463,6 +489,7 @@ async fn test_create_post_validates_empty_title() {
 **Tools**: `axum::Router` for testing, SQLite in-memory
 
 **Example**:
+
 ```rust
 #[tokio::test]
 async fn test_create_post_endpoint() {
@@ -473,12 +500,13 @@ async fn test_create_post_endpoint() {
             .body(json_body)
         )
         .await;
-    
+
     assert_eq!(response.status(), StatusCode::CREATED);
 }
 ```
 
 **Benefits**:
+
 - Test entire request flow
 - Validate HTTP layer
 - Catch integration issues
@@ -492,19 +520,21 @@ async fn test_create_post_endpoint() {
 **Tools**: SQLite test database, fixtures
 
 **Example**:
+
 ```rust
 #[tokio::test]
 async fn test_repository_create_post() {
     let db = setup_test_db().await;
     let repo = PostRepositoryImpl::new(db);
-    
+
     let post = repo.create_post(user_id, "Title".to_string(), "Content".to_string()).await.unwrap();
-    
+
     assert!(post.id != Uuid::nil());
 }
 ```
 
 **Benefits**:
+
 - Test database operations
 - Validate SQL queries
 - Ensure conversions work
@@ -559,7 +589,7 @@ impl<R: CommentRepository> CommentService<R> {
         self.validate_content(&content)?;
         self.repo.create_comment(user_id, post_id, content).await
     }
-    
+
     fn validate_content(&self, content: &str) -> Result<()> {
         if content.trim().is_empty() {
             return Err(Error::Validation("Content cannot be empty".to_string()));
@@ -582,7 +612,7 @@ impl core::repository::CommentRepository for CommentRepositoryImpl {
         let comment = Comment::new(user_id, post_id, content);
         let entity = Self::comment_to_entity(&comment);
         let active_model = Self::entity_to_active_model(entity);
-        
+
         active_model.insert(self.db.as_ref()).await?;
         Ok(comment)
     }
@@ -612,7 +642,7 @@ async fn create_comment(
         .create(user.user_id, post_id, input.content)
         .await
         .map_err(|e| ApiError::Domain(e))?;
-    
+
     Ok((StatusCode::CREATED, Json(comment)))
 }
 ```

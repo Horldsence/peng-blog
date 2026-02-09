@@ -20,10 +20,10 @@ Get all categories.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 50 | Items per page |
+| Parameter  | Type    | Required | Default | Description    |
+| ---------- | ------- | -------- | ------- | -------------- |
+| `page`     | integer | No       | 1       | Page number    |
+| `per_page` | integer | No       | 50      | Items per page |
 
 **Response (200 OK):**
 
@@ -81,12 +81,12 @@ Create a new category.
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | Yes | Category name |
-| `slug` | string | Yes | URL-friendly identifier |
-| `description` | string | No | Category description |
-| `parent_id` | UUID/null | No | Parent category ID |
+| Field         | Type      | Required | Description             |
+| ------------- | --------- | -------- | ----------------------- |
+| `name`        | string    | Yes      | Category name           |
+| `slug`        | string    | Yes      | URL-friendly identifier |
+| `description` | string    | No       | Category description    |
+| `parent_id`   | UUID/null | No       | Parent category ID      |
 
 **Response (201 Created):**
 
@@ -144,10 +144,10 @@ Get all posts in a category.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 20 | Items per page |
+| Parameter  | Type    | Required | Default | Description    |
+| ---------- | ------- | -------- | ------- | -------------- |
+| `page`     | integer | No       | 1       | Page number    |
+| `per_page` | integer | No       | 20      | Items per page |
 
 **Response (200 OK):** Paginated list of posts
 

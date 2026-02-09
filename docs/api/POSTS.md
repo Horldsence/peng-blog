@@ -20,14 +20,14 @@ Get posts with optional filtering. By default, returns only published posts.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number (1-based) |
-| `per_page` | integer | No | 20 | Items per page |
-| `author` | UUID | No | - | Filter by author ID |
-| `category` | UUID | No | - | Filter by category ID |
-| `tag` | UUID | No | - | Filter by tag ID |
-| `status` | string | No | `published` | `published`, `draft`, or `all` (admin/owner only) |
+| Parameter  | Type    | Required | Default     | Description                                       |
+| ---------- | ------- | -------- | ----------- | ------------------------------------------------- |
+| `page`     | integer | No       | 1           | Page number (1-based)                             |
+| `per_page` | integer | No       | 20          | Items per page                                    |
+| `author`   | UUID    | No       | -           | Filter by author ID                               |
+| `category` | UUID    | No       | -           | Filter by category ID                             |
+| `tag`      | UUID    | No       | -           | Filter by tag ID                                  |
+| `status`   | string  | No       | `published` | `published`, `draft`, or `all` (admin/owner only) |
 
 **Response (200 OK):**
 
@@ -88,11 +88,11 @@ Search posts by query string.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `q` | string | Yes | - | Search query |
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 20 | Items per page |
+| Parameter  | Type    | Required | Default | Description    |
+| ---------- | ------- | -------- | ------- | -------------- |
+| `q`        | string  | Yes      | -       | Search query   |
+| `page`     | integer | No       | 1       | Page number    |
+| `per_page` | integer | No       | 20      | Items per page |
 
 **Response:** Same format as List Posts
 
@@ -123,10 +123,10 @@ Create a new blog post. Initially created as unpublished (draft).
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | Yes | Post title |
-| `content` | string | Yes | Post content (Markdown supported) |
+| Field     | Type   | Required | Description                       |
+| --------- | ------ | -------- | --------------------------------- |
+| `title`   | string | Yes      | Post title                        |
+| `content` | string | Yes      | Post content (Markdown supported) |
 
 **Response (201 Created):**
 
@@ -160,8 +160,8 @@ Retrieve a single post by ID.
 **Path Parameters:**
 
 | Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | UUID | Yes | Post ID |
+| --------- | ---- | -------- | ----------- |
+| `id`      | UUID | Yes      | Post ID     |
 
 **Response (200 OK):**
 
@@ -183,6 +183,7 @@ Retrieve a single post by ID.
 ```
 
 **Access Control:**
+
 - Published posts: Visible to everyone
 - Draft posts: Only visible to post owner and admins (returns 404 for others)
 
@@ -214,6 +215,7 @@ Full update of an existing post.
 ### Update Post (Partial)
 
 Partial update of a post. Use this for:
+
 - Publishing/unpublishing posts
 - Changing category
 - Updating title or content
@@ -235,12 +237,12 @@ Partial update of a post. Use this for:
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | No | New post title |
-| `content` | string | No | New post content |
-| `category_id` | string/null | No | Category ID (empty string to remove) |
-| `status` | string | No | `"published"` or `"draft"` |
+| Field         | Type        | Required | Description                          |
+| ------------- | ----------- | -------- | ------------------------------------ |
+| `title`       | string      | No       | New post title                       |
+| `content`     | string      | No       | New post content                     |
+| `category_id` | string/null | No       | Category ID (empty string to remove) |
+| `status`      | string      | No       | `"published"` or `"draft"`           |
 
 **Examples:**
 
@@ -414,6 +416,7 @@ Posts follow a simple workflow:
 5. **Delete** → Permanently removes post
 
 **Visibility Rules:**
+
 - Draft posts: Visible only to owner and admins
 - Published posts: Visible to everyone
 
@@ -421,12 +424,12 @@ Posts follow a simple workflow:
 
 ## Permission System
 
-| Permission | Value | Description |
-|-----------|-------|-------------|
-| `POST_CREATE` | 1 | Create new posts |
-| `POST_UPDATE` | 2 | Update posts |
-| `POST_DELETE` | 4 | Delete posts |
-| `POST_PUBLISH` | 8 | Publish/unpublish posts |
+| Permission     | Value | Description             |
+| -------------- | ----- | ----------------------- |
+| `POST_CREATE`  | 1     | Create new posts        |
+| `POST_UPDATE`  | 2     | Update posts            |
+| `POST_DELETE`  | 4     | Delete posts            |
+| `POST_PUBLISH` | 8     | Publish/unpublish posts |
 
 **Default User Permissions:** `POST_CREATE | POST_UPDATE | POST_PUBLISH` (11)
 

@@ -22,10 +22,10 @@ Get all users (admin only).
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 50 | Items per page |
+| Parameter  | Type    | Required | Default | Description    |
+| ---------- | ------- | -------- | ------- | -------------- |
+| `page`     | integer | No       | 1       | Page number    |
+| `per_page` | integer | No       | 50      | Items per page |
 
 **Response (200 OK):**
 
@@ -107,9 +107,9 @@ Update user information (partial update).
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `permissions` | integer | No | New permission flags (admin only) |
+| Field         | Type    | Required | Description                       |
+| ------------- | ------- | -------- | --------------------------------- |
+| `permissions` | integer | No       | New permission flags (admin only) |
 
 **Note:** Currently only permissions can be updated via PATCH. Other user profile updates may be added later.
 
@@ -157,6 +157,7 @@ Delete a user account.
 **Permission:** Self (own account) or admin
 
 **Important Notes:**
+
 - Users can delete their own account
 - Admins can delete any account
 - Cannot delete the last admin user
@@ -197,11 +198,11 @@ Get all posts by a specific user.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `page` | integer | No | 1 | Page number |
-| `per_page` | integer | No | 20 | Items per page |
-| `include` | string | No | - | Use `drafts` to include draft posts (self/admin only) |
+| Parameter  | Type    | Required | Default | Description                                           |
+| ---------- | ------- | -------- | ------- | ----------------------------------------------------- |
+| `page`     | integer | No       | 1       | Page number                                           |
+| `per_page` | integer | No       | 20      | Items per page                                        |
+| `include`  | string  | No       | -       | Use `drafts` to include draft posts (self/admin only) |
 
 **Response (200 OK):** Paginated list of posts
 
@@ -228,6 +229,7 @@ Get all posts by a specific user.
 ```
 
 **Notes:**
+
 - By default, only published posts are returned
 - Use `?include=drafts` to include draft posts (requires authentication as the user or admin)
 
@@ -235,13 +237,13 @@ Get all posts by a specific user.
 
 ## Permission System
 
-| Permission | Value | Description |
-|-----------|-------|-------------|
-| `POST_CREATE` | 1 | Create posts |
-| `POST_UPDATE` | 2 | Update posts |
-| `POST_DELETE` | 4 | Delete posts |
-| `POST_PUBLISH` | 8 | Publish/unpublish posts |
-| `USER_MANAGE` | 16 | Manage users, categories, tags |
+| Permission     | Value | Description                    |
+| -------------- | ----- | ------------------------------ |
+| `POST_CREATE`  | 1     | Create posts                   |
+| `POST_UPDATE`  | 2     | Update posts                   |
+| `POST_DELETE`  | 4     | Delete posts                   |
+| `POST_PUBLISH` | 8     | Publish/unpublish posts        |
+| `USER_MANAGE`  | 16    | Manage users, categories, tags |
 
 **Default User Permissions:** `POST_CREATE | POST_UPDATE | POST_PUBLISH` (11)
 

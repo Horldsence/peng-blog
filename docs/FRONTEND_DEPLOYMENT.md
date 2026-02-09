@@ -64,6 +64,7 @@ cargo run
 ### 3. 访问应用
 
 打开浏览器访问：
+
 - **前端页面**: http://localhost:3000
 - **API 文档**: http://localhost:3000/api
 - **健康检查**: http://localhost:3000/api/health
@@ -154,22 +155,22 @@ peng-blog/
 ```typescript
 export default defineConfig({
   plugins: [react()],
-  base: '/',                    // 基础路径
+  base: "/", // 基础路径
   build: {
-    outDir: '../dist',          // 输出到项目根目录的 dist
-    emptyOutDir: true,          // 构建前清空目录
-    sourcemap: false,           // 生产环境不生成 sourcemap
+    outDir: "../dist", // 输出到项目根目录的 dist
+    emptyOutDir: true, // 构建前清空目录
+    sourcemap: false, // 生产环境不生成 sourcemap
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          markdown: ['react-markdown', 'rehype-highlight', 'remark-gfm'],
+          vendor: ["react", "react-dom", "react-router-dom"],
+          markdown: ["react-markdown", "rehype-highlight", "remark-gfm"],
         },
       },
     },
   },
   // ...
-})
+});
 ```
 
 ### 后端配置 (crates/app/src/lib.rs)
@@ -187,6 +188,7 @@ let app = axum::Router::new()
 ```
 
 **SPA Fallback 逻辑:**
+
 1. 如果请求的是 `/api/*`，则走 API 路由
 2. 如果请求的文件存在（如 `/assets/index.js`），则返回文件内容
 3. 如果文件不存在且路径没有扩展名（如 `/posts/123`），则返回 `index.html`，让前端路由处理
@@ -414,6 +416,7 @@ npm run build
 ### 后端找不到静态文件
 
 确保：
+
 1. `dist/` 目录存在且包含 `index.html`
 2. 工作目录正确（在项目根目录运行）
 3. 检查日志输出：`Frontend served from ./dist directory`
@@ -430,6 +433,7 @@ cd /path/to/peng-blog
 ### 前端路由 404
 
 如果前端路由（如 `/posts/123`）返回 404：
+
 1. 检查 SPA fallback 逻辑是否正确
 2. 确认 `dist/index.html` 存在
 3. 查看浏览器控制台错误
@@ -437,11 +441,13 @@ cd /path/to/peng-blog
 ### API 请求失败
 
 开发模式下：
+
 - 前端：http://localhost:5173
 - 后端：http://localhost:3000
 - Vite 会代理 `/api` 到后端
 
 生产模式下：
+
 - 前端和后端都在 http://localhost:3000
 - 确保 API 路径以 `/api` 开头
 
@@ -454,6 +460,7 @@ A: 这样后端可以直接使用 `ServeDir::new("dist")` 而不需要关心前�
 **Q: 可以更改静态文件目录吗？**
 
 A: 可以，修改两处：
+
 1. `frontend/vite.config.ts` 的 `build.outDir`
 2. `crates/app/src/lib.rs` 的 `ServeDir::new("your-dir")`
 
@@ -490,4 +497,4 @@ A: 不需要。开发时使用 `npm run dev`（5173 端口），只在部署前�
 
 ---
 
-*最后更新: 2024-01-31*
+_最后更新: 2024-01-31_

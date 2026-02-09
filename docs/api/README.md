@@ -31,6 +31,7 @@ Authorization: Bearer <your-jwt-token>
 获取方式：登录接口返回 `token` 字段。
 
 **特点：**
+
 - 适用于 RESTful API 调用
 - 支持移动端和前端应用
 - Token 有效期由服务器配置
@@ -40,6 +41,7 @@ Authorization: Bearer <your-jwt-token>
 自动包含在浏览器请求中，无需手动设置。
 
 **特点：**
+
 - 适用于浏览器原生应用
 - 支持"记住我"功能（30天 vs 24小时）
 - 自动过期管理
@@ -62,6 +64,7 @@ http://localhost:3000/api
 所有响应都遵循统一格式：
 
 **成功响应：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -71,6 +74,7 @@ http://localhost:3000/api
 ```
 
 **批量响应：**
+
 ```json
 {
   "data": [...],
@@ -81,6 +85,7 @@ http://localhost:3000/api
 ```
 
 **操作确认响应：**
+
 ```json
 {
   "message": "操作成功"
@@ -96,6 +101,7 @@ GET /api/posts?page=1&page_size=10
 ```
 
 参数：
+
 - `page`: 页码（从1开始）
 - `page_size`: 每页数量（默认10）
 
@@ -111,15 +117,15 @@ GET /api/posts?page=1&page_size=10
 
 ### HTTP 状态码
 
-| 状态码 | 说明 |
-|--------|------|
-| 200 | 请求成功 |
-| 201 | 资源创建成功 |
-| 400 | 请求参数错误 |
-| 401 | 未认证 |
-| 403 | 权限不足 |
-| 404 | 资源不存在 |
-| 500 | 服务器内部错误 |
+| 状态码 | 说明           |
+| ------ | -------------- |
+| 200    | 请求成功       |
+| 201    | 资源创建成功   |
+| 400    | 请求参数错误   |
+| 401    | 未认证         |
+| 403    | 权限不足       |
+| 404    | 资源不存在     |
+| 500    | 服务器内部错误 |
 
 ### 错误响应格式
 
@@ -136,6 +142,7 @@ GET /api/posts?page=1&page_size=10
 ### 常见错误
 
 **400 Bad Request**
+
 ```json
 {
   "error": "Validation",
@@ -144,6 +151,7 @@ GET /api/posts?page=1&page_size=10
 ```
 
 **401 Unauthorized**
+
 ```json
 {
   "error": "Unauthorized",
@@ -152,6 +160,7 @@ GET /api/posts?page=1&page_size=10
 ```
 
 **403 Forbidden**
+
 ```json
 {
   "error": "Forbidden",
@@ -160,6 +169,7 @@ GET /api/posts?page=1&page_size=10
 ```
 
 **404 Not Found**
+
 ```json
 {
   "error": "NotFound",
@@ -176,11 +186,13 @@ GET /api/posts?page=1&page_size=10
 创建新用户账户。
 
 **端点：**
+
 ```
 POST /auth/register
 ```
 
 **请求体：**
+
 ```json
 {
   "username": "newuser",
@@ -189,10 +201,12 @@ POST /auth/register
 ```
 
 **字段说明：**
+
 - `username`: 用户名（3-50字符，字母数字）
 - `password`: 密码（最少8字符）
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -207,11 +221,13 @@ POST /auth/register
 使用用户名和密码登录，返回 JWT token。
 
 **端点：**
+
 ```
 POST /auth/login
 ```
 
 **请求体：**
+
 ```json
 {
   "username": "testuser",
@@ -220,6 +236,7 @@ POST /auth/login
 ```
 
 **响应 (200)：**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM...",
@@ -236,6 +253,7 @@ POST /auth/login
 使当前 token 失效（如支持 token 黑名单）。
 
 **端点：**
+
 ```
 POST /auth/logout
 ```
@@ -243,6 +261,7 @@ POST /auth/logout
 **认证：** 需要
 
 **响应 (200)：**
+
 ```json
 {
   "message": "登出成功"
@@ -258,22 +277,26 @@ POST /auth/logout
 获取所有文章，支持分页和过滤。
 
 **端点：**
+
 ```
 GET /posts
 ```
 
 **查询参数：**
+
 - `page`: 页码（默认1）
 - `page_size`: 每页数量（默认10）
 - `user_id`: 按用户过滤（可选）
 
 **示例：**
+
 ```
 GET /posts?page=1&page_size=10
 GET /posts?user_id=550e8400-e29b-41d4-a716-446655440000
 ```
 
 **响应 (200)：**
+
 ```json
 {
   "data": [
@@ -300,14 +323,17 @@ GET /posts?user_id=550e8400-e29b-41d4-a716-446655440000
 获取指定 ID 的文章详情。
 
 **端点：**
+
 ```
 GET /posts/:id
 ```
 
 **路径参数：**
+
 - `id`: 文章 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -327,6 +353,7 @@ GET /posts/:id
 创建新文章。
 
 **端点：**
+
 ```
 POST /posts
 ```
@@ -336,6 +363,7 @@ POST /posts
 **权限：** `POST_CREATE`
 
 **请求体：**
+
 ```json
 {
   "title": "新文章标题",
@@ -345,11 +373,13 @@ POST /posts
 ```
 
 **字段说明：**
+
 - `title`: 文章标题（必填）
 - `content`: 文章内容（必填）
 - `published`: 是否立即发布（默认false）
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -369,6 +399,7 @@ POST /posts
 更新现有文章。
 
 **端点：**
+
 ```
 PUT /posts/:id
 ```
@@ -378,9 +409,11 @@ PUT /posts/:id
 **权限：** 文章所有者或 `POST_UPDATE`
 
 **路径参数：**
+
 - `id`: 文章 UUID
 
 **请求体：**
+
 ```json
 {
   "title": "更新后的标题",
@@ -390,6 +423,7 @@ PUT /posts/:id
 ```
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -409,6 +443,7 @@ PUT /posts/:id
 删除指定文章。
 
 **端点：**
+
 ```
 DELETE /posts/:id
 ```
@@ -418,9 +453,11 @@ DELETE /posts/:id
 **权限：** 文章所有者或 `POST_DELETE`
 
 **路径参数：**
+
 - `id`: 文章 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "message": "文章删除成功"
@@ -436,6 +473,7 @@ DELETE /posts/:id
 获取当前认证用户的详细信息。
 
 **端点：**
+
 ```
 GET /users/me
 ```
@@ -443,6 +481,7 @@ GET /users/me
 **认证：** 需要
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -457,6 +496,7 @@ GET /users/me
 获取所有用户列表（管理员功能）。
 
 **端点：**
+
 ```
 GET /users
 ```
@@ -466,10 +506,12 @@ GET /users
 **权限：** `USER_MANAGE`
 
 **查询参数：**
+
 - `page`: 页码
 - `page_size`: 每页数量
 
 **响应 (200)：**
+
 ```json
 {
   "data": [
@@ -491,14 +533,17 @@ GET /users
 获取指定 ID 的用户信息。
 
 **端点：**
+
 ```
 GET /users/:id
 ```
 
 **路径参数：**
+
 - `id`: 用户 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -513,6 +558,7 @@ GET /users/:id
 删除指定用户（管理员功能）。
 
 **端点：**
+
 ```
 DELETE /users/:id
 ```
@@ -522,9 +568,11 @@ DELETE /users/:id
 **权限：** `USER_MANAGE`
 
 **路径参数：**
+
 - `id`: 用户 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "message": "用户删除成功"
@@ -540,11 +588,13 @@ DELETE /users/:id
 创建新会话（登录）。
 
 **端点：**
+
 ```
 POST /sessions
 ```
 
 **请求体：**
+
 ```json
 {
   "username": "testuser",
@@ -554,11 +604,13 @@ POST /sessions
 ```
 
 **字段说明：**
+
 - `username`: 用户名
 - `password`: 密码
 - `remember_me`: 是否记住我（30天 vs 24小时）
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -573,6 +625,7 @@ POST /sessions
 删除当前会话（登出）。
 
 **端点：**
+
 ```
 DELETE /sessions
 ```
@@ -580,6 +633,7 @@ DELETE /sessions
 **认证：** 需要（Cookie）
 
 **响应 (200)：**
+
 ```json
 {
   "message": "会话已删除"
@@ -591,6 +645,7 @@ DELETE /sessions
 获取当前用户的会话信息。
 
 **端点：**
+
 ```
 GET /sessions/me
 ```
@@ -598,6 +653,7 @@ GET /sessions/me
 **认证：** 需要（Cookie）
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -612,11 +668,13 @@ GET /sessions/me
 处理 GitHub OAuth 认证回调。
 
 **端点：**
+
 ```
 POST /sessions/github
 ```
 
 **请求体：**
+
 ```json
 {
   "code": "github-authorization-code"
@@ -624,6 +682,7 @@ POST /sessions/github
 ```
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -642,6 +701,7 @@ POST /sessions/github
 上传新文件。
 
 **端点：**
+
 ```
 POST /files
 ```
@@ -651,15 +711,18 @@ POST /files
 **请求格式：** `multipart/form-data`
 
 **请求体：**
+
 ```
 file: <binary>
 ```
 
 **限制：**
+
 - 最大文件大小：10MB
 - 允许类型：image/jpeg, image/png, image/gif, image/webp, application/pdf, text/plain, text/markdown
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -678,14 +741,17 @@ file: <binary>
 获取指定文件的元数据。
 
 **端点：**
+
 ```
 GET /files/:id
 ```
 
 **路径参数：**
+
 - `id`: 文件 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -704,16 +770,19 @@ GET /files/:id
 下载指定文件。
 
 **端点：**
+
 ```
 GET /files/:id/download
 ```
 
 **路径参数：**
+
 - `id`: 文件 UUID
 
 **响应 (200)：** 文件二进制流
 
 **Headers：**
+
 ```
 Content-Type: image/jpeg
 Content-Disposition: attachment; filename="photo.jpg"
@@ -725,6 +794,7 @@ Content-Length: 1024000
 获取当前用户上传的所有文件。
 
 **端点：**
+
 ```
 GET /files
 ```
@@ -732,10 +802,12 @@ GET /files
 **认证：** 需要
 
 **查询参数：**
+
 - `page`: 页码
 - `page_size`: 每页数量
 
 **响应 (200)：**
+
 ```json
 {
   "data": [
@@ -761,6 +833,7 @@ GET /files
 删除指定文件。
 
 **端点：**
+
 ```
 DELETE /files/:id
 ```
@@ -770,9 +843,11 @@ DELETE /files/:id
 **权限：** 文件所有者
 
 **路径参数：**
+
 - `id`: 文件 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "message": "文件删除成功"
@@ -788,18 +863,22 @@ DELETE /files/:id
 获取指定文章的所有评论。
 
 **端点：**
+
 ```
 GET /posts/:post_id/comments
 ```
 
 **路径参数：**
+
 - `post_id`: 文章 UUID
 
 **查询参数：**
+
 - `page`: 页码
 - `page_size`: 每页数量
 
 **响应 (200)：**
+
 ```json
 {
   "data": [
@@ -825,6 +904,7 @@ GET /posts/:post_id/comments
 使用注册用户身份创建评论。
 
 **端点：**
+
 ```
 POST /comments
 ```
@@ -832,6 +912,7 @@ POST /comments
 **认证：** 需要
 
 **请求体：**
+
 ```json
 {
   "post_id": "660e8400-e29b-41d4-a716-446655440001",
@@ -840,10 +921,12 @@ POST /comments
 ```
 
 **字段说明：**
+
 - `post_id`: 文章 UUID
 - `content`: 评论内容（必填）
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -862,11 +945,13 @@ POST /comments
 使用 GitHub OAuth 认证创建评论。
 
 **端点：**
+
 ```
 POST /comments/github
 ```
 
 **请求体：**
+
 ```json
 {
   "post_id": "660e8400-e29b-41d4-a716-446655440001",
@@ -876,6 +961,7 @@ POST /comments/github
 ```
 
 **响应 (201)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -894,11 +980,13 @@ POST /comments/github
 获取 GitHub OAuth 授权 URL。
 
 **端点：**
+
 ```
 GET /comments/github/auth
 ```
 
 **响应 (200)：**
+
 ```json
 {
   "auth_url": "https://github.com/login/oauth/authorize?client_id=xxx&scope=user:email&state=xxx"
@@ -910,14 +998,17 @@ GET /comments/github/auth
 获取指定评论的详细信息。
 
 **端点：**
+
 ```
 GET /comments/:id
 ```
 
 **路径参数：**
+
 - `id`: 评论 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -936,6 +1027,7 @@ GET /comments/:id
 更新指定评论。
 
 **端点：**
+
 ```
 PUT /comments/:id
 ```
@@ -945,9 +1037,11 @@ PUT /comments/:id
 **权限：** 评论作者
 
 **路径参数：**
+
 - `id`: 评论 UUID
 
 **请求体：**
+
 ```json
 {
   "content": "更新后的评论内容"
@@ -955,6 +1049,7 @@ PUT /comments/:id
 ```
 
 **响应 (200)：**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -973,6 +1068,7 @@ PUT /comments/:id
 删除指定评论。
 
 **端点：**
+
 ```
 DELETE /comments/:id
 ```
@@ -982,9 +1078,11 @@ DELETE /comments/:id
 **权限：** 评论作者
 
 **路径参数：**
+
 - `id`: 评论 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "message": "评论删除成功"
@@ -1000,11 +1098,13 @@ DELETE /comments/:id
 获取网站的访问统计信息。
 
 **端点：**
+
 ```
 GET /stats/visits
 ```
 
 **响应 (200)：**
+
 ```json
 {
   "total_visits": 10000,
@@ -1018,11 +1118,13 @@ GET /stats/visits
 记录一次网站访问。
 
 **端点：**
+
 ```
 POST /stats/visits
 ```
 
 **请求体：**
+
 ```json
 {
   "post_id": "550e8400-e29b-41d4-a716-446655440000"
@@ -1030,9 +1132,11 @@ POST /stats/visits
 ```
 
 **字段说明：**
+
 - `post_id`: 可选，如果提供则同时记录文章阅读量
 
 **响应 (200)：**
+
 ```json
 {
   "message": "访问已记录"
@@ -1044,14 +1148,17 @@ POST /stats/visits
 获取指定文章的阅读量统计。
 
 **端点：**
+
 ```
 GET /stats/posts/:id/views
 ```
 
 **路径参数：**
+
 - `id`: 文章 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "post_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -1065,14 +1172,17 @@ GET /stats/posts/:id/views
 记录指定文章被阅读一次。
 
 **端点：**
+
 ```
 POST /stats/posts/:id/views
 ```
 
 **路径参数：**
+
 - `id`: 文章 UUID
 
 **响应 (200)：**
+
 ```json
 {
   "message": "阅读已记录"
@@ -1084,6 +1194,7 @@ POST /stats/posts/:id/views
 获取完整的统计信息（管理员功能）。
 
 **端点：**
+
 ```
 GET /stats/total
 ```
@@ -1093,6 +1204,7 @@ GET /stats/total
 **权限：** 管理员
 
 **响应 (200)：**
+
 ```json
 {
   "total_posts": 100,
@@ -1112,22 +1224,24 @@ GET /stats/total
 
 Peng Blog 使用位标志实现高效的权限控制：
 
-| 权限 | 值 | 说明 |
-|------|-----|------|
-| `POST_CREATE` | 1 | 创建文章 |
-| `POST_UPDATE` | 2 | 更新文章 |
-| `POST_DELETE` | 4 | 删除文章 |
-| `POST_PUBLISH` | 8 | 发布文章 |
-| `USER_MANAGE` | 16 | 管理用户 |
+| 权限           | 值  | 说明     |
+| -------------- | --- | -------- |
+| `POST_CREATE`  | 1   | 创建文章 |
+| `POST_UPDATE`  | 2   | 更新文章 |
+| `POST_DELETE`  | 4   | 删除文章 |
+| `POST_PUBLISH` | 8   | 发布文章 |
+| `USER_MANAGE`  | 16  | 管理用户 |
 
 ### 默认权限
 
 **普通用户：**
+
 ```
 POST_CREATE | POST_UPDATE | POST_PUBLISH = 1 | 2 | 8 = 11
 ```
 
 **管理员：**
+
 ```
 POST_CREATE | POST_UPDATE | POST_DELETE | POST_PUBLISH | USER_MANAGE = 31
 ```
@@ -1135,16 +1249,18 @@ POST_CREATE | POST_UPDATE | POST_DELETE | POST_PUBLISH | USER_MANAGE = 31
 ### 权限检查示例
 
 **检查是否是资源所有者：**
+
 ```javascript
 if (resource.user_id === current_user.id) {
-    // 可以操作
+  // 可以操作
 }
 ```
 
 **检查管理员权限：**
+
 ```javascript
 if (current_user.permissions & USER_MANAGE) {
-    // 可以管理
+  // 可以管理
 }
 ```
 
@@ -1199,36 +1315,36 @@ curl http://localhost:3000/api/posts
 ```javascript
 // 用户登录
 const login = async () => {
-  const response = await fetch('http://localhost:3000/api/auth/login', {
-    method: 'POST',
+  const response = await fetch("http://localhost:3000/api/auth/login", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      username: 'testuser',
-      password: 'password123',
+      username: "testuser",
+      password: "password123",
     }),
   });
-  
+
   const data = await response.json();
   return data.token; // 保存 token
 };
 
 // 创建文章
 const createPost = async (token) => {
-  const response = await fetch('http://localhost:3000/api/posts', {
-    method: 'POST',
+  const response = await fetch("http://localhost:3000/api/posts", {
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      title: '新文章',
-      content: '文章内容',
+      title: "新文章",
+      content: "文章内容",
       published: false,
     }),
   });
-  
+
   return await response.json();
 };
 ```

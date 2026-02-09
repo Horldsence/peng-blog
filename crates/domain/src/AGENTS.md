@@ -32,11 +32,11 @@ crates/domain/src/
 
 ## WHERE TO LOOK
 
-| Task | File | Purpose |
-|------|------|---------|
+| Task     | File            | Purpose                                      |
+| -------- | --------------- | -------------------------------------------- |
 | 权限系统 | `permission.rs` | POST_CREATE, POST_UPDATE, check_permission() |
-| 错误类型 | `error.rs` | Error enum, Result<T> alias |
-| 文章实体 | `post.rs` | Post结构体 + PostStatus枚举 |
+| 错误类型 | `error.rs`      | Error enum, Result<T> alias                  |
+| 文章实体 | `post.rs`       | Post结构体 + PostStatus枚举                  |
 
 ---
 
@@ -59,4 +59,4 @@ crates/domain/src/
 
 ---
 
-*Last updated: 2026-02-04*
+_Last updated: 2026-02-04_
