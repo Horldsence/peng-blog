@@ -191,7 +191,7 @@ impl PostService {
         let mut post = self.repo.get_post(post_id).await?;
 
         // Prepare IndexNow request
-        let url = format!("{}/posts/{}", self.base_url, post.id);
+        let url = format!("{}/post/{}", self.base_url, post.id);
 
         let base_url_clean = self
             .base_url

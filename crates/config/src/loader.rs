@@ -28,7 +28,7 @@ allow_registration = true
 [indexnow]
 enabled = false
 api_key = ""
-endpoint = "https://api.indexnow.org/indexnow"
+endpoint = "https://api.indexnow.org/IndexNow"
 "#;
 
 pub fn load_config() -> Result<Config, ConfigError> {

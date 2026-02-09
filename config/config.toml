@@ -25,4 +25,4 @@ allow_registration = false
 [indexnow]
 enabled = true
 api_key = "c68d327f590e4cd084fb955120599c4b"
-endpoint = "https://api.indexnow.org/indexnow"
+endpoint = "https://api.indexnow.org/Indexnow"
