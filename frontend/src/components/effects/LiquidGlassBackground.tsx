@@ -136,11 +136,16 @@ export function LiquidGlassBackground() {
           // Viscosity
           if (dist < CONFIG.viscosityEnd) {
             let strength = CONFIG.viscosityStrength * (1 - dist / CONFIG.viscosityEnd);
-            if (dragState.active && (dragState.particleIndex === i || dragState.particleIndex === j)) {
+            if (
+              dragState.active &&
+              (dragState.particleIndex === i || dragState.particleIndex === j)
+            ) {
               strength *= CONFIG.dragViscosityFactor;
             }
-            const impactX = (particles.velocity[j][0] - particles.velocity[i][0]) * strength * CONFIG.dt;
-            const impactY = (particles.velocity[j][1] - particles.velocity[i][1]) * strength * CONFIG.dt;
+            const impactX =
+              (particles.velocity[j][0] - particles.velocity[i][0]) * strength * CONFIG.dt;
+            const impactY =
+              (particles.velocity[j][1] - particles.velocity[i][1]) * strength * CONFIG.dt;
             particles.velocity[i][0] += impactX;
             particles.velocity[i][1] += impactY;
             particles.velocity[j][0] -= impactX;
@@ -150,7 +155,7 @@ export function LiquidGlassBackground() {
           // Distance-based forces
           if (dist < CONFIG.targetDistance) {
             // Repulsion
-            const force = CONFIG.forceScale1 * (CONFIG.targetDistance - dist) / dist;
+            const force = (CONFIG.forceScale1 * (CONFIG.targetDistance - dist)) / dist;
             const impactX = -dx * force * CONFIG.dt;
             const impactY = -dy * force * CONFIG.dt;
             particles.velocity[i][0] += impactX;
@@ -161,12 +166,14 @@ export function LiquidGlassBackground() {
             // Attraction
             let force: number;
             if (dist < CONFIG.attractionPeak) {
-              force = CONFIG.forceScale2 * (dist - CONFIG.targetDistance) / CONFIG.attractionPeak;
+              force = (CONFIG.forceScale2 * (dist - CONFIG.targetDistance)) / CONFIG.attractionPeak;
             } else {
-              force = CONFIG.forceScale2 * (CONFIG.attractionEnd - dist) / (CONFIG.attractionEnd - CONFIG.attractionPeak);
+              force =
+                (CONFIG.forceScale2 * (CONFIG.attractionEnd - dist)) /
+                (CONFIG.attractionEnd - CONFIG.attractionPeak);
             }
-            const impactX = (dx * force / dist) * CONFIG.dt;
-            const impactY = (dy * force / dist) * CONFIG.dt;
+            const impactX = ((dx * force) / dist) * CONFIG.dt;
+            const impactY = ((dy * force) / dist) * CONFIG.dt;
             particles.velocity[i][0] += impactX;
             particles.velocity[i][1] += impactY;
             particles.velocity[j][0] -= impactX;
@@ -230,7 +237,14 @@ export function LiquidGlassBackground() {
       renderer.setClearColor(0x000000, 0);
 
       const scene = new THREE.Scene();
-      const camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 1000);
+      const camera = new THREE.OrthographicCamera(
+        -width / 2,
+        width / 2,
+        height / 2,
+        -height / 2,
+        1,
+        1000
+      );
       camera.position.z = 100;
 
       const geometry = new THREE.PlaneGeometry(width, height);
