@@ -13,6 +13,10 @@ pub struct Post {
     pub published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub views: u64,
+    pub indexnow_submitted: bool,
+    pub indexnow_submitted_at: Option<DateTime<Utc>>,
+    pub indexnow_last_status: Option<String>,
+    pub indexnow_last_error: Option<String>,
 }
 
 impl Post {
@@ -27,6 +31,10 @@ impl Post {
             published_at: None,
             created_at: Utc::now(),
             views: 0,
+            indexnow_submitted: false,
+            indexnow_submitted_at: None,
+            indexnow_last_status: None,
+            indexnow_last_error: None,
         }
     }
 

@@ -15,6 +15,7 @@ mod m20250101_000012_create_category;
 mod m20250101_000013_create_tag;
 mod m20250101_000014_create_post_tag;
 mod m20250101_000015_add_category_to_post;
+mod m20250101_000016_add_indexnow_to_post;
 
 use sea_orm_migration::prelude::*;
 
@@ -30,6 +31,7 @@ pub use m20250101_000012_create_category::CreateCategory;
 pub use m20250101_000013_create_tag::CreateTag;
 pub use m20250101_000014_create_post_tag::CreatePostTag;
 pub use m20250101_000015_add_category_to_post::AddCategoryToPost;
+pub use m20250101_000016_add_indexnow_to_post::AddIndexNowToPost;
 
 pub struct Migrator;
 
@@ -49,6 +51,7 @@ impl MigratorTrait for Migrator {
             Box::new(CreateTag),
             Box::new(CreatePostTag),
             Box::new(AddCategoryToPost),
+            Box::new(AddIndexNowToPost),
         ]
     }
 }

@@ -106,6 +106,10 @@ export interface Post {
   created_at: Timestamp;
   updated_at?: Timestamp;
   published_at?: Timestamp | null;
+  indexnow_submitted: boolean;
+  indexnow_submitted_at?: Timestamp | null;
+  indexnow_last_status?: 'pending' | 'success' | 'failed' | null;
+  indexnow_last_error?: string | null;
 }
 
 export interface PostCreateRequest {

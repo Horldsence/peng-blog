@@ -20,6 +20,7 @@ sea-orm-migration = { workspace = true }
 tokio = { workspace = true }
 rss = "2.0"
 reqwest = { workspace = true }
+tracing = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

@@ -137,6 +137,14 @@ export const postsApi = {
   removePostTag: (postId: string, tagId: string) => {
     return http.delete<ApiResponseV2<Tag[]>>(`/posts/${postId}/tags/${tagId}`);
   },
+
+  /**
+   * 手动提交文章到 IndexNow
+   * API: POST /posts/{id}/indexnow
+   */
+  submitToIndexNow: (postId: string) => {
+    return http.post<ApiResponseV2<Post>>(`/posts/${postId}/indexnow`);
+  },
 };
 
 export default postsApi;

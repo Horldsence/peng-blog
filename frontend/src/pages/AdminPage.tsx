@@ -29,6 +29,7 @@ import {
   EyeRegular,
   EyeOffRegular,
   AddRegular,
+  SendRegular,
 } from '@fluentui/react-icons';
 import { authApi, postsApi, usersApi, statsApi, configApi } from '../api';
 import { useToast } from '../components/ui/Toast';
@@ -203,6 +204,7 @@ export function AdminPage() {
   const [pendingConfig, setPendingConfig] = useState<UpdateConfigRequest>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [submittingIndexNow, setSubmittingIndexNow] = useState<Set<string>>(new Set());
 
   const EnvOverrideBadge = ({ message }: { message?: string }) => (
     <Tooltip
@@ -314,6 +316,25 @@ export function AdminPage() {
       void fetchData();
     } catch (err) {
       toast.showError(err instanceof Error ? err.message : '操作失败');
+    }
+  };
+
+  const handleSubmitToIndexNow = async (postId: string) => {
+    setSubmittingIndexNow((prev) => new Set(prev).add(postId));
+
+    try {
+      toast.showInfo('正在通知搜索引擎...', { timeout: 3000 });
+      await postsApi.submitToIndexNow(postId);
+      toast.showSuccess('已成功通知搜索引擎');
+      void fetchData();
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : '通知搜索引擎失败');
+    } finally {
+      setSubmittingIndexNow((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
     }
   };
 
@@ -513,6 +534,37 @@ export function AdminPage() {
                                 {formatDate(post.created_at)}
                               </Caption1>
                               <Caption1 className={styles.metaText}>{post.views} 次阅读</Caption1>
+
+                              {post.indexnow_submitted &&
+                                post.indexnow_last_status === 'success' && (
+                                  <Tooltip
+                                    content={`提交于: ${post.indexnow_submitted_at ? formatDate(post.indexnow_submitted_at) : '未知'}`}
+                                  >
+                                    <Badge size="small" color="success" appearance="outline">
+                                      ✓ 已通知搜索引擎
+                                    </Badge>
+                                  </Tooltip>
+                                )}
+
+                              {post.indexnow_last_status === 'pending' && (
+                                <Badge size="small" color="brand" appearance="outline">
+                                  正在提交...
+                                </Badge>
+                              )}
+
+                              {post.indexnow_last_status === 'failed' && (
+                                <Tooltip content={post.indexnow_last_error ?? '未知错误'}>
+                                  <Badge size="small" color="danger" appearance="outline">
+                                    ✗ 提交失败
+                                  </Badge>
+                                </Tooltip>
+                              )}
+
+                              {!post.indexnow_submitted && post.published_at && (
+                                <Badge size="small" color="warning" appearance="outline">
+                                  未通知搜索引擎
+                                </Badge>
+                              )}
                             </div>
                           </div>
 
@@ -542,6 +594,21 @@ export function AdminPage() {
                             >
                               {post.published_at ? '取消发布' : '发布'}
                             </Button>
+
+                            {post.published_at && (
+                              <Button
+                                appearance="transparent"
+                                icon={<SendRegular />}
+                                size="small"
+                                onClick={() => {
+                                  void handleSubmitToIndexNow(post.id);
+                                }}
+                                disabled={submittingIndexNow.has(post.id)}
+                              >
+                                {submittingIndexNow.has(post.id) ? '提交中...' : '通知搜索引擎'}
+                              </Button>
+                            )}
+
                             <Button
                               appearance="transparent"
                               icon={<DeleteRegular />}

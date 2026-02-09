@@ -35,6 +35,10 @@ fn post_to_entity(post: &Post) -> crate::entity::post::Model {
         published_at: post.published_at.map(|d| d.to_rfc3339()),
         created_at: post.created_at.to_rfc3339(),
         views: post.views as i64,
+        indexnow_submitted: post.indexnow_submitted as i64,
+        indexnow_submitted_at: post.indexnow_submitted_at.map(|d| d.to_rfc3339()),
+        indexnow_last_status: post.indexnow_last_status.clone(),
+        indexnow_last_error: post.indexnow_last_error.clone(),
     }
 }
 
@@ -48,6 +52,10 @@ fn entity_to_active_model(entity: crate::entity::post::Model) -> crate::entity::
         published_at: Set(entity.published_at),
         created_at: Set(entity.created_at),
         views: Set(entity.views),
+        indexnow_submitted: Set(entity.indexnow_submitted),
+        indexnow_submitted_at: Set(entity.indexnow_submitted_at),
+        indexnow_last_status: Set(entity.indexnow_last_status),
+        indexnow_last_error: Set(entity.indexnow_last_error),
     }
 }
 
@@ -92,6 +100,10 @@ fn model_to_post(model: crate::entity::post::Model) -> Result<Post> {
         published_at,
         created_at,
         views: model.views as u64,
+        indexnow_submitted: model.indexnow_submitted != 0,
+        indexnow_submitted_at: parse_datetime_option(&model.indexnow_submitted_at)?,
+        indexnow_last_status: model.indexnow_last_status,
+        indexnow_last_error: model.indexnow_last_error,
     })
 }
 

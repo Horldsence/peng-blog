@@ -34,6 +34,18 @@ pub struct Model {
 
     /// Number of times this post has been viewed
     pub views: i64,
+
+    /// IndexNow submission status (0 = not submitted, 1 = submitted)
+    pub indexnow_submitted: i64,
+
+    /// ISO 8601 datetime string when IndexNow was last submitted
+    pub indexnow_submitted_at: Option<String>,
+
+    /// Last IndexNow submission status (pending, success, failed)
+    pub indexnow_last_status: Option<String>,
+
+    /// Last IndexNow submission error message
+    pub indexnow_last_error: Option<String>,
 }
 
 /// Relations for Post entity
@@ -77,6 +89,8 @@ impl ActiveModelBehavior for ActiveModel {
         Self {
             created_at: Set(chrono::Utc::now().to_rfc3339()),
             views: Set(0),
+            indexnow_submitted: Set(0),
+            indexnow_last_status: Set(Some("pending".to_string())),
             ..ActiveModelTrait::default()
         }
     }

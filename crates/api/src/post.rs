@@ -121,6 +121,7 @@ pub fn routes() -> Router<AppState> {
             "/{id}/tags/{tag_id}",
             axum::routing::delete(remove_post_tag),
         )
+        .route("/{id}/indexnow", axum::routing::post(submit_to_indexnow))
 }
 
 /// GET /posts
@@ -585,4 +586,33 @@ async fn create_comment(
     };
 
     Ok(resp::created(comment))
+}
+
+/// POST /posts/{id}/indexnow
+/// Manually submit post to IndexNow
+async fn submit_to_indexnow(
+    user: Claims,
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let user_id = Uuid::parse_str(&user.sub)
+        .map_err(|e| ApiError::Internal(format!("Invalid user ID: {}", e)))?;
+
+    let post = state
+        .post_service
+        .notify_indexnow(id)
+        .await
+        .map_err(ApiError::Domain)?;
+
+    // Verify ownership or admin permission
+    let is_owner = post.user_id == user_id;
+    let is_admin = (user.permissions & USER_MANAGE) != 0;
+
+    if !is_owner && !is_admin {
+        return Err(ApiError::Unauthorized(
+            "You don't have permission to submit this post".to_string(),
+        ));
+    }
+
+    Ok(resp::ok(post))
 }

@@ -17,9 +17,11 @@ pub struct IndexNowRequest {
     /// Optional: URL location of the key file for verification
     /// If not provided, search engines will look for https://host/key.txt
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "keyLocation")]
     pub key_location: Option<String>,
 
     /// List of URLs to submit (can be one or multiple)
+    #[serde(rename = "urlList")]
     pub url_list: Vec<String>,
 }
 

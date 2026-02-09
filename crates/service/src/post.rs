@@ -78,6 +78,10 @@ impl PostService {
             POST_DELETE,
         )?;
 
+        // Track if content changed for IndexNow notification
+        let content_changed = title.is_some() || content.is_some();
+        let was_published = post.is_published();
+
         // Update fields if provided
         if let Some(title) = title {
             self.validate_title(&title)?;
@@ -89,7 +93,14 @@ impl PostService {
             post.content = content;
         }
 
-        self.repo.update_post(post).await
+        let updated_post = self.repo.update_post(post).await?;
+
+        // Notify IndexNow if post is published and content changed
+        if was_published && content_changed {
+            let _ = self.notify_indexnow(updated_post.id).await;
+        }
+
+        Ok(updated_post)
     }
 
     /// Publish a post with permission and ownership checks
@@ -103,32 +114,8 @@ impl PostService {
         post.publish();
         let updated_post = self.repo.update_post(post).await?;
 
-        // Notify IndexNow if configured (non-blocking)
-        if let (Some(client), Some(key)) = (&self.indexnow_client, &self.indexnow_key) {
-            let url = format!("{}/posts/{}", self.base_url, updated_post.id);
-
-            let base_url_clean = self
-                .base_url
-                .trim_start_matches("http://")
-                .trim_start_matches("https://");
-            let host = base_url_clean.split('/').next().unwrap_or("localhost");
-
-            let key_location = format!("{}/{}.txt", self.base_url, key);
-
-            let request = IndexNowRequest {
-                host: host.to_string(),
-                key: key.clone(),
-                key_location: Some(key_location),
-                url_list: vec![url],
-            };
-
-            let client_clone = Arc::clone(client);
-            tokio::spawn(async move {
-                if let Err(e) = client_clone.notify(request).await {
-                    tracing::warn!("IndexNow notification failed: {}", e);
-                }
-            });
-        }
+        // Notify IndexNow if configured
+        let _ = self.notify_indexnow(updated_post.id).await;
 
         Ok(updated_post)
     }
@@ -186,6 +173,64 @@ impl PostService {
         self.repo
             .list_published_posts_by_user(user_id, limit.unwrap_or(DEFAULT_LIST_LIMIT))
             .await
+    }
+
+    /// Notify IndexNow for a single post and update status
+    pub async fn notify_indexnow(&self, post_id: Uuid) -> Result<Post> {
+        let Some(client) = &self.indexnow_client else {
+            tracing::debug!("IndexNow client not configured");
+            return self.repo.get_post(post_id).await;
+        };
+
+        let Some(key) = &self.indexnow_key else {
+            tracing::debug!("IndexNow key not configured");
+            return self.repo.get_post(post_id).await;
+        };
+
+        // Get current post
+        let mut post = self.repo.get_post(post_id).await?;
+
+        // Prepare IndexNow request
+        let url = format!("{}/posts/{}", self.base_url, post.id);
+
+        let base_url_clean = self
+            .base_url
+            .trim_start_matches("http://")
+            .trim_start_matches("https://");
+        let host = base_url_clean.split('/').next().unwrap_or("localhost");
+
+        let key_location = format!("{}/{}.txt", self.base_url, key);
+
+        let request = IndexNowRequest {
+            host: host.to_string(),
+            key: key.clone(),
+            key_location: Some(key_location),
+            url_list: vec![url],
+        };
+
+        // Update status to pending
+        post.indexnow_submitted = true;
+        post.indexnow_submitted_at = Some(chrono::Utc::now());
+        post.indexnow_last_status = Some("pending".to_string());
+        post.indexnow_last_error = None;
+        post = self.repo.update_post(post).await?;
+
+        // Send notification
+        match client.notify(request).await {
+            Ok(()) => {
+                post.indexnow_last_status = Some("success".to_string());
+                post.indexnow_last_error = None;
+                tracing::info!("IndexNow notification successful for post {}", post_id);
+            }
+            Err(e) => {
+                post.indexnow_last_status = Some("failed".to_string());
+                post.indexnow_last_error = Some(e.clone());
+                tracing::error!("IndexNow notification failed for post {}: {}", post_id, e);
+            }
+        }
+
+        // Update final status
+        self.repo.update_post(post).await
     }
 
     /// Set category for a post with permission and ownership checks
